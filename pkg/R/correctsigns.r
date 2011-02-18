@@ -17,7 +17,7 @@
 #'
 getSignCorrection <- function(A, r, adapt, maxSigns, eps){
 
-    v <- rep(1,nrow(r))
+    v <- rep(1,length(r))
     if (all(abs(A%*%r) <= eps)) return(list(v))
     adapt <- which(adapt)
     nViolated <- length(adapt)
@@ -48,6 +48,13 @@ getSignCorrection <- function(A, r, adapt, maxSigns, eps){
 #' @param weight Positive numeric vector of length ncol(E). Variables with heigher 
 #'      reliability weight are less likely to be changed. Defaults to \code{rep(1,ncol(E))}
 #' @param fix character vector. Names of variables which may not be changed.
+#' @param swap data frame with two character columns, each row listing a pair of variables that may
+#'      be swapped to correct the record. A pair is only meaningfull if they appear together in
+#'      at least one row of the editmatrix with oposite signs.
+#'
+#' @example ../../examples/correctSigns.R
+#'
+#'
 #' @export
 correctSigns <- function(
     E, 
@@ -55,11 +62,28 @@ correctSigns <- function(
     maxSigns = ncol(E)%/%2,
     eps=sqrt(.Machine$double.eps),
     weight = rep(1,ncol(E)),
-    fix = NA ){
+    fix = NA,
+    swap = NA ){
 
+    # Flip signs and swaps variables if allowed. Register swaps. 
+    swappit <- function(sw){
+        if ( all(s[sw]==-1) || any(abs(r[sw]) < eps) & any(s[sw] == -1) ){
+            r[sw] <<- r[sw[2:1]]
+            s[sw] <<- 1
+        }
+    }
+
+    # which variables may be changed?
     notFixed <- rep(TRUE,ncol(E))
     if ( !identical(fix, NA) ){
         notFixed <- !(colnames(E) %in% fix)
+    }
+
+    # swap-names to swap-indices
+    haveSwaps <- FALSE
+    if (!identical(swap, NA)){
+        iSwap <- lapply(swap, function(sw) which(names(dat) %in% sw) )
+        haveSwaps <- TRUE
     }
 
     cn <- colnames(E)
@@ -68,24 +92,21 @@ correctSigns <- function(
     w <- matrix(weight,nrow=1)
     degeneracy <- integer(nrow(dat))
     for ( i in 1:nrow(dat) ){
-        r <- t(D[i,,drop=FALSE])
+        r <- D[i,]
         violated <- abs(A %*% r) > eps            
         adapt <- notFixed & colSums(abs(E[violated, ,drop=FALSE])) > 0
         S <- getSignCorrection(A, r, adapt, maxSigns, eps)
         if ( length(S) > 0 ){
-            wvec <- w %*% (sapply(S,matrix)<0)
+            wvec <- w %*% (sapply(S,matrix) < 0)
             s <- S[[which.max(wvec)]]
-            D[i, ] <- D[i, ]*s
             degeneracy[i] <- sum(wvec==max(wvec))
+            if ( haveSwaps ) lapply(iSwap, swappit)
+            D[i, ] <- r*s
         }
     }
     dat[,cn] <- D
     return(list(data=dat, degeneracy=degeneracy))
 }
-
-
-
-
 
 
 

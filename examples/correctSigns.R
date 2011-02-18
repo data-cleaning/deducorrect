@@ -29,7 +29,15 @@ dat <- data.frame(
 
 
 source("correctsigns.r")
-dat2 <- correctSigns(E,dat, eps=2)
+
+swap <- list(
+    c("x1r","x1c"), 
+    c("x2r","x2c"), 
+    c("x3r","x3c"))
+
+dat2 <- correctSigns(E,dat, eps=2, swap=swap)
+
+
 
 checkRows(E,dat2)
 listErrors(E, dat)

@@ -11,17 +11,17 @@
 #' @export
 #' @seealso damerauLevenshteinDistance
 #'
-#' @param A \code{\link{editmatrix} that constrains \code{x} 
+#' @param E \code{\link{editmatrix} that constrains \code{x} 
 #' @param dat data.frame with data to be checked.
 #' @param cost for an deletion, insertion, substition or transposition
 typingErrors <- function( E
                         , dat
                         , cost = c(1,1,1,1)
                         ){
-   stopifnot(is.matrix(A), is.data.frame(dat))
+   stopifnot(is.matrix(E), is.data.frame(dat))
    
-   #align names of A and dat, beware dat contains only constrained variables at this point
-   dat <- dat[colnames(A)]
+   #align names of E and dat, beware dat contains only constrained variables at this point
+   dat <- dat[colnames(E)]
    
    # looping might be inefficient so we may rewrite this
    n <- nrow(dat)
@@ -32,7 +32,7 @@ typingErrors <- function( E
 
    m <- as.matrix(dat)   
 	for (i in 1:n){
-	  chk <- checkRecord(A,t(dat[i,]))
+	  chk <- checkRecord(E,t(dat[i,]))
       
       status[i] <- chk$status
       
@@ -67,7 +67,7 @@ typingErrors <- function( E
 }
 
 #' check record if its is valid and suggest corrections
-#' @param A editmatrix
+#' @param E editmatrix
 #' @param x numerical record to be checked
 #' @param eps tolerance for an edit to be valid
 #' @return list with members
@@ -75,10 +75,10 @@ typingErrors <- function( E
 #' \item \code{status}
 #' \item \cor suggested corrections
 #' \item \B reduced binary editmatrix with violated edits, needed for choosing the suggested corrections
-checkRecord <- function( A, x, eps=2){
+checkRecord <- function( E, x, eps=2){
    ret <- list(status=NA)
    #violated edits (ignoring rounding errors)
-   E1 <- (abs(A%*%x) > eps)
+   E1 <- (abs(E%*%x) > eps)
    
    #non violated edits
    E2 <- !E1
@@ -90,11 +90,11 @@ checkRecord <- function( A, x, eps=2){
    }
    
    # set of variables that are involved in the violated edits
-   V1 <- if (any(E1)) colSums(abs(A[E1,,drop=FALSE])) != 0
+   V1 <- if (any(E1)) colSums(abs(E[E1,,drop=FALSE])) != 0
          else FALSE
                
    # set of variables that are not involved in the non-violated edits and therefore can be edited
-   I0 <- if (any(E2)) colSums(abs(A[E2,,drop=FALSE])) == 0
+   I0 <- if (any(E2)) colSums(abs(E[E2,,drop=FALSE])) == 0
          else TRUE
 
    # restrict I0 to the set of variables involved in violated edits that can be changed
@@ -106,15 +106,15 @@ checkRecord <- function( A, x, eps=2){
 		return(ret)
    }
    
-   names(I0) <- colnames(A)
+   names(I0) <- colnames(E)
    # retrieve correction canditates for variables that can be changed
    cor <- lapply( which(I0)
                 , function(i){
                      # edits valid for current variable v_i
-                     edits <- E1 & (A[,i] != 0)
+                     edits <- E1 & (E[,i] != 0)
                      
                      # correction candidates
-                     x_i_c <- ( (A[edits,-i] %*% x[-i]) / (-A[edits,i]));
+                     x_i_c <- ( (E[edits,-i] %*% x[-i]) / (-E[edits,i]));
                      # count their numbers
                      kap <- table(x_i_c)
                      x_i_c <- as.integer(rownames(kap))
@@ -139,7 +139,7 @@ checkRecord <- function( A, x, eps=2){
    
    cor <- cor[valid,,drop=FALSE]
    # optimization matrix
-   B <- A[E1,cor[,"i"], drop=FALSE] != 0
+   B <- E[E1,cor[,"i"], drop=FALSE] != 0
    # convert to 0 and 1
    #mode(B) <- "integer"
    ret$cor <- cor

@@ -13,10 +13,7 @@
 damerauLevenshteinDistance <- function(sa,sb, w=c(1,1,1,1)){
    #TODO edit this so it calculates the distance for multiple   characters.
    
-   mapply(function(sa,sb){
-      a <- strsplit(as.character(a), NULL)[[1]]
-      b <- strsplit(as.character(b), NULL)[[1]]
-      
+   mapply(function(a,b){      
       a <- c("",a)
       b <- c("",b)
       
@@ -46,7 +43,7 @@ damerauLevenshteinDistance <- function(sa,sb, w=c(1,1,1,1)){
       }
       d[la,lb]
    }
-   , a
-   , b
+   , strsplit(as.character(sa), NULL)
+   , strsplit(as.character(sb), NULL)
    )
 }

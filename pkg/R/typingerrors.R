@@ -9,6 +9,7 @@
 #' \cite{damerau:1964}
 #'
 #' @export
+#' @example examples/typingErrors.R
 #' @seealso damerauLevenshteinDistance
 #'
 #' @param E \code{\link{editmatrix} that constrains \code{x} 
@@ -45,8 +46,10 @@ typingErrors <- function( E
       #cat("Row ",i,":\n")
       #print(chk)
       sol <- tree(chk$B, cor[,"kappa"])
-      if (nrow(sol > 1)){
+      if (nrow(sol) > 1){
          warning("Multiple solutions in row ", i, ". Taking first solution found.")
+         v <- sol[,colSums(sol) == nrow(sol)] #is a variable everywhere changed?
+         print(cor[v,])
       }
       cor <- cor[sol[1,],,drop=FALSE]
       

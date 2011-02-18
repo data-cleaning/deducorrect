@@ -39,7 +39,6 @@ getSignCorrection <- function(A, r, inViolatedEdits, maxSigns, eps){
     return(S)
 }
 
-# TODO add posibility to recognize swapping.
 correctSigns <- function(
     E, 
     dat,
@@ -47,7 +46,7 @@ correctSigns <- function(
     eps=sqrt(.Machine$double.eps),
     weight = rep(1,ncol(E))
     ){
-    
+# TODO swapping and fix variables    
     cn <- colnames(E)
     D <- as.matrix(dat[ ,cn])
     A <- as.matrix(E)

@@ -68,8 +68,8 @@ getSignCorrection <- function(A, r, adapt, maxSigns, eps){
 #'
 #' \tabular{ll}{
 #' value \tab meaning \cr
-#' 0     \tab record contains an error that cannot be repaired by sign corrections
-#' n     \tan there were $n$ solutions with equal reliability weights. The first one was chosen.
+#' 0     \tab record contains an error that cannot be repaired by sign corrections \n
+#' n     \tab there were $n$ solutions with equal reliability weights. The first one was chosen.\n
 #' }
 #' @example ../../examples/correctSigns.R
 #' 

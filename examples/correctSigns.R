@@ -11,6 +11,11 @@ edits <- c(
 E <- editmatrix(edits) 
 isTotallyUnimodular(E)
 
+# case a: sign error in x1, 
+# case b: 2 swap errors x1r <-> x1c and x3r <-> x3c
+# case c: sign error in x0
+# case d: sign errors in x1 and x2c, masked by a rounding error. 
+# 
 dat <- data.frame(
    case = c("a","b","c","d"),
    x0r = c(2100,5100,3250,5726),
@@ -27,20 +32,17 @@ dat <- data.frame(
    x3  = c(  40,  10,  20,   0),
    x4  = c( 195, 610,-140, 221))
 
-
-source("correctsigns.r")
-
+# These variable pairs may be swapped to repair records (they are of opposite sign in the edits).
 swap <- list(
     c("x1r","x1c"), 
     c("x2r","x2c"), 
     c("x3r","x3c"))
 
-dat2 <- correctSigns(E,dat, eps=2, swap=swap)
+(dat2 <- correctSigns(E,dat, eps=2, swap=swap))
 
-
-
+# This gives an error for row nr. 4 because checkRows does not 
+# use tolerances to perform equality checks.
 checkRows(E,dat2)
-listErrors(E, dat)
 
 
 

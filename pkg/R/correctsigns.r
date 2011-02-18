@@ -40,6 +40,19 @@ getSignCorrection <- function(A, r, adapt, maxSigns, eps){
 
 #' Try to resolve linear edits by adapting signs
 #'
+#' This algorithm tries to repair records that violate linear equality constraints by
+#' switching signs or swapping variable values. The option to swap variables is only meaningfull
+#' when they have oposite signs in the equality restriction. For example if \eqn{x=y-z}
+#' is violated, one could try to swap the values of \eqn{y} and \eqn{z}, which is equal to
+#' changing the signs of y and z. The user has to indicate explicitly which variable pairs
+#' may be switched. 
+#'
+#' The algorithm searches for the least possible number of sign switches which lead to a solution.
+#' If multiple solutions with the same number of sign switches are found, the solution with the
+#' minimum weight (computed by summing over the reliability weights of the variables to be
+#' switched) is chosen. If there are still more than one, the first one is chosen. A vector
+#' with the number of degenerate solutions (if any) is returned.
+#'
 #' 
 #' @param E An object of class \code{editmatrix} 
 #' @param dat The data to correct
@@ -48,13 +61,20 @@ getSignCorrection <- function(A, r, adapt, maxSigns, eps){
 #' @param weight Positive numeric vector of length ncol(E). Variables with heigher 
 #'      reliability weight are less likely to be changed. Defaults to \code{rep(1,ncol(E))}
 #' @param fix character vector. Names of variables which may not be changed.
-#' @param swap data frame with two character columns, each row listing a pair of variables that may
-#'      be swapped to correct the record. A pair is only meaningfull if they appear together in
-#'      at least one row of the editmatrix with oposite signs.
+#' @param swap \code{list} of 2-vectors containing pairs of swappable variable names.
 #'
+#' @return a list containign repaired data and a vector of length \code{nrow(dat)} denoting 
+#'      the number of degenerate solutions found.
+#'
+#' \tabular{ll}{
+#' value \tab meaning \cr
+#' 0     \tab record contains an error that cannot be repaired by sign corrections
+#' n     \tan there were $n$ solutions with equal reliability weights. The first one was chosen.
+#' }
 #' @example ../../examples/correctSigns.R
-#'
-#'
+#' 
+#' @references
+#' @cite scholtus:2008
 #' @export
 correctSigns <- function(
     E, 
@@ -64,7 +84,7 @@ correctSigns <- function(
     weight = rep(1,ncol(E)),
     fix = NA,
     swap = NA ){
-
+#TODO check if swap-pairs have opposite signs in edits.
     # Flip signs and swaps variables if allowed. Register swaps. 
     swappit <- function(sw){
         if ( all(s[sw]==-1) || any(abs(r[sw]) < eps) & any(s[sw] == -1) ){

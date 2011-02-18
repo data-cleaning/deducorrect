@@ -18,7 +18,7 @@
 #' @seealso \code{\link{reducematrix}}
 #' @export
 #' @references
-#' @cite:scholtus:2008
+#' @cite scholtus:2008
 #' @cite raghavachari:1976
 #' @cite heller:1956
 isTotallyUnimodular <- function(A) {

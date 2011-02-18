@@ -1,7 +1,7 @@
 Package: deducimput
 Type: Package
 Title: Deductive imputation
-Version: 0.1
+Version: 0.2
 Date: 2011-02-06
 Author: Edwin de Jonge, Mark van der Loo, Sander Scholtus
 Maintainer: Edwin de Jonge <edwindjonge@gmail.com>

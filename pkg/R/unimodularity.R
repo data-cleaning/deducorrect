@@ -3,24 +3,19 @@
 #'
 #' A matrix for which the determinant of every square submatrix is -1, 0 or 1
 #' is called _totally unimodular_. This function tests if a matrix with 
-#' coefficients in \eqn{\{-1,0,1\}} is unimodular. It tries to reduce the matrix
+#' coefficients in {-1,0,1} is unimodular. It tries to reduce the matrix
 #' using the reduction method described in Scholtus (2008). Next, a test based
 #' on Heller and Tompkins (1956) or Raghavachari is performed.
 #'
 #' @title Total unimodularity of a -1, 0, 1 matrix.
 #'
-#' @param A An object of class \code{\link{matrix}} in \eqn{\{-1,0,n\}^{n\times m}}
+#' @param A An object of class \code{\link{matrix}} with coefficients -1, 0, or 1
 #' @return logical
 #' 
-#' @example ../../examples/unimodular.R
+#' @example examples/unimodular.R
 #'
 #'
-#' @seealso \code{\link{reducematrix}}
 #' @export
-#' @references
-#' @cite scholtus:2008
-#' @cite raghavachari:1976
-#' @cite heller:1956
 isTotallyUnimodular <- function(A) {
     
     # A matrix with elements not in {-1,0,1} cannot be totally unimodular.
@@ -61,13 +56,9 @@ isTotallyUnimodular <- function(A) {
 #' function iteratively removes rows and columns with only 1 nonzero element
 #' from \eqn{A} and returns the reduced result.
 #'
-#' @param A An object of class \code{matrix}, in \eqn{\{-1,0,1}^{n\times m}}
-#' @return 
+#' @param A An object of class \code{matrix}, in {-1,0,1}
+#' @return The reduction of A.
 #'
-#' @example ../../examples/reduceMatrix.R
-#'
-#' @references
-#' @cite scholtus:2008
 reduceMatrix <- function(A){
     d1 <- c(0,0)
     d <- dim(A)
@@ -82,14 +73,11 @@ reduceMatrix <- function(A){
 
 #' Determine if a matrix is totally unimodular using Heller and Tompkins criterium.
 #'
-#' @param A An object of class Matrix in \eqn{\-1,0,1\}^{m\times n}}. Each column 
+#' @param A An object of class Matrix with coefficients in {-1,0,1}. Each column 
 #'      must have exactly 2 nonzero elements. (This is tested by 
 #'      \code{\link{isTotallyUnimodular}}).
 #'
 #' @return \code{TRUE} if matrix is unimodular, otherwise \code{FALSE}
-#'
-#' @references
-#' @cite heller:1956
 hellerTompkins <- function(A){
     # If the matrix has columns with two elements, and those elements differ in
     # sign for all those columns, the matrix is unimodular. 
@@ -113,7 +101,7 @@ hellerTompkins <- function(A){
 
 #' Test if a list of matrices are all unimodular
 #'
-#' Helper function for \code{\link{raghavachani}}
+#' Helper function for \code{\link{raghavachari}}
 #' @param L A list of objects of class matrix.
 #' @return logical vector of length \code{length(L)}
 allTotallyUnimodular <- function(L){
@@ -129,8 +117,6 @@ allTotallyUnimodular <- function(L){
 #' 
 #' @param A An object of class Matrix in \eqn{\-1,0,1\}^{m\times n}}. 
 #' @return \code{TRUE} or \code{FALSE}
-#' @references
-#' @cite raghavachari:1976  
 raghavachari <- function(A){
     if ( ncol(A) == 1 ){
         return(TRUE)

@@ -5,8 +5,11 @@ Version: 0.2
 Date: 2011-02-06
 Author: Edwin de Jonge, Mark van der Loo, Sander Scholtus
 Maintainer: Edwin de Jonge <edwindjonge@gmail.com>
-Description: Deductive correction of simple rounding, typing and sign errors
+Description: Deductive correction of simple rounding, typing and sign
+    errors
 License: GPL-3
 URL: http://code.google.com/p/deducorrect/
 LazyLoad: yes
 Depends: editrules
+Collate: 'correctsigns.r' 'stringdistance.R' 'typingerrors.R'
+    'unimodularity.R'

@@ -1,5 +1,5 @@
 
-#' Solve balance edit violations by sign changes
+#' Try to solve balance edit violations by sign changes
 #' 
 #' This is the workhorse function for \code{\link{correctSigns}}. It performs
 #' a breadth-first tree search to resolve (near) equality edit violations.
@@ -56,30 +56,28 @@ getSignCorrection <- function(A, r, adapt, maxSigns, eps){
 #' 
 #' @param E An object of class \code{editmatrix} 
 #' @param dat The data to correct
-#' @param maxSigns Maximum number of signs that may be changed. Defaults to \eqn{ncol(E)%/%2}.
+#' @param maxSigns Maximum number of signs that may be changed. Defaults to \code{ncol(E)} modulo 2.
 #' @param eps Tolerance on edit check. Defaults to \code{sqrt(.Machine.double.eps)}
 #' @param weight Positive numeric vector of length ncol(E). Variables with heigher 
 #'      reliability weight are less likely to be changed. Defaults to \code{rep(1,ncol(E))}
 #' @param fix character vector. Names of variables which may not be changed.
 #' @param swap \code{list} of 2-vectors containing pairs of swappable variable names.
 #'
-#' @return a list containign repaired data and a vector of length \code{nrow(dat)} denoting 
+#' @return a list containing repaired data and a vector of length \code{nrow(dat)} denoting 
 #'      the number of degenerate solutions found.
 #'
 #' \tabular{ll}{
 #' value \tab meaning \cr
-#' 0     \tab record contains an error that cannot be repaired by sign corrections \n
-#' n     \tab there were $n$ solutions with equal reliability weights. The first one was chosen.\n
+#' 0     \tab record contains an error that cannot be repaired by sign corrections \cr
+#' n     \tab there were $n$ solutions with equal reliability weights. The first one was chosen.\cr
 #' }
-#' @example ../../examples/correctSigns.R
+#' @example examples/correctSigns.R
 #' 
-#' @references
-#' @cite scholtus:2008
 #' @export
 correctSigns <- function(
     E, 
     dat,
-    maxSigns = ncol(E)%/%2,
+    maxSigns = floor(ncol(E)/2),
     eps=sqrt(.Machine$double.eps),
     weight = rep(1,ncol(E)),
     fix = NA,

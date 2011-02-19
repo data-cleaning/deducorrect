@@ -42,7 +42,7 @@ swap <- list(
 
 # This gives an error for row nr. 4 because checkRows does not 
 # use tolerances to perform equality checks.
-checkRows(E,dat2)
+checkRows(E,dat2$data)
 
 
 

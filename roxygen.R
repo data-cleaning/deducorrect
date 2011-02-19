@@ -1,5 +1,4 @@
 library(roxygen)
-
 unlink( 'pkg/man', TRUE)
 
 roxygenize( 'pkg'

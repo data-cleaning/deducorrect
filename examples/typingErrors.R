@@ -17,5 +17,4 @@ dat <- read.csv(textConnection(
 4.4, 1452, 116, 1568, 161, 323, 76, 12,   0, 19979, 1842, 137"
 ))
 
-cor <- typingErrors(E,dat)
-cor
+(cor <- typingErrors(E,dat))

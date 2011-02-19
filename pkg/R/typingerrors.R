@@ -1,7 +1,7 @@
-#' \code{typingErrors} detects and corrects typing errors in \code{dat} based on the \code{editmatrix} E. 
+#' detect and correct typing errors in \code{dat} based on the \code{editmatrix} E. 
 #'
 #' Typing errors detects and corrects typing errors as described in Scholtus (2009). The implemention of the detection of typing errors 
-#' differs in that it uses the Damerau-Levensthein distance ()
+#' differs in that it uses the Damerau-Levensthein distance
 #' TODO explain Ax=0
 #'
 #' \cite{scholtus:2009}
@@ -12,7 +12,7 @@
 #' @example examples/typingErrors.R
 #' @seealso damerauLevenshteinDistance
 #'
-#' @param E \code{\link{editmatrix} that constrains \code{x} 
+#' @param E \code{\link{editmatrix}} that constrains \code{x} 
 #' @param dat data.frame with data to be checked.
 #' @param cost for an deletion, insertion, substition or transposition
 typingErrors <- function( E
@@ -69,15 +69,18 @@ typingErrors <- function( E
        )
 }
 
-#' check record if its is valid and suggest corrections
+#' Check record validity and suggest corrections
+#'
+#' @nord
 #' @param E editmatrix
 #' @param x numerical record to be checked
 #' @param eps tolerance for an edit to be valid
 #' @return list with members
-#' \itemize
-#' \item \code{status}
-#' \item \cor suggested corrections
-#' \item \B reduced binary editmatrix with violated edits, needed for choosing the suggested corrections
+#' \tabular{ll}{
+#' status \tab \cr
+#' cor \tab suggested corrections \cr
+#' B \tab reduced binary editmatrix with violated edits, needed for choosing the suggested corrections\cr
+#'}
 checkRecord <- function( E, x, eps=2){
    ret <- list(status=NA)
    #violated edits (ignoring rounding errors)

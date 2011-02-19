@@ -13,7 +13,17 @@
 #' @return logical
 #' 
 #' @example examples/unimodular.R
+#' @references see
+#' Heller I and Tompkins CB (1956). An extension of a theorem of Danttzig's In kuhn HW and Tucker AW (eds.),
+#' pp. 247-254. Princeton University Press.
 #'
+#' Raghavachari M (1976). A constructive method to recognize the total
+#' unimodularity of a matrix. _Zeitschrift fur operations research_,
+#' *20*, pp. 59-61.
+#'
+#' Scholtus S (2008). Algorithms for correcting some obvious
+#' inconsistencies and rounding errors in business survey data. Technical
+#' Report 08015, Netherlands.
 #'
 #' @export
 isTotallyUnimodular <- function(A) {
@@ -58,6 +68,7 @@ isTotallyUnimodular <- function(A) {
 #'
 #' @param A An object of class \code{matrix}, in {-1,0,1}
 #' @return The reduction of A.
+#' @seealso \code{\link{isTotallyUnimodular}}
 #'
 reduceMatrix <- function(A){
     d1 <- c(0,0)
@@ -78,6 +89,7 @@ reduceMatrix <- function(A){
 #'      \code{\link{isTotallyUnimodular}}).
 #'
 #' @return \code{TRUE} if matrix is unimodular, otherwise \code{FALSE}
+#' @seealso \code{\link{isTotallyUnimodular}}
 hellerTompkins <- function(A){
     # If the matrix has columns with two elements, and those elements differ in
     # sign for all those columns, the matrix is unimodular. 
@@ -104,6 +116,7 @@ hellerTompkins <- function(A){
 #' Helper function for \code{\link{raghavachari}}
 #' @param L A list of objects of class matrix.
 #' @return logical vector of length \code{length(L)}
+#' @seealso \code{\link{isTotallyUnimodular}}
 allTotallyUnimodular <- function(L){
     for ( i in 1:length(L) ){
         if ( !isTotallyUnimodular(L[[i]]) ){
@@ -117,6 +130,7 @@ allTotallyUnimodular <- function(L){
 #' 
 #' @param A An object of class Matrix in \eqn{\-1,0,1\}^{m\times n}}. 
 #' @return \code{TRUE} or \code{FALSE}
+#' @seealso \code{\link{isTotallyUnimodular}}
 raghavachari <- function(A){
     if ( ncol(A) == 1 ){
         return(TRUE)

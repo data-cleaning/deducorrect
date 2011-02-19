@@ -10,11 +10,21 @@
 #'
 #' @export
 #' @example examples/typingErrors.R
-#' @seealso damerauLevenshteinDistance
+#' @seealso \code{\link{damerauLevenshteinDistance}}
 #'
 #' @param E \code{\link{editmatrix}} that constrains \code{x} 
 #' @param dat data.frame with data to be checked.
 #' @param cost for an deletion, insertion, substition or transposition
+#'
+#' @references see
+#' 
+#' Scholtus S (2008). Algorithms for correcting some obvious
+#' inconsistencies and rounding errors in business survey data. Technical
+#' Report 08015, Netherlands.
+#' 
+#' Damerau F (1964). A technique for computer detection and correction of
+#' spelling errors. _Communications of the ACM_, *7*.
+#'
 typingErrors <- function( E
                         , dat
                         , cost = c(1,1,1,1)

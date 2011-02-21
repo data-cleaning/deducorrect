@@ -38,7 +38,11 @@ swap <- list(
     c("x2r","x2c"), 
     c("x3r","x3c"))
 
-(dat2 <- correctSigns(E,dat, eps=2, swap=swap))
+flip <- c("x0","x1","x2","x3","x4")
+
+
+(dat2 <- correctSigns(E, dat, eps=2, flip=flip, swap=swap,swapIsOneFlip=FALSE))
+
 
 # This gives an error for row nr. 4 because checkRows does not 
 # use tolerances to perform equality checks.

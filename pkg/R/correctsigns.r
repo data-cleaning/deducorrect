@@ -57,14 +57,13 @@ getSignCorrection <- function(A, r, adapt, maxSigns, eps, w){
 #'      in \eqn{\{-1,1\}}. Empty \code{list} if no solution is found.
 #'
 flipAndSwap <- function(A, r, flip, swap, eps, w){
-
     II <- rbind(cbind(flip,NA),swap)
    
     v <- rep(1,ncol(A))
     if (all(abs(A%*%r) <= eps)) return(list(v))
     
     S <- list()
-    weights==NA
+    weights <- NA
     j <- 1
     for ( nsigns in 1:(nrow(II))){    
         I <- combn(1:nrow(II), nsigns)
@@ -138,11 +137,13 @@ correctSigns <- function(
     maxSigns = floor(ncol(E)/2),
     eps=sqrt(.Machine$double.eps),
     flip = colnames(E),
-    swap = NA,
+    swap = NULL,
     swapIsOneFlip = TRUE,
-    weight = rep(1,ncol(E)),
+    weight = NA,
     fix = NA){
-#TODO check if swap-pairs have opposite signs in edits.
+# TODO check if swap-pairs have opposite signs in at least one edit.
+# TODO check that flip and are mutually exclusive
+# TODO consistency checks on arguments
     # Flip signs and swaps variables if allowed. Register swaps. 
     swappit <- function(sw){
         if ( all(s[sw]==-1) || any(abs(r[sw]) < eps) & any(s[sw] == -1) ){
@@ -159,33 +160,43 @@ correctSigns <- function(
 
     # swap-names to swap-indices
     haveSwaps <- FALSE
-    if (!identical(swap, NA)){
+    if (!identical(swap, NULL)){
         iSwap <- lapply(swap, function(sw) which(names(dat) %in% sw) )
         haveSwaps <- TRUE
     }
-    
+        
     if ( swapIsOneFlip & haveSwaps ){
-        swapArray <- sapply(iSwap, array)
+        swapArray <- t(sapply(iSwap, array))
         flipVec <- sapply(flip, function(fl) which(names(dat) %in% fl))
     }
+
+    # default weights if necessary
+    if (is.na(weight)){
+        if (swapIsOneFlip) {
+            weight <- matrix(rep(1,length(flip) + length(swap)), nrow=1)
+        } else {
+            weight <- matrix(rep(1,ncol(E)), nrow=1)
+        }
+    }
+
+        
 
     cn <- colnames(E)
     D <- as.matrix(dat[ ,cn])
     A <- as.matrix(E)
-    w <- matrix(weight,nrow=1)
     degeneracy <- integer(nrow(dat))
     for ( i in 1:nrow(dat) ){
         r <- D[i,]
         violated <- abs(A %*% r) > eps            
         adapt <- notFixed & colSums(abs(E[violated, ,drop=FALSE])) > 0
         if ( swapIsOneFlip ){
-          S <-  flipAndSwap(A, r, flipVec, swapArray, eps, w)
+          S <-  flipAndSwap(A, r, flipVec, swapArray, eps, weight)
         } else {
-          S <- getSignCorrection(A, r, adapt, maxSigns, eps, w)
+          S <- getSignCorrection(A, r, adapt, maxSigns, eps, weight)
         }
         if ( length(S$signs) > 0 ){
             s <- S$signs[[which.min(S$weights)]]
-            degeneracy[i] <- sum(wvec==max(wvec))
+            degeneracy[i] <- sum(S$weights==max(S$weights))
             if ( haveSwaps ) lapply(iSwap, swappit)
                 D[i, ] <- r*s
         }

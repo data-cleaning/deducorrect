@@ -4,7 +4,8 @@
 #' It detects and corrects simple typing errors as described in Scholtus (2009). The implemention of the detection of typing errors 
 #' differs in that it uses the Damerau-Levensthein distance.
 #' 
-#' For each row in \code{dat} the correction algorithm first detects if row \code{x} violates the equality constraints of \code{E}. In mathematical terms the matrix equation \eqn{Ex=0} should hold. The implementation checks these 
+#' For each row in \code{dat} the correction algorithm first detects if row \code{x} violates the equality constraints of \code{E}. 
+#' In mathematical terms the matrix equation \eqn{Ex=0} should hold. The implementation checks these 
 #' constraints within rounding errors.
 #'
 #' Please note that if the returned status of a record is "partial" the corrected record is still not valid.
@@ -39,7 +40,7 @@
 #' spelling errors. Communications of the ACM, 7,issue 3
 #'
 #' Levenshtein VI (1966). Binary codes capable of correcting deletions, insertions, 
-#' and reversals. Soviet Physics Doklady 10: 707–10
+#' and reversals. Soviet Physics Doklady 10: 707-10
 typingErrors <- function( E
                         , dat
                         , cost = c(1,1,1,1)

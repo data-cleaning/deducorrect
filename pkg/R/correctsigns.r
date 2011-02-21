@@ -11,11 +11,12 @@
 #' @param adapt A logical vector of length \code{ncol(A)} indicating which variables may be changed.
 #' @param maxSigns how many signs may maximally be flipped? 
 #' @param eps Tolerance for equality restriction checking
+#' @param w positive weight vector of \code{length(ncol(A))}
 #' 
 #' @return A \code{list} with vectors of length \code{r} with coefficients 
 #'      in \eqn{\{-1,1\}}. Empty \code{list} if no solution is found.
 #'
-getSignCorrection <- function(A, r, adapt, maxSigns, eps){
+getSignCorrection <- function(A, r, adapt, maxSigns, eps, w){
 
     v <- rep(1,length(r))
     if (all(abs(A%*%r) <= eps)) return(list(v))
@@ -137,7 +138,7 @@ correctSigns <- function(
     maxSigns = floor(ncol(E)/2),
     eps=sqrt(.Machine$double.eps),
     flip = colnames(E),
-    swap = NA
+    swap = NA,
     swapIsOneFlip = TRUE,
     weight = rep(1,ncol(E)),
     fix = NA){
@@ -165,7 +166,7 @@ correctSigns <- function(
     
     if ( swapIsOneFlip & haveSwaps ){
         swapArray <- sapply(iSwap, array)
-        flipVec <- sapply(flip, function(fl) which(names(dat) %in% sw))
+        flipVec <- sapply(flip, function(fl) which(names(dat) %in% fl))
     }
 
     cn <- colnames(E)
@@ -183,7 +184,7 @@ correctSigns <- function(
           S <- getSignCorrection(A, r, adapt, maxSigns, eps, w)
         }
         if ( length(S$signs) > 0 ){
-            s <- S$signs[[which.min(signs$wvec)]]
+            s <- S$signs[[which.min(S$weights)]]
             degeneracy[i] <- sum(wvec==max(wvec))
             if ( haveSwaps ) lapply(iSwap, swappit)
                 D[i, ] <- r*s

@@ -1,5 +1,7 @@
 library(editrules)
 
+# example from section 4 in Scholtus (2009)
+
 E <- editmatrix( c("x1 + x2 == x3"
                   ,"x2 == x4"
                   ,"x5 + x6 + x7 == x8"

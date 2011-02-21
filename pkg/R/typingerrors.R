@@ -1,21 +1,34 @@
 #' detect and correct typing errors in \code{dat} based on the \code{editmatrix} E. 
 #'
-#' Typing errors detects and corrects typing errors as described in Scholtus (2009). The implemention of the detection of typing errors 
-#' differs in that it uses the Damerau-Levensthein distance
-#' TODO explain Ax=0
+#' This algorithm tries to repair records that violate linear equality constraints by correcting simple typo's
+#' It detects and corrects simple typing errors as described in Scholtus (2009). The implemention of the detection of typing errors 
+#' differs in that it uses the Damerau-Levensthein distance.
+#' 
+#' For each row in \code{dat} the correction algorithm first detects if row \code{x} violates the equality constraints of \code{E}. In mathematical terms the matrix equation \eqn{Ex=0} should hold. The implementation checks these 
+#' constraints within rounding errors.
 #'
-#' \cite{scholtus:2009}
-#' \cite{levenshtein:1966}
-#' \cite{damerau:1964}
+#' Please note that if the returned status of a record is "partial" the corrected record is still not valid.
+#' The partially corrected record will contain less errors and will violate less constraints. 
 #'
 #' @export
 #' @example examples/typingErrors.R
 #' @seealso \code{\link{damerauLevenshteinDistance}}
 #'
 #' @param E \code{\link{editmatrix}} that constrains \code{x} 
-#' @param dat data.frame with data to be checked.
-#' @param cost for an deletion, insertion, substition or transposition
+#' @param dat \code{data.frame} with data to be corrected.
+#' @param cost for an deletion, insertion, substition or transposition.
+#' @param eps \code{numeric}, tolerance on edit check. Default value is \code{sqrt(.Machine$double.eps)}. Set to 2 
+#' to allow for rounding errors. Set this parameter to 0 for exact checking.
+#' @param maxdist \code{numeric}, tolerance used in finding typographical corrections. Default value 1 allows for one error. Used in combination with \code{cost}.
 #'
+#' @return list with members
+#' \tabular{ll}{
+#' status      \tab a \code{factor} with the status for each row: \code{valid, invalid, corrected, partial} \cr
+#' corrected   \tab \code{data.frame} where correction are applied to original data.frame \code{dat} \cr
+#' corrections \tab \code{matrix} with all corrections. Per correction the row number, column number, 
+#' original value, corrected value and frequency are given. \cr
+#' }
+#' 
 #' @references see
 #' 
 #' Scholtus S (2008). Algorithms for correcting some obvious
@@ -23,27 +36,33 @@
 #' Report 08015, Netherlands.
 #' 
 #' Damerau F (1964). A technique for computer detection and correction of
-#' spelling errors. _Communications of the ACM_, *7*.
+#' spelling errors. Communications of the ACM, 7,issue 3
 #'
+#' Levenshtein VI (1966). Binary codes capable of correcting deletions, insertions, 
+#' and reversals. Soviet Physics Doklady 10: 707–10
 typingErrors <- function( E
                         , dat
                         , cost = c(1,1,1,1)
+                        , eps = sqrt(.Machine$double.eps)
+                        , maxdist = 1
                         ){
-   stopifnot(is.matrix(E), is.data.frame(dat))
+   stopifnot(is.editmatrix(E), is.data.frame(dat))
+   
+   #TODO add check on E, are all ops "=="?
    
    #align names of E and dat, beware dat contains only constrained variables at this point
    dat <- dat[colnames(E)]
    
    # looping might be inefficient so we may rewrite this
    n <- nrow(dat)
-   status <- factor(integer(n), levels=c("valid","correction", "invalid"))
+   status <- factor(integer(n), levels=c("valid","corrected", "partial","invalid"))
    #names(status) <- rownames(dat)
    
    corrections <- NULL
 
    m <- as.matrix(dat)   
 	for (i in 1:n){
-	  chk <- checkRecord(E,t(dat[i,]))
+	   chk <- suggestCorrections(E,t(dat[i,]), eps, maxdist)
       
       status[i] <- chk$status
       
@@ -54,12 +73,20 @@ typingErrors <- function( E
       cor <- chk$cor
       # try corrections
       #cat("Row ",i,":\n")
-      #print(chk)
       sol <- tree(chk$B, cor[,"kappa"])
       if (nrow(sol) > 1){
-         warning("Multiple solutions in row ", i, ". Taking first solution found.")
-         v <- sol[,colSums(sol) == nrow(sol)] #is a variable everywhere changed?
-         print(cor[v,])
+         # if a correction is valid for all found solutions, then it can be applied
+         partialsol <- colSums(sol) == nrow(sol)
+         #names(vars) <- colnames(chk$B)
+         if (any(partialsol)){
+            warning("Multiple solutions in row ", i, ". Applying partial correction.")
+            sol[1,] <- partialsol
+            status[i] <- "partial"
+         }
+         else {
+            warning("Multiple solutions in row ", i, ". Marking record as invalid")
+            status[i] <- "invalid"
+         }
       }
       cor <- cor[sol[1,],,drop=FALSE]
       
@@ -85,13 +112,14 @@ typingErrors <- function( E
 #' @param E editmatrix
 #' @param x numerical record to be checked
 #' @param eps tolerance for an edit to be valid
+#' @param maxdist maximum edit distance to be valid as a correction suggestion
 #' @return list with members
 #' \tabular{ll}{
 #' status \tab \cr
-#' cor \tab suggested corrections \cr
-#' B \tab reduced binary editmatrix with violated edits, needed for choosing the suggested corrections\cr
+#' cor    \tab suggested corrections \cr
+#' B      \tab reduced binary editmatrix with violated edits, needed for choosing the suggested corrections\cr
 #'}
-checkRecord <- function( E, x, eps=2){
+suggestCorrections <- function( E, x, eps=sqrt(.Machine$double.eps), maxdist=1){
    ret <- list(status=NA)
    #violated edits (ignoring rounding errors)
    E1 <- (abs(E%*%x) > eps)
@@ -151,19 +179,25 @@ checkRecord <- function( E, x, eps=2){
    cor <- t(do.call(cbind,cor))
    
    # filter out the corrections that have dist > 1
-   valid <- cor[,"dist"] <= 1
+   valid <- cor[,"dist"] <= maxdist
    
    cor <- cor[valid,,drop=FALSE]
    # optimization matrix
    B <- E[E1,cor[,"i"], drop=FALSE] != 0
-   # convert to 0 and 1
-   #mode(B) <- "integer"
    ret$cor <- cor
    ret$B <- B
-   ret$status <- "correction"
+   ret$status <- "corrected"
    ret
 }
 
+#' Solve an optimization problem using a tree algorithm as described in Scholtus (2009)
+#' @nord
+#' @param B binary matrix with suggested corrections per violated edit
+#' @param kappa frequency of suggested corrections
+#' @param delta \code{logical} vector with partial solution (starts with NA)
+#' @param sol current best solution. (starts with null)
+#' 
+#' @return sol
 tree <- function( B
                 , kappa
                 , delta=as.logical(rep(NA, ncol(B)))

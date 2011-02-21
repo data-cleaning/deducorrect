@@ -21,11 +21,12 @@ dat <- read.csv(textConnection(
 
 test_that("typingErrors works",{   
    cor <- typingErrors(E,dat)
-   #print(cor)
    corrected <- cor$corrected
    expect_equal(corrected[1,], dat[1,-1])
-   expect_equal(corrected[2,], dat[1,-1])
-   expect_equal(corrected[3,], dat[1,-1])
+   
+   expect_equal(as.integer(corrected[2,]), as.integer(dat[1,-1]))
+   
+   expect_equal(as.integer(corrected[3,]), as.integer(dat[1,-1]))
    #TODO add checks
 })
 

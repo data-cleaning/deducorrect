@@ -22,6 +22,7 @@ getSignCorrection <- function(A, r, adapt, maxSigns, eps){
     adapt <- which(adapt)
     nViolated <- length(adapt)
     S <- list()
+    weights <- NA 
     j <- 1
     for ( nsigns in 1:min(maxSigns, max(nViolated%/%2,1)) ){
         I <- combn(1:nViolated, nsigns)
@@ -33,12 +34,61 @@ getSignCorrection <- function(A, r, adapt, maxSigns, eps){
                 j <- j+1
            }
         }
-        if ( length(S) > 0 ) break
+        if ( length(S) > 0 ){ 
+            weights <- w %*% (sapply(S,matrix) < 0)
+            break
+        } 
     }
-    return(S)
+    return(list(signs=S, weights=weights))
 }
 
+#' Try to solve balance edit violations by sign changes and/or variable swaps.
+#'
+#' @param A The \code{matrix} part of an \code{editmatrix}
+#' @param r A numerical record.
+#' @param flip vector of  indices (integers) in r who's values may be swapped.
+#' @param swap nx2 array of index combinations of variables wich may be swapped.
+#' @param eps Tolerance for equality restriction checking
+#' @param w weights vector of length length(flip)+nrow(swap), w[1:lenght(flip)] are penalties for changing variables 
+#'      corresponding to indices in \code{flip}, the remaining entries are penalties for the value interchanges in the
+#'      rows of \code{swap}.
+#' @return A \code{list} with vectors of length \code{r} with coefficients 
+#'      in \eqn{\{-1,1\}}. Empty \code{list} if no solution is found.
+#'
+flipAndSwap <- function(A, r, flip, swap, eps, w){
+
+    II <- rbind(cbind(flip,NA),swap)
+   
+    v <- rep(1,ncol(A))
+    if (all(abs(A%*%r) <= eps)) return(list(v))
+    
+    S <- list()
+    weights==NA
+    j <- 1
+    for ( nsigns in 1:(nrow(II))){    
+        I <- combn(1:nrow(II), nsigns)
+        for ( i in 1:ncol(I) ){
+           s <- v
+           k <- as.numeric(II[I[,j],])
+           k <- k[!is.na(k)]
+           s[k] <- -1
+           if ( all(abs(A %*% (r*s)) <= eps) ){
+                S[[j]] <- s
+                j <- j+1
+           }
+        }
+        if ( length(S) > 0 ){ 
+            weights <- w %*% (sapply(S,matrix) < 0)
+            break
+        } 
+    }
+    return(list(signs=S, weights=weights))
+}
+
+
 #' Try to resolve linear edits by adapting signs
+#'
+#' TODO edit DESCRIPTION after adding flipAndSwap
 #'
 #' This algorithm tries to repair records that violate linear equality constraints by
 #' switching signs or swapping variable values. The option to swap variables is only meaningfull
@@ -56,12 +106,19 @@ getSignCorrection <- function(A, r, adapt, maxSigns, eps){
 #' 
 #' @param E An object of class \code{editmatrix} 
 #' @param dat The data to correct
-#' @param maxSigns Maximum number of signs that may be changed. Defaults to \code{ncol(E)} modulo 2.
+#' @param maxSigns Maximum number of signs that may be changed. Defaults to 
+#'      \code{ncol(E)} modulo 2 if \code{swapIsOneFlip==FALSE}. Ignored otherwise.
 #' @param eps Tolerance on edit check. Defaults to \code{sqrt(.Machine.double.eps)}
+#' @param flip Names of variables whos signs may be flipped, defaults to \code{colnames(E)}
+#' @param swap \code{list} of 2-vectors containing pairs of variable names who's values may 
+#'      be interchanged. Defaults to \code{NA}.
+#' @param swapIsOneFlip \code{logical}. Count a value interchange as 1 or 2 sign changes? 
+#'  If \code{TRUE}, a value swap is counted as 1 sign interchange, which corresponds with the 
+#'  formulation in Scholtus (2008). If \code{FALSE}, a swap counts as two sign changes,
+#'  (since \eqn{y-x=-(x-y))}). See also the details.
 #' @param weight Positive numeric vector of length ncol(E). Variables with heigher 
 #'      reliability weight are less likely to be changed. Defaults to \code{rep(1,ncol(E))}
-#' @param fix character vector. Names of variables which may not be changed.
-#' @param swap \code{list} of 2-vectors containing pairs of swappable variable names.
+#' @param fix character vector. Names of variables which may not be changed. Ignored when \code{swapIsOneFlip==TRUE}
 #'
 #' @return a list containing repaired data and a vector of length \code{nrow(dat)} denoting 
 #'      the number of degenerate solutions found.
@@ -79,9 +136,11 @@ correctSigns <- function(
     dat,
     maxSigns = floor(ncol(E)/2),
     eps=sqrt(.Machine$double.eps),
+    flip = colnames(E),
+    swap = NA
+    swapIsOneFlip = TRUE,
     weight = rep(1,ncol(E)),
-    fix = NA,
-    swap = NA ){
+    fix = NA){
 #TODO check if swap-pairs have opposite signs in edits.
     # Flip signs and swaps variables if allowed. Register swaps. 
     swappit <- function(sw){
@@ -93,7 +152,7 @@ correctSigns <- function(
 
     # which variables may be changed?
     notFixed <- rep(TRUE,ncol(E))
-    if ( !identical(fix, NA) ){
+    if ( is.character(fix) & !swapIsOneFlip  ){
         notFixed <- !(colnames(E) %in% fix)
     }
 
@@ -102,6 +161,11 @@ correctSigns <- function(
     if (!identical(swap, NA)){
         iSwap <- lapply(swap, function(sw) which(names(dat) %in% sw) )
         haveSwaps <- TRUE
+    }
+    
+    if ( swapIsOneFlip & haveSwaps ){
+        swapArray <- sapply(iSwap, array)
+        flipVec <- sapply(flip, function(fl) which(names(dat) %in% sw))
     }
 
     cn <- colnames(E)
@@ -113,19 +177,21 @@ correctSigns <- function(
         r <- D[i,]
         violated <- abs(A %*% r) > eps            
         adapt <- notFixed & colSums(abs(E[violated, ,drop=FALSE])) > 0
-        S <- getSignCorrection(A, r, adapt, maxSigns, eps)
-        if ( length(S) > 0 ){
-            wvec <- w %*% (sapply(S,matrix) < 0)
-            s <- S[[which.max(wvec)]]
+        if ( swapIsOneFlip ){
+          S <-  flipAndSwap(A, r, flipVec, swapArray, eps, w)
+        } else {
+          S <- getSignCorrection(A, r, adapt, maxSigns, eps, w)
+        }
+        if ( length(S$signs) > 0 ){
+            s <- S$signs[[which.min(signs$wvec)]]
             degeneracy[i] <- sum(wvec==max(wvec))
             if ( haveSwaps ) lapply(iSwap, swappit)
-            D[i, ] <- r*s
+                D[i, ] <- r*s
         }
     }
     dat[,cn] <- D
     return(list(data=dat, degeneracy=degeneracy))
 }
-
 
 
 

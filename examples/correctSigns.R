@@ -1,6 +1,6 @@
 
 require(editrules)
-source("correctsigns.r")
+
 # some data 
 dat <- data.frame(
     x = c( 3,14,15),

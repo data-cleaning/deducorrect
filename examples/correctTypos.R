@@ -1,6 +1,6 @@
-library(testthat)
 library(editrules)
 
+# example from section 4 in Scholtus (2009)
 
 E <- editmatrix( c("x1 + x2 == x3"
                   ,"x2 == x4"
@@ -19,31 +19,4 @@ dat <- read.csv(textConnection(
 4.4, 1452, 116, 1568, 161, 323, 76, 12,   0, 19979, 1842, 137"
 ))
 
-test_that("typingErrors works",{   
-   cor <- typingErrors(E,dat)
-   corrected <- cor$corrected
-   expect_equal(corrected[1,], dat[1,])
-   
-   expect_equal(as.integer(corrected[2,]), as.integer(dat[1,]))
-   
-   expect_equal(as.integer(corrected[3,]), as.integer(dat[1,]))
-})
-
-
-E2 <- editmatrix( c("x1 + x2 == x3"
-                  )
-               )
-
-dat2 <- read.csv(textConnection(
-"    , x2, x1 , x3  
-     , 1452, 116, 1568
-     , 1452, 161, 1568"
-))
-
-
-test_that("typingErrors reorder works",{   
-   cor <- typingErrors(E2,dat2)
-   corrected <- cor$corrected
-   expect_equivalent(corrected[2,], dat2[1,])
-})
-
+(cor <- correctTypos(E,dat))

@@ -12,7 +12,7 @@
 #' The partially corrected record will contain less errors and will violate less constraints. 
 #'
 #' @export
-#' @example examples/typingErrors.R
+#' @example examples/correctTypos.R
 #' @seealso \code{\link{damerauLevenshteinDistance}}
 #'
 #' @param E \code{\link{editmatrix}} that constrains \code{x} 
@@ -47,11 +47,7 @@
 #'
 #' Levenshtein VI (1966). Binary codes capable of correcting deletions, insertions, 
 #' and reversals. Soviet Physics Doklady 10: 707-10
-typingErrors <- function( E
-                        , dat
-                        , cost = c(1,1,1,1)
-                        , eps = sqrt(.Machine$double.eps)
-                        , maxdist = 1
+correctTypos <- function( E, dat, cost = c(1,1,1,1), eps = sqrt(.Machine$double.eps), maxdist = 1
                         ){
    stopifnot(is.editmatrix(E), is.data.frame(dat))
    
@@ -65,7 +61,7 @@ typingErrors <- function( E
 
    # looping might be inefficient so we may rewrite this
 	for (i in 1:n){
-	   chk <- suggestCorrections(E,m[i,], eps, maxdist)
+	   chk <- getTypoCorrection(E,m[i,], eps, maxdist)
       
       status[i] <- chk$status
       
@@ -121,8 +117,9 @@ typingErrors <- function( E
        )
 }
 
-#' Check record validity and suggest corrections
+#' Check record validity and suggest typo corrections
 #'
+#' This function is the working horse for \code{\link{correctTypos}}
 #' @nord
 #' @param E editmatrix
 #' @param x numerical record to be checked
@@ -134,7 +131,7 @@ typingErrors <- function( E
 #' cor    \tab suggested corrections \cr
 #' B      \tab reduced binary editmatrix with violated edits, needed for choosing the suggested corrections\cr
 #'}
-suggestCorrections <- function( E, x, eps=sqrt(.Machine$double.eps), maxdist=1){
+getTypoCorrection <- function( E, x, eps=sqrt(.Machine$double.eps), maxdist=1){
    ret <- list(status=NA)
    #violated edits (ignoring rounding errors)
    E1 <- (abs(E%*%x) > eps)

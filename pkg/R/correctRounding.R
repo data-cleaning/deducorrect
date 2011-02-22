@@ -59,7 +59,7 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
 #' @param K number of trials
 #' @param round \code{logical}, should the solution be a rounded?
 #' @return list with....
-roundingErrors <- function(R, Q, dat, delta=2, K=10, round=TRUE){
+correctRounding <- function(R, Q, dat, delta=2, K=10, round=TRUE){
    stopifnot(is.editmatrix(R), is.data.frame(dat))
    krit <- character(0)
    

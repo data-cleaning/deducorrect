@@ -63,24 +63,22 @@ flipAndSwap <- function(A, r, flip, swap, eps, w){
     if (all(abs(A%*%r) <= eps)) return(list(v))
     
     S <- list()
-    weights <- NA
+    weights <- numeric(0)
     j <- 1
     for ( nsigns in 1:(nrow(II))){    
         I <- combn(1:nrow(II), nsigns)
         for ( i in 1:ncol(I) ){
            s <- v
-           k <- as.numeric(II[I[,j],])
+           k <- as.integer(II[I[,i],])
            k <- k[!is.na(k)]
            s[k] <- -1
            if ( all(abs(A %*% (r*s)) <= eps) ){
                 S[[j]] <- s
+                weights[j] <- sum(w[I[,j]])
                 j <- j+1
            }
         }
-        if ( length(S) > 0 ){ 
-            weights <- w %*% (sapply(S,matrix) < 0)
-            break
-        } 
+        if ( length(S) > 0 ) break
     }
     return(list(signs=S, weights=weights))
 }
@@ -142,9 +140,76 @@ correctSigns <- function(
     weight = NA,
     fix = NA){
 # TODO check if swap-pairs have opposite signs in at least one edit.
-# TODO check that flip and are mutually exclusive
-# TODO consistency checks on arguments
-    # Flip signs and swaps variables if allowed. Register swaps. 
+
+    # check that flip and swap are disjunct
+    lapply(swap, function(sw){ 
+        if (any(flip %in% sw)) 
+            stop("Variables in flip and swap must be mutually exclusive")
+    })
+    
+    # remove flips and swaps containing fixed variables.
+    if (!is.na(fix)){
+        flip <- setdiff(flip, fix)
+        swap <- lapply(swap, function(sw){
+            if ( !any(sw %in% fix)) return(sw)
+        })
+    }
+
+    # default weights if necessary
+    if (is.na(weight)){
+        if (swapIsOneFlip){
+            weight <- matrix(rep(1,length(flip) + length(swap)), nrow=1)
+        } else {
+            weight <- matrix(rep(1,ncol(E)), nrow=1)
+            weight[!(colnames(E) %in% flip)] <- 0 
+        }
+    # check valitity of weights
+    } else {
+        if (swapIsOneFlip){
+            if (length(weight) != length(flip) + length(swap)){
+                cat("Problem with weigth vector:\n")
+                print(flip)
+                print(swap)
+                print(weight)
+                stop("Length of Weight vector not equal to number of flips + swaps")
+            } else {
+                if (length(weight) != ncol(E)){
+                    stop("Length of weight vecor must equal the number of columns in E")
+                }
+            }
+        }
+    }
+    
+    # convenient subvectors
+    if (swapIsOneFlip){
+        wflip <- if ( length(flip)>0 ) weight[1:length(flip)] else numeric(0)
+        wswap <- if ( length(swap)>0 ) weight[(length(flip)+1):length(weight)] else numeric(0)
+    }
+    # which variables may be changed?
+    notFixed <- rep(TRUE,ncol(E))
+    if ( is.character(fix) & !swapIsOneFlip  ){
+        notFixed <- !(colnames(E) %in% fix)
+    }
+
+
+    # Prepare matrices for correctSigns ans flipAndSwap
+    cn <- colnames(E)
+    D <- as.matrix(dat[ ,cn])
+    A <- as.matrix(E)
+    
+    # swap-names to swap-indices
+    haveSwaps <- FALSE
+    if (!identical(swap, NULL)){
+        iSwap <- lapply(swap, function(sw) which(colnames(D) %in% sw) )
+        haveSwaps <- TRUE
+    }
+        
+    if ( swapIsOneFlip & haveSwaps ){
+        flipable <- colnames(D) %in% flip
+        swapable <- t(sapply(iSwap, array))
+    }
+
+    # Flip signs and swaps variables if allowed. 
     swappit <- function(sw){
         if ( all(s[sw]==-1) || any(abs(r[sw]) < eps) & any(s[sw] == -1) ){
             r[sw] <<- r[sw[2:1]]
@@ -152,47 +217,20 @@ correctSigns <- function(
         }
     }
 
-    # which variables may be changed?
-    notFixed <- rep(TRUE,ncol(E))
-    if ( is.character(fix) & !swapIsOneFlip  ){
-        notFixed <- !(colnames(E) %in% fix)
-    }
-
-    # swap-names to swap-indices
-    haveSwaps <- FALSE
-    if (!identical(swap, NULL)){
-        iSwap <- lapply(swap, function(sw) which(names(dat) %in% sw) )
-        haveSwaps <- TRUE
-    }
-        
-    if ( swapIsOneFlip & haveSwaps ){
-        swapArray <- t(sapply(iSwap, array))
-        flipVec <- sapply(flip, function(fl) which(names(dat) %in% fl))
-    }
-
-    # default weights if necessary
-    if (is.na(weight)){
-        if (swapIsOneFlip) {
-            weight <- matrix(rep(1,length(flip) + length(swap)), nrow=1)
-        } else {
-            weight <- matrix(rep(1,ncol(E)), nrow=1)
-        }
-    }
-
-        
-
-    cn <- colnames(E)
-    D <- as.matrix(dat[ ,cn])
-    A <- as.matrix(E)
     degeneracy <- integer(nrow(dat))
     for ( i in 1:nrow(dat) ){
         r <- D[i,]
         violated <- abs(A %*% r) > eps            
         adapt <- notFixed & colSums(abs(E[violated, ,drop=FALSE])) > 0
         if ( swapIsOneFlip ){
-          S <-  flipAndSwap(A, r, flipVec, swapArray, eps, weight)
+            fl    <- which(adapt & flipable)
+            adapt <- which(adapt)
+            w1    <- wflip[which(flipable) %in% adapt]
+            iSw   <- which(swapable[,1] %in% adapt & swapable[,2] %in%  adapt)
+            w2    <- wswap[iSw]
+            S <- flipAndSwap(A, r, fl, swapable[iSw,], eps, c(w1,w2))
         } else {
-          S <- getSignCorrection(A, r, adapt, maxSigns, eps, weight)
+            S <- getSignCorrection(A, r, adapt, maxSigns, eps, weight)
         }
         if ( length(S$signs) > 0 ){
             s <- S$signs[[which.min(S$weights)]]
@@ -202,7 +240,7 @@ correctSigns <- function(
         }
     }
     dat[,cn] <- D
-    return(list(data=dat, degeneracy=degeneracy))
+    return(list(corrected=dat, degeneracy=degeneracy))
 }
 
 

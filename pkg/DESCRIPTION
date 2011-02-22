@@ -11,5 +11,5 @@ License: GPL-3
 URL: http://code.google.com/p/deducorrect/
 LazyLoad: yes
 Depends: editrules
-Collate: 'correctsigns.r' 'stringdistance.R' 'typingerrors.R'
-    'unimodularity.R'
+Collate: 'correctsigns.r' 'roundingErrors.R' 'stringdistance.R'
+    'typingerrors.R' 'unimodularity.R'

@@ -1,8 +1,8 @@
 #' Scapegoat algorithm
 #'
 #' @nord
-scapegoat <- function(R0, x,krit=NULL) {
-	r0 <- nrow(R0)
+scapegoat <- function(R0, a0, x,krit=NULL) {
+	 r0 <- nrow(R0)
     v <- ncol(R0)
     
     if (v < r0){
@@ -25,10 +25,11 @@ scapegoat <- function(R0, x,krit=NULL) {
     }
     
     R0t <- R0[, perm, drop=FALSE]
+    a0t <- a0[perm]
     xt <- x[perm]
     
-	#TODO check if R0 is totalunimodular, if so, then QR decomposition isn't necessary
-	ks <- qr(R0t)$pivot;
+	 #TODO check if R0 is totalunimodular, if so, then QR decomposition isn't necessary
+	 ks <- qr(R0t)$pivot;
     p1 <- ks[1:r0]
     p2 <- ks[(r0+1):v]
     
@@ -36,10 +37,11 @@ scapegoat <- function(R0, x,krit=NULL) {
     #x1 <- x[p1]
     R2 <- R0t[,p2, drop=FALSE]
     x2 <- xt[p2]
+    a2 <- a0t[p2]
     
-	b <- -R2 %*% x2
-	x1 <- solve(R1, b)[,1]
-	sol <- c(x1, x2)
+	 c <- a2 - (R2 %*% x2)
+	 x1 <- solve(R1, c)[,1]
+	 sol <- c(x1, x2)
     
     #restore original order
     m <- match(names(x), names(sol))
@@ -71,14 +73,17 @@ roundingErrors <- function(R, Q, dat, delta=2, K=10, round=TRUE){
    status <- factor(integer(n), levels=c("valid", "corrected", "partial","invalid"), ordered=TRUE)
    
    corrections <- NULL
-   
+   #a <- getC(R)
+   #b <- getC(Q)
+   a <- NULL
+   b <- NULL
    for (i in 1:n){
       x <- m[i,]
-      #TODO add C to R matrix
-      E0 <- abs(R %*% x) <= delta
+      E0 <- abs(a - (R %*% x)) <= delta
       R0 <- R[E0,,drop=FALSE]
+      a0 <- a[E0]
       
-      if (all((R0 %*% x) == 0)){
+      if (all((R0 %*% x) == a0)){
          status[i] <- if (all(E0)) "valid"
                       else "invalid"
          next
@@ -107,7 +112,7 @@ roundingErrors <- function(R, Q, dat, delta=2, K=10, round=TRUE){
                      else "partial"
       }
       else {
-         status[i] <- "invalid"
+        status[i] <- "invalid"
       }
       
    }

@@ -217,7 +217,10 @@ correctSigns <- function(
         }
     }
 
-    degeneracy <- integer(nrow(dat))
+    # do the actual work
+#    degeneracy <- integer(nrow(dat))
+    status <- factor(1:nrow(D),levels=c("valid","corrected","partial","invalid"))
+    corrections <- data.frame(row=integer(0), var=factor(levels=colnames(D)), old=numeric(0), new=numeric(0))
     for ( i in 1:nrow(dat) ){
         r <- D[i,]
         violated <- abs(A %*% r) > eps            
@@ -232,15 +235,30 @@ correctSigns <- function(
         } else {
             S <- getSignCorrection(A, r, adapt, maxSigns, eps, weight)
         }
-        if ( length(S$signs) > 0 ){
+        if ( length(S$signs) > 0 ){ # solution found
             s <- S$signs[[which.min(S$weights)]]
-            degeneracy[i] <- sum(S$weights==max(S$weights))
-            if ( haveSwaps ) lapply(iSwap, swappit)
+#            degeneracy[i] <- sum(S$weights==max(S$weights))
+            adapted <- s == -1
+            if ( !any(adapted) ){
+                status[i] <- "valid"
+            } else {
+                oldrec <- r
+                if ( haveSwaps ) lapply(iSwap, swappit)
                 D[i, ] <- r*s
+                status[i] <- "corrected"
+                corrections <- rbind(corrections,
+                    data.frame(
+                        row = rep(i,sum(adapted)),
+                        col = colnames(D)[adapted],
+                        old = oldrec[adapted],
+                        new = D[i,adapted]))
+            }
+        } else { # no solution
+            status[i] <- "invalid"
         }
     }
     dat[,cn] <- D
-    return(list(corrected=dat, degeneracy=degeneracy))
+    return(list(corrected=dat, corrections=corrections, status=status))
 }
 
 

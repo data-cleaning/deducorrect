@@ -25,7 +25,7 @@ getSignCorrection <- function(A, r, adapt, maxSigns, eps, w){
     S <- list()
     weights <- NA 
     j <- 1
-    for ( nsigns in 1:min(maxSigns, max(nViolated%/%2,1)) ){
+    for ( nsigns in 1:min(maxSigns, nViolated) ){
         I <- combn(1:nViolated, nsigns)
         for ( i in 1:ncol(I) ){
            s <- v
@@ -132,7 +132,7 @@ flipAndSwap <- function(A, r, flip, swap, eps, w){
 correctSigns <- function(
     E, 
     dat,
-    maxSigns = floor(ncol(E)/2),
+    maxSigns = length(unique(c(flip,unlist(swap)))),
     eps=sqrt(.Machine$double.eps),
     flip = colnames(E),
     swap = NULL,
@@ -188,10 +188,9 @@ correctSigns <- function(
     }
     # which variables may be changed?
     notFixed <- rep(TRUE,ncol(E))
-    if ( is.character(fix) & !swapIsOneFlip  ){
-        notFixed <- !(colnames(E) %in% fix)
+    if ( !swapIsOneFlip  ){
+        notFixed <- colnames(E) %in% c(flip,unlist(swap))
     }
-
 
     # Prepare matrices for correctSigns ans flipAndSwap
     cn <- colnames(E)
@@ -215,14 +214,16 @@ correctSigns <- function(
         if ( all(s[sw]==-1) || any(abs(r[sw]) < eps) & any(s[sw] == -1) ){
             r[sw] <<- r[sw[2:1]]
             s[sw] <<- 1
+            nswap[i] <<- nswap[i] + 1
         }
     }
 
     # do the actual work
     degeneracy <- integer(nrow(dat))
-    weights <- numeric(nrow(dat))
+    nflip <- nswap <- weights <- numeric(nrow(dat))
     status <- factor(1:nrow(D),levels=c("valid","corrected","partial","invalid"))
     corrections <- data.frame(row=integer(0), var=factor(levels=colnames(D)), old=numeric(0), new=numeric(0))
+
     for ( i in 1:nrow(dat) ){
         r <- D[i,]
         violated <- abs(A %*% r) > eps            
@@ -247,6 +248,7 @@ correctSigns <- function(
             } else {
                 oldrec <- r
                 if ( haveSwaps ) lapply(iSwap, swappit)
+                nflip[i] <- sum(adapted) - 2*nswap[i]
                 D[i, ] <- r*s
                 status[i] <- "corrected"
                 corrections <- rbind(corrections,
@@ -268,7 +270,9 @@ correctSigns <- function(
         status=data.frame(
             status=status, 
             degeneracy=degeneracy,
-            weight=weights)))
+            weight=weights,
+            nflip=nflip,
+            nswap=nswap)))
 }
 
 

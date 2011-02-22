@@ -1,52 +1,31 @@
 
 require(editrules)
-# Example of scholtus (2008)
-edits <- c(
-    "x0 == x0r - x0c",
-    "x1 == x1r - x1c",
-    "x2 == x2r - x2c",
-    "x3 == x3r - x3c",
-    "x4 == x0 + x1 + x2 + x3")
-
-E <- editmatrix(edits) 
-isTotallyUnimodular(E)
-
-# case a: sign error in x1, 
-# case b: 2 swap errors x1r <-> x1c and x3r <-> x3c
-# case c: sign error in x0
-# case d: sign errors in x1 and x2c, masked by a rounding error. 
-# 
+source("correctsigns.r")
+# some data 
 dat <- data.frame(
-   case = c("a","b","c","d"),
-   x0r = c(2100,5100,3250,5726),
-   x0c = c(1950,4650,3550,5449),
-   x0  = c( 150, 450, 300, 276),
-   x1r = c(   0,   0, 110,  17),
-   x1c = c(  10, 130,  10,  26),
-   x1  = c(  10, 130, 100,  10),
-   x2r = c(  20,  20,  50,   0),
-   x2c = c(   5,   0,  90,  46),
-   x2  = c(  15,  20,  40,  46),
-   x3r = c(  50,  15,  30,   0),
-   x3c = c(  10,  25,  10,   0),
-   x3  = c(  40,  10,  20,   0),
-   x4  = c( 195, 610,-140, 221))
+    x = c( 3,14,15),
+    y = c(13,-4, 5),
+    z = c(10,10,-10))
+# ... which has to obey
+E <- editmatrix("z == x-y")
 
-# These variable pairs may be swapped to repair records (they are of opposite sign in the edits).
-swap <- list(
-    c("x1r","x1c"), 
-    c("x2r","x2c"), 
-    c("x3r","x3c"))
+# All signs may be flipped, no swaps.
+correctSigns(E, dat)
 
-flip <- c("x0","x1","x2","x3","x4")
+# fix z, flip everything else
+correctSigns(E, dat,fix="z")
 
+# the same result is achieved with
+correctSigns(E, dat, flip=c("x","y"))
 
-(dat2 <- correctSigns(E, dat, eps=2, flip=flip, swap=swap,swapIsOneFlip=FALSE))
+# make x and y swappable, if both x and y are flipped, it is interpreted as a swap.
+correctSigns(E, dat,flip=c(), swap=list(c("x","y")))
 
+# make x and y swappable, swap a counts as one flip
+correctSigns(E, dat, flip="z", swap=list(c("x","y")), swapIsOneFlip=TRUE)
 
-# This gives an error for row nr. 4 because checkRows does not 
-# use tolerances to perform equality checks.
-checkRows(E,dat2$data)
+# make x and y swappable, swap counts as one flip, flipping z gets higher penalty
+correctSigns(E, dat, flip="z", swap=list(c("x","y")), swapIsOneFlip=TRUE, weight=c(2,1))
 
 
 

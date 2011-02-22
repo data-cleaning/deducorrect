@@ -1,8 +1,8 @@
 Package: deducorrect
 Type: Package
 Title: Deductive correction of simple rounding, typing and sign errors
-Version: 0.2
-Date: 2011-02-06
+Version: 0.9
+Date: 2011-02-22
 Author: Edwin de Jonge, Mark van der Loo, Sander Scholtus
 Maintainer: Edwin de Jonge <edwindjonge@gmail.com>
 Description: Deductive correction of simple rounding, typing and sign
@@ -11,5 +11,5 @@ License: GPL-3
 URL: http://code.google.com/p/deducorrect/
 LazyLoad: yes
 Depends: editrules
-Collate: 'correctRounding.R' 'correctsigns.r' 'correctTypos.R'
+Collate: 'correctRounding.R' 'correctsigns.r' 'correctTypos.R' 'pkg.R'
     'stringdistance.R' 'unimodularity.R'

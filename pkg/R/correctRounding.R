@@ -1,3 +1,7 @@
+resample <- function(x, ...) {
+   x[sample.int(length(x), ...)]
+}
+
 #' Scapegoat algorithm
 #'
 #' @nord
@@ -14,15 +18,9 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
     }
     else krit <- logical(ncol(R0))
     
-    if ((k <- sum(krit))==0){
-        perm <- c(sample(which(!krit)))
-    } 
-    else if (k==v){
-       perm <- c(sample(which(krit)))
-    }
-    else {
-       perm <- c(sample(which(!krit)), sample(which(krit)))
-    }
+    p <- 1:v
+    perm <- c(resample(p[!krit]),resample(p[krit]))
+    #print(perm)
     
     R0t <- R0[, perm, drop=FALSE]
     a0t <- a0[perm]
@@ -38,11 +36,13 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
     R2 <- R0t[,p2, drop=FALSE]
     x2 <- xt[p2]
     a2 <- a0t[p2]
+    print(a0)
     
 	 c <- a2 - (R2 %*% x2)
-	 x1 <- solve(R1, c)[,1]
+    print(xt)
+	 x1 <- solve(R1, c)[1,]
 	 sol <- c(x1, x2)
-    
+    #print(x1)
     #restore original order
     m <- match(names(x), names(sol))
     sol[m]
@@ -73,10 +73,8 @@ correctRounding <- function(R, Q, dat, delta=2, K=10, round=TRUE){
    status <- factor(integer(n), levels=c("valid", "corrected", "partial","invalid"), ordered=TRUE)
    
    corrections <- NULL
-   #a <- getC(R)
-   #b <- getC(Q)
-   a <- NULL
-   b <- NULL
+   a <- getC(R)
+   b <- getC(Q)
    for (i in 1:n){
       x <- m[i,]
       E0 <- abs(a - (R %*% x)) <= delta
@@ -92,9 +90,10 @@ correctRounding <- function(R, Q, dat, delta=2, K=10, round=TRUE){
       k <- 0
       while (k <- K){
         k <- k + 1
-        sol <- scapegoat(R0, x, krit)
+        sol <- scapegoat(R0, a0, x, krit)
         if (round) 
             sol <- round(sol,0)
+        break
         #TODO check Qx >= b
       }
       

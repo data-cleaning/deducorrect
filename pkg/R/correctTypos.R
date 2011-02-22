@@ -47,11 +47,19 @@
 #'
 #' Levenshtein VI (1966). Binary codes capable of correcting deletions, insertions, 
 #' and reversals. Soviet Physics Doklady 10: 707-10
-correctTypos <- function( E, dat, cost = c(1,1,1,1), eps = sqrt(.Machine$double.eps), maxdist = 1
+correctTypos <- function( E
+                        , dat
+                        , cost = c(1,1,1,1)
+                        , eps = sqrt(.Machine$double.eps)
+                        , maxdist = 1
                         ){
+                        
    stopifnot(is.editmatrix(E), is.data.frame(dat))
    
-   #TODO add check on E, are all ops "=="?
+   eq <- getOps(E) == "=="
+   if (!all(eq)){
+      stop("E must be an equality edit matrix. Edits ", which(!eq)," are inequalities.")
+   }
    
    #align names of E and dat, beware m contains only constrained, numeric variables at this point
    m <- as.matrix(dat[colnames(E)])

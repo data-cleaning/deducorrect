@@ -22,11 +22,28 @@ dat <- read.csv(textConnection(
 test_that("typingErrors works",{   
    cor <- typingErrors(E,dat)
    corrected <- cor$corrected
-   expect_equal(corrected[1,], dat[1,-1])
+   expect_equal(corrected[1,], dat[1,])
    
-   expect_equal(as.integer(corrected[2,]), as.integer(dat[1,-1]))
+   expect_equal(as.integer(corrected[2,]), as.integer(dat[1,]))
    
-   expect_equal(as.integer(corrected[3,]), as.integer(dat[1,-1]))
-   #TODO add checks
+   expect_equal(as.integer(corrected[3,]), as.integer(dat[1,]))
+})
+
+
+E2 <- editmatrix( c("x1 + x2 == x3"
+                  )
+               )
+
+dat2 <- read.csv(textConnection(
+"    , x2, x1 , x3  
+     , 1452, 116, 1568
+     , 1452, 161, 1568"
+))
+
+
+test_that("typingErrors reorder works",{   
+   cor <- typingErrors(E2,dat2)
+   corrected <- cor$corrected
+   expect_equivalent(corrected[2,], dat2[1,])
 })
 

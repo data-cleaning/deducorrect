@@ -24,11 +24,17 @@
 #'
 #' @return list with members
 #' \tabular{ll}{
-#' status      \tab a \code{factor} with the status for each row: \code{valid, invalid, corrected, partial} \cr
-#' corrected   \tab \code{data.frame} where correction are applied to original data.frame \code{dat} \cr
-#' corrections \tab \code{matrix} with all corrections. Per correction the row number, column number, 
-#' original value, corrected value and frequency are given. \cr
-#' }
+#' status      \tab an ordered \code{factor} with the status for each row: \code{valid, corrected, partial, invalid} \cr
+#' corrected   \tab corrected \code{data.frame}: the original \code{dat} with the \code{corrections} applied \cr
+#' corrections \tab \code{data.frame} with all corrections. \cr
+#' } 
+#' for each correction:
+#' \tabular{lll}{
+#'       row   \tab \code{integer}   \tab row number of \code{dat} \cr
+#'       var   \tab \code{character} \tab variable name \cr
+#'       old   \tab \code{numeric}   \tab old value of var in row \cr
+#'       new   \tab \code{numeric}   \tab new value of var in row \cr
+#'     }
 #' 
 #' @references see
 #' 
@@ -51,23 +57,22 @@ typingErrors <- function( E
    
    #TODO add check on E, are all ops "=="?
    
-   #align names of E and dat, beware dat contains only constrained variables at this point
-   dat <- dat[colnames(E)]
+   #align names of E and dat, beware dat contains only constrained, numeric variables at this point
+   rdat <- dat[colnames(E)]
    
    # looping might be inefficient so we may rewrite this
-   n <- nrow(dat)
-   status <- factor(integer(n), levels=c("valid","corrected", "partial","invalid"))
-   #names(status) <- rownames(dat)
-   
+   n <- nrow(rdat)
+   status <- factor(integer(n), levels=c("valid","corrected", "partial","invalid"), ordered=TRUE)   
    corrections <- NULL
 
-   m <- as.matrix(dat)   
+   m <- as.matrix(rdat)
 	for (i in 1:n){
-	   chk <- suggestCorrections(E,t(dat[i,]), eps, maxdist)
+	   chk <- suggestCorrections(E,t(rdat[i,]), eps, maxdist)
       
       status[i] <- chk$status
       
       if (chk$status %in% c("valid", "invalid")){
+         #nothing we can do...
          next
       }
 
@@ -80,13 +85,14 @@ typingErrors <- function( E
          partialsol <- colSums(sol) == nrow(sol)
          #names(vars) <- colnames(chk$B)
          if (any(partialsol)){
-            warning("Multiple solutions in row ", i, ". Applying partial correction.")
+            #warning("Multiple solutions in row ", i, ". Applying partial correction.")
             sol[1,] <- partialsol
             status[i] <- "partial"
          }
          else {
-            warning("Multiple solutions in row ", i, ". Marking record as invalid")
+            #warning("Multiple solutions in row ", i, ". Marking record as invalid")
             status[i] <- "invalid"
+            next
          }
       }
       cor <- cor[sol[1,],,drop=FALSE]
@@ -98,12 +104,22 @@ typingErrors <- function( E
       corrections <- rbind(corrections, cor)      
 	}
    
-   #TODO reconstruct corrected original data.frame
-   corrected <- as.data.frame(m)
+   mdf <- as.data.frame(m)
+   vars <- colnames(mdf)
    
+   # recreate data.frame dat in original column order, but with the corrections applied
+   corrected <- dat   
+   corrected [vars] <- mdf[]
+   
+   cdf <- data.frame( row=corrections[,1]
+                    , var=vars[corrections[,2]]
+                    , old=corrections[,3]
+                    , new=corrections[,4]
+                    )
+                    
    list( status = status
        , corrected = corrected
-       , corrections = corrections
+       , corrections = cdf
        )
 }
 
@@ -205,15 +221,15 @@ tree <- function( B
                 , sol = NULL
                 ) {
    if (any(is.na(delta))){
-      i_t <- match(NA,delta); # eerste element van delta dat nog niet is bepaald
+      i_t <- match(NA,delta); # first element of partial solution that is not determined
       
-      #leftnode delta_i_t == FALSE
+      # leftnode delta_i_t == FALSE
       delta[i_t] <- FALSE
       sol <- tree(B, kappa, delta, sol)
       
-      #rightnode  delta_i_t == TRUE
+      # rightnode  delta_i_t == TRUE
       # set other corrections involved in this edit to FALSE
-      #edits involved in i_t
+      # edits involved in i_t
       E2 <- B[,i_t]
       delta[colSums(B[E2,,drop=FALSE]) > 0] <- FALSE
       delta[i_t] <- TRUE

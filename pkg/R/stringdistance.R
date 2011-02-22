@@ -1,8 +1,17 @@
 #' Damerau Levenshtein Distance calculates the difference between two strings
 #' used for typografiphical errors (typo's) 
 #'
-#' \cite{levenshtein:1966}
-#' \cite{damerau:1964}
+#' @references see
+#' 
+#' Scholtus S (2008). Algorithms for correcting some obvious
+#' inconsistencies and rounding errors in business survey data. Technical
+#' Report 08015, Netherlands.
+#' 
+#' Damerau F (1964). A technique for computer detection and correction of
+#' spelling errors. Communications of the ACM, 7,issue 3
+#'
+#' Levenshtein VI (1966). Binary codes capable of correcting deletions, insertions, 
+#' and reversals. Soviet Physics Doklady 10: 707-10
 #'
 #' @param sa character vector
 #' @param sb character vector of equal \code{length(sa)}
@@ -11,8 +20,6 @@
 #'
 #' @return integer vector with all edit distances
 damerauLevenshteinDistance <- function(sa,sb, w=c(1,1,1,1)){
-   #TODO edit this so it calculates the distance for multiple   characters.
-   
    mapply(function(a,b){      
       a <- c("",a)
       b <- c("",b)

@@ -57,17 +57,15 @@ typingErrors <- function( E
    
    #TODO add check on E, are all ops "=="?
    
-   #align names of E and dat, beware dat contains only constrained, numeric variables at this point
-   rdat <- dat[colnames(E)]
-   
-   # looping might be inefficient so we may rewrite this
-   n <- nrow(rdat)
+   #align names of E and dat, beware m contains only constrained, numeric variables at this point
+   m <- as.matrix(dat[colnames(E)])
+   n <- nrow(m)
    status <- factor(integer(n), levels=c("valid","corrected", "partial","invalid"), ordered=TRUE)   
    corrections <- NULL
 
-   m <- as.matrix(rdat)
+   # looping might be inefficient so we may rewrite this
 	for (i in 1:n){
-	   chk <- suggestCorrections(E,t(rdat[i,]), eps, maxdist)
+	   chk <- suggestCorrections(E,m[i,], eps, maxdist)
       
       status[i] <- chk$status
       
@@ -109,7 +107,7 @@ typingErrors <- function( E
    
    # recreate data.frame dat in original column order, but with the corrections applied
    corrected <- dat   
-   corrected [vars] <- mdf[]
+   corrected[vars] <- mdf[]
    
    cdf <- data.frame( row=corrections[,1]
                     , var=vars[corrections[,2]]

@@ -1,0 +1,21 @@
+%\VignetteIndexEntry{deducorrect}
+\documentclass[10pt, fleqn, a4paper]{article}
+\usepackage[english]{babel}
+\usepackage{amsmath, amssymb}
+\title{The {\tt deducorrect} vignette}
+\author{Edwin de Jonge and Mark van der Loo}
+\begin{document}
+\maketitle
+\begin{abstract}
+To do...
+\end{abstract}
+
+
+\section{Introduction}
+<<echo=FALSE, keep.source=FALSE>>=
+library(deducorrect)
+@
+\maketitle
+
+
+\end{document}

@@ -136,7 +136,7 @@ correctSigns <- function(
     eps=sqrt(.Machine$double.eps),
     flip = colnames(E),
     swap = NULL,
-    swapIsOneFlip = TRUE,
+    swapIsOneFlip = FALSE,
     weight = NA,
     fix = NA){
 # TODO check if swap-pairs have opposite signs in at least one edit.
@@ -148,7 +148,7 @@ correctSigns <- function(
     })
     
     # remove flips and swaps containing fixed variables.
-    if (!is.na(fix)){
+    if (!identical(fix,NA)){
         flip <- setdiff(flip, fix)
         swap <- lapply(swap, function(sw){
             if ( !any(sw %in% fix)) return(sw)
@@ -156,7 +156,7 @@ correctSigns <- function(
     }
 
     # default weights if necessary
-    if (is.na(weight)){
+    if (identical(weight,NA)){
         if (swapIsOneFlip){
             weight <- matrix(rep(1,length(flip) + length(swap)), nrow=1)
         } else {
@@ -168,17 +168,18 @@ correctSigns <- function(
         if (swapIsOneFlip){
             if (length(weight) != length(flip) + length(swap)){
                 cat("Problem with weigth vector:\n")
-                print(flip)
-                print(swap)
-                print(weight)
-                stop("Length of Weight vector not equal to number of flips + swaps")
-            } else {
-                if (length(weight) != ncol(E)){
-                    stop("Length of weight vecor must equal the number of columns in E")
-                }
+                cat(paste(" flip variables (",length(flip),"): ",paste(flip,collapse=", "),"\n",sep=""))
+                cat(paste(" swaps          (",length(swap),"): ",paste(sapply(swap, paste,collapse="<->"),sep=", "),"\n",sep=""))
+                cat(paste(" weight vector  (",length(weight),"): ",paste(weight, collapse=" "),"\n",sep=""))
+                stop("Length of Weight vector not equal to number of flips + number of swaps")
+            } 
+        } else {
+            if (length(weight) != ncol(E)){
+                stop("Length of weight vecor must equal the number of columns in E")
             }
         }
     }
+    
     
     # convenient subvectors
     if (swapIsOneFlip){
@@ -218,7 +219,8 @@ correctSigns <- function(
     }
 
     # do the actual work
-#    degeneracy <- integer(nrow(dat))
+    degeneracy <- integer(nrow(dat))
+    weights <- numeric(nrow(dat))
     status <- factor(1:nrow(D),levels=c("valid","corrected","partial","invalid"))
     corrections <- data.frame(row=integer(0), var=factor(levels=colnames(D)), old=numeric(0), new=numeric(0))
     for ( i in 1:nrow(dat) ){
@@ -237,7 +239,8 @@ correctSigns <- function(
         }
         if ( length(S$signs) > 0 ){ # solution found
             s <- S$signs[[which.min(S$weights)]]
-#            degeneracy[i] <- sum(S$weights==max(S$weights))
+            degeneracy[i] <- sum(S$weights==min(S$weights))
+            weights[i] <- min(S$weights)
             adapted <- s == -1
             if ( !any(adapted) ){
                 status[i] <- "valid"
@@ -258,7 +261,14 @@ correctSigns <- function(
         }
     }
     dat[,cn] <- D
-    return(list(corrected=dat, corrections=corrections, status=status))
+    rownames(corrections) <- NULL
+    return(list(
+        corrected=dat, 
+        corrections=corrections, 
+        status=data.frame(
+            status=status, 
+            degeneracy=degeneracy,
+            weight=weights)))
 }
 
 

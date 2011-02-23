@@ -2,14 +2,26 @@
 #'
 #' This algorithm tries to repair records that violate linear equality constraints by correcting simple typo's
 #' It detects and corrects simple typing errors as described in Scholtus (2009). The implemention of the detection of typing errors 
-#' differs in that it uses the Damerau-Levensthein distance.
+#' differs in that it uses the Damerau-Levensthein distance. Furthermore it solves a broader class of problems: the original  #' paper describes the class of inequalites: \eqn{Ex=0} and the implementation allows for  \eqn{Ex=a}.
 #' 
 #' For each row in \code{dat} the correction algorithm first detects if row \code{x} violates the equality constraints of \code{E}. 
-#' In mathematical terms the matrix equation \eqn{Ex=0} should hold. The implementation checks these 
+#' In mathematical terms the matrix equation \eqn{Ex=a} should hold. The implementation checks these 
 #' constraints within rounding errors.
+#'
+#' \code{correctTypos} returns a list with (amongst others) \code{corrections}. Each corrected
+#' \tabular{lll}{
+#'       row   \tab \code{integer}   \tab row number of \code{dat} \cr
+#'       var   \tab \code{character} \tab variable name \cr
+#'       old   \tab \code{numeric}   \tab old value of var in row \cr
+#'       new   \tab \code{numeric}   \tab new value of var in row \cr
+#'     }
 #'
 #' Please note that if the returned status of a record is "partial" the corrected record is still not valid.
 #' The partially corrected record will contain less errors and will violate less constraints. 
+#' Also note that the status "valid" and "corrected" have to be interpreted in combination with \code{eps}.
+#' A common case is first to correct for typo's and then correct for rounding errors. This means that in the first
+#' step the algorithm should allow for typo's (e.g. \code{eps==2}). The returned "valid"  record therefore may still contain 
+#' rounding errors.
 #'
 #' @export
 #' @example examples/correctTypos.R
@@ -26,15 +38,8 @@
 #' \tabular{ll}{
 #' status      \tab an ordered \code{factor} with the status for each row: \code{valid, corrected, partial, invalid} \cr
 #' corrected   \tab corrected \code{data.frame}: the original \code{dat} with the \code{corrections} applied \cr
-#' corrections \tab \code{data.frame} with all corrections. \cr
+#' corrections \tab \code{data.frame} with all corrections. see details
 #' } 
-#' for each correction:
-#' \tabular{lll}{
-#'       row   \tab \code{integer}   \tab row number of \code{dat} \cr
-#'       var   \tab \code{character} \tab variable name \cr
-#'       old   \tab \code{numeric}   \tab old value of var in row \cr
-#'       new   \tab \code{numeric}   \tab new value of var in row \cr
-#'     }
 #' 
 #' @references see
 #' 
@@ -64,6 +69,7 @@ correctTypos <- function( E
    #align names of E and dat, beware m contains only constrained, numeric variables at this point
    m <- as.matrix(dat[colnames(E)])
    n <- nrow(m)
+   
    status <- factor(integer(n), levels=c("valid","corrected", "partial","invalid"), ordered=TRUE)   
    corrections <- NULL
 

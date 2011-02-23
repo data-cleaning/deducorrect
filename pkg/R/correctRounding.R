@@ -1,4 +1,4 @@
-resample <- function(x, ...) {
+ resample <- function(x, ...) {
    x[sample.int(length(x), ...)]
 }
 
@@ -23,7 +23,7 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
     #print(perm)
     
     R0t <- R0[, perm, drop=FALSE]
-    a0t <- a0[perm]
+    print(a0)
     xt <- x[perm]
     
 	 #TODO check if R0 is totalunimodular, if so, then QR decomposition isn't necessary
@@ -35,16 +35,14 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
     #x1 <- x[p1]
     R2 <- R0t[,p2, drop=FALSE]
     x2 <- xt[p2]
-    a2 <- a0t[p2]
-    print(a0)
     
-	 c <- a2 - (R2 %*% x2)
-    print(xt)
-	 x1 <- solve(R1, c)[1,]
+	 c <- a0 - (R2 %*% x2)
+    x1 <- solve(R1, c)[1,]
 	 sol <- c(x1, x2)
     #print(x1)
     #restore original order
     m <- match(names(x), names(sol))
+    print(sol[m])
     sol[m]
 }
 
@@ -86,7 +84,6 @@ correctRounding <- function(R, Q, dat, delta=2, K=10, round=TRUE){
                       else "invalid"
          next
       }
-      
       k <- 0
       while (k <- K){
         k <- k + 1

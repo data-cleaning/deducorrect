@@ -13,7 +13,7 @@
 #' @return logical
 #' 
 #' @example examples/unimodular.R
-#' @references see
+#' @references 
 #' Heller I and Tompkins CB (1956). An extension of a theorem of Danttzig's In kuhn HW and Tucker AW (eds.),
 #' pp. 247-254. Princeton University Press.
 #'

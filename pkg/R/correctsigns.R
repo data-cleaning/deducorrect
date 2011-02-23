@@ -86,25 +86,59 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 }
 
 
-#' Try to resolve linear edits by adapting signs
-#'
-#' TODO edit DESCRIPTION after adding flipAndSwap
+#' Correct records under linear restrictions with sign flips and variable swaps
 #'
 #' This algorithm tries to repair records that violate linear equality constraints by
-#' switching signs or swapping variable values. The option to swap variables is only meaningfull
-#' when they have oposite signs in the equality restriction. For example if \eqn{x=y-z}
-#' is violated, one could try to swap the values of \eqn{y} and \eqn{z}, which is equal to
-#' changing the signs of y and z. The user has to indicate explicitly which variable pairs
-#' may be switched. 
+#' switching signs or swapping variable values, taking account of possible rounding errors. 
+#' Specifically, it tries to solve
+#' 
+#' \eqn{(1)\quad \min_{s\in\{-1,1\}^n}(\sum_{i=1}^n\delta_{s_i,-1}) \textrm{ under } |\sum_{i=1}^nE_{ji}x_is_i - b_j| \leq \varepsilon,\quad \forall j},
 #'
-#' The algorithm searches for the least possible number of sign switches which lead to a solution.
-#' If multiple solutions with the same number of sign switches are found, the solution with the
-#' minimum weight (computed by summing over the reliability weights of the variables to be
-#' switched) is chosen. If there are still more than one, the first one is chosen. A vector
-#' with the number of degenerate solutions (if any) is returned.
+#' where \eqn{\delta} is the Kronecker delta function (the sum counts the number of occurences where \eqn{s_i=1}). Furthermore, 
+#' \eqn{E} is an \code{editmatrix}, \eqn{x} is a (partial) record of \code{dat} with
+#' numerical data, and \eqn{b}  a vecor of constants. When a set \eqn{S} of equivalent solutions is found, the solution minimizing a certain
+#' weight will be chosen. Rounding errors which mask sign  errors in \eqn{x} can be circumvented by setting \eqn{\varepsilon} to 2 or more
+#' units of measure. 
+#'
+#' Note that when two elements of \eqn{x} have coefficients with opposite signs in one of the rows of \eqn{E},
+#' flipping the sign of both elements is equal to changing their order (\emph{i.e.} \eqn{a-b=-(b-a)}). We will
+#' call this a variable swap.
+#'
+#' The algorithm has two modes: one where a variable swap is counted as two sign flips (the default) and one where 
+#' a variable swap is counted as one sign flip. This can be set with the option  \code{swapIsOneFlip}. 
+#'
+#' If \code{swapIsOneFlip=FALSE}, the default, the algorithm tries to solve the minimization of Eqn.\ (1). When a set \eqn{S} of
+#' multiple solutions is found the solution satisfying
+#'
+#' \eqn{(2)\quad \min_{s\in S}\sum_{i=1}^n w_is_i\delta_{s_i,-1}}
+#'
+#' is chosen (\eqn{n} is the number of variables in the record). 
+#' If this still doesn't single out one solution, the first one encountered is used. If the user passes a list
+#' of variable pairs which may be interchanged (the \code{swap} argument), the solution will be checked for
+#' swaps and if so, the swaps are applied.
+#'
+#' When \code{swapIsOneFlip=TRUE}, a value interchange counts as one sign change. The algorithm still searches for
+#' the minimum of Eqn. (1), however signs of swap-pairs are always changed simultaneously. Therefore the list of 
+#' variables who's signs may be changed (\code{flip} argument) must be disjunct from the list of variable pairs
+#' that may be swapped. When more then one solution is found, the solution satisfying
 #'
 #' 
-#' @param E An object of class \code{editmatrix} 
+#' \eqn{(3)\quad \min_{s\in S}\sum_{i\in {\tt flips}}^{m} w_i  +\sum{i\in{\tt swaps}} w_i }
+#'
+#' is chosen. Here, \eqn{w} is a vector of length \code{length{flip}+length{swap}}, so a weight is assigned to every 
+#' action, not to every variable. The case where \code{swapIsOneFlip=TRUE}, is can be used in the the profit-loss account example
+#' in \cite{Scholtus, 2008}. TODO: elaborate in vignette.
+#'
+#'
+#'
+#'
+#'
+#'
+#' @title Correct records violating linear restrictions 
+#'
+#'
+#' @param E An object of class \code{editmatrix}. It may contain equality as well as inequality constraints, 
+#        but only the equality constraints will be used.
 #' @param dat The data to correct
 #' @param maxSigns Maximum number of signs that may be changed. Defaults to 
 #'      \code{ncol(E)} modulo 2 if \code{swapIsOneFlip==FALSE}. Ignored otherwise.
@@ -129,7 +163,12 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 #' n     \tab there were $n$ solutions with equal reliability weights. The first one was chosen.\cr
 #' }
 #' @example examples/correctSigns.R
-#' 
+#' @references
+#'
+#' Scholtus S (2008). Algorithms for correcting some obvious
+#' inconsistencies and rounding errors in business survey data. Technical
+#' Report 08015, Netherlands.
+#'
 #' @export
 correctSigns <- function(
     E, 

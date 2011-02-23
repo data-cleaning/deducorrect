@@ -1,13 +1,12 @@
 
 require(editrules)
-
 # some data 
 dat <- data.frame(
-    x = c( 3,14,15),
-    y = c(13,-4, 5),
-    z = c(10,10,-10))
+    x = c( 3,14,15, 1),
+    y = c(13,-4, 5, 2),
+    z = c(10,10,-10, NA))
 # ... which has to obey
-E <- editmatrix("z == x-y")
+E <- editmatrix(c("z == x-y", "x>0"))
 
 # All signs may be flipped, no swaps.
 correctSigns(E, dat)

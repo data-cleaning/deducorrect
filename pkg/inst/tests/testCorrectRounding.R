@@ -35,5 +35,6 @@ test_that("correctRounding works with Scholtus 2008 example",{
                     , x11=-13
                     )
    sol <- correctRounding(E,dat)
-   expect_equal(as.character(sol$status), "corrected")
+   #print(sol)
+   expect_equal(as.character(sol$status$status), "corrected")
 })

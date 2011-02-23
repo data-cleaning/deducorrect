@@ -121,7 +121,7 @@ correctTypos <- function( E
                     , new=corrections[,4]
                     )
                     
-   list( status = status
+   list( status = data.frame(status=status)
        , corrected = corrected
        , corrections = cdf
        )

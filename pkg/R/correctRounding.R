@@ -44,10 +44,14 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
 #' Correct rounding errors Scholtus (2009)
 #'
 #' Try to find and correct for rounding errors.
-#' @nord
+#'
+#'
+#' @example examples/correctRounding.R
+#'
+#' @export
 #' @param R editmatrix \eqn{Rx = a}
-#' @param Q optional editmatrix \eqn{Qx => b}
 #' @param dat \code{data.frame} with the data to be corrected
+#' @param Q optional editmatrix \eqn{Qx => b}
 #' @param delta tolerance on checking for rounding error
 #' @param K number of trials per records see details
 #' @param round should the solution be a rounded, default TRUE
@@ -65,6 +69,7 @@ correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
    m <- as.matrix(dat[getVars(R)])
    n <- nrow(m)
    status <- factor(integer(n), levels=c("valid", "corrected", "partial","invalid"), ordered=TRUE)
+   attempts <- integer(n)
    
    corrections <- NULL
    a <- getC(R)
@@ -102,7 +107,6 @@ correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
                     , var=colnames(R)[vars]
                     , old=x[vars]
                     , new=sol[vars]
-                    , attempts=k
                     )
         corrections <- rbind(corrections, cor)
         status[i] <- if (all(E0)) "corrected"
@@ -111,13 +115,13 @@ correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
       else {
         status[i] <- "invalid"
       }
-      
+      attempts[i] <- k
    }
    
    corrected <- dat
    corrected[colnames(m)] <- as.data.frame(m)[]
    
-   list( status=status
+   list( status=data.frame(status=status, attempts=attempts)
        , corrected=corrected
        , corrections=as.data.frame(corrections)
        )

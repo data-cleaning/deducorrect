@@ -117,6 +117,7 @@ hellerTompkins <- function(A){
 #' @param L A list of objects of class matrix.
 #' @return logical vector of length \code{length(L)}
 #' @seealso \code{\link{isTotallyUnimodular}}
+#' @nord
 allTotallyUnimodular <- function(L){
     for ( i in 1:length(L) ){
         if ( !isTotallyUnimodular(L[[i]]) ){
@@ -128,6 +129,8 @@ allTotallyUnimodular <- function(L){
 
 #' Determine if a matrix is unimodular using recursive Raghavachari criterium
 #' 
+#' deducorrect internal function.
+#'
 #' @param A An object of class Matrix in \eqn{\-1,0,1\}^{m\times n}}. 
 #' @return \code{TRUE} or \code{FALSE}
 #' @seealso \code{\link{isTotallyUnimodular}}

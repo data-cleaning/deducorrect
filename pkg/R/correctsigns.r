@@ -7,6 +7,7 @@
 #'
 #'
 #' @param A The \code{matrix} part of an \code{editmatrix}
+#' @param C The \code{CONSTANT} part of an \code{editmatrix}
 #' @param r A numerical record.
 #' @param adapt A logical vector of length \code{ncol(A)} indicating which variables may be changed.
 #' @param maxSigns how many signs may maximally be flipped? 
@@ -16,10 +17,10 @@
 #' @return A \code{list} with vectors of length \code{r} with coefficients 
 #'      in \eqn{\{-1,1\}}. Empty \code{list} if no solution is found.
 #'
-getSignCorrection <- function(A, r, adapt, maxSigns, eps, w){
+getSignCorrection <- function(A, C, r, adapt, maxSigns, eps, w){
 
     v <- rep(1,length(r))
-    if (all(abs(A%*%r) <= eps)) return(list(v))
+    if (all(abs(A%*%r - C) <= eps)) return(list(v))
     adapt <- which(adapt)
     nViolated <- length(adapt)
     S <- list()
@@ -30,7 +31,7 @@ getSignCorrection <- function(A, r, adapt, maxSigns, eps, w){
         for ( i in 1:ncol(I) ){
            s <- v
            s[adapt[I[, i]]] <- -1
-           if ( all(abs(A %*% (r*s)) <= eps) ){
+           if ( all(abs(A %*% (r*s) - C) <= eps) ){
                 S[[j]] <- s
                 j <- j+1
            }
@@ -46,6 +47,7 @@ getSignCorrection <- function(A, r, adapt, maxSigns, eps, w){
 #' Try to solve balance edit violations by sign changes and/or variable swaps.
 #'
 #' @param A The \code{matrix} part of an \code{editmatrix}
+#' @param C The \code{CONSTANT} part of an \code{editmatrix}
 #' @param r A numerical record.
 #' @param flip vector of  indices (integers) in r who's values may be swapped.
 #' @param swap nx2 array of index combinations of variables wich may be swapped.
@@ -56,11 +58,11 @@ getSignCorrection <- function(A, r, adapt, maxSigns, eps, w){
 #' @return A \code{list} with vectors of length \code{r} with coefficients 
 #'      in \eqn{\{-1,1\}}. Empty \code{list} if no solution is found.
 #'
-flipAndSwap <- function(A, r, flip, swap, eps, w){
+flipAndSwap <- function(A, C, r, flip, swap, eps, w){
     II <- rbind(cbind(flip,NA),swap)
    
     v <- rep(1,ncol(A))
-    if (all(abs(A%*%r) <= eps)) return(list(v))
+    if (all(abs(A%*%r - C) <= eps)) return(list(v))
     
     S <- list()
     weights <- numeric(0)
@@ -72,7 +74,7 @@ flipAndSwap <- function(A, r, flip, swap, eps, w){
            k <- as.integer(II[I[,i],])
            k <- k[!is.na(k)]
            s[k] <- -1
-           if ( all(abs(A %*% (r*s)) <= eps) ){
+           if ( all(abs(A %*% (r*s) - C) <= eps) ){
                 S[[j]] <- s
                 weights[j] <- sum(w[I[,j]])
                 j <- j+1
@@ -140,6 +142,7 @@ correctSigns <- function(
     weight = NA,
     fix = NA){
 # TODO check if swap-pairs have opposite signs in at least one edit.
+# TODO use only equality constraints.
 
     # check that flip and swap are disjunct
     lapply(swap, function(sw){ 
@@ -195,8 +198,8 @@ correctSigns <- function(
     # Prepare matrices for correctSigns ans flipAndSwap
     cn <- colnames(E)
     D <- as.matrix(dat[ ,cn])
-    A <- as.matrix(E)
-    
+    A <- as.matrix(E)[getOps(E) == "==", ,drop=FALSE]
+    C <- getC(E)
     # swap-names to swap-indices
     haveSwaps <- FALSE
     if (!identical(swap, NULL)){
@@ -224,9 +227,9 @@ correctSigns <- function(
     status <- factor(1:nrow(D),levels=c("valid","corrected","partial","invalid"))
     corrections <- data.frame(row=integer(0), var=factor(levels=colnames(D)), old=numeric(0), new=numeric(0))
 
-    for ( i in 1:nrow(dat) ){
+    for ( i in which(complete.cases(D)) ){
         r <- D[i,]
-        violated <- abs(A %*% r) > eps            
+        violated <- abs(A%*%r - C) > eps            
         adapt <- notFixed & colSums(abs(E[violated, ,drop=FALSE])) > 0
         if ( swapIsOneFlip ){
             fl    <- which(adapt & flipable)
@@ -234,9 +237,9 @@ correctSigns <- function(
             w1    <- wflip[which(flipable) %in% adapt]
             iSw   <- which(swapable[,1] %in% adapt & swapable[,2] %in%  adapt)
             w2    <- wswap[iSw]
-            S <- flipAndSwap(A, r, fl, swapable[iSw,], eps, c(w1,w2))
+            S <- flipAndSwap(A, C, r, fl, swapable[iSw,], eps, c(w1,w2))
         } else {
-            S <- getSignCorrection(A, r, adapt, maxSigns, eps, weight)
+            S <- getSignCorrection(A, C, r, adapt, maxSigns, eps, weight)
         }
         if ( length(S$signs) > 0 ){ # solution found
             s <- S$signs[[which.min(S$weights)]]

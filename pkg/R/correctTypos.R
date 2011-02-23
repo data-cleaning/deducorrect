@@ -73,8 +73,9 @@ correctTypos <- function( E
    status <- factor(integer(n), levels=c("valid","corrected", "partial","invalid"), ordered=TRUE)   
    corrections <- NULL
 
-   # looping might be inefficient so we may rewrite this
-	for (i in 1:n){
+   # only loop over complete records
+   cc <- which(complete.cases(m))
+	for (i in cc){
 	   chk <- getTypoCorrection(E,m[i,], eps, maxdist)
       
       status[i] <- chk$status
@@ -85,39 +86,34 @@ correctTypos <- function( E
       }
 
       cor <- chk$cor
-      # try corrections
-      #cat("Row ",i,":\n")
-      sol <- tree(chk$B, cor[,"kappa"])
+      #sol <- tree(chk$B, cor[,"kappa"])
+      sol <- tree(chk$B, cor[,5])
       if (nrow(sol) > 1){
          # if a correction is valid for all found solutions, then it can be applied
          partialsol <- colSums(sol) == nrow(sol)
-         #names(vars) <- colnames(chk$B)
          if (any(partialsol)){
-            #warning("Multiple solutions in row ", i, ". Applying partial correction.")
             sol[1,] <- partialsol
             status[i] <- "partial"
          }
          else {
-            #warning("Multiple solutions in row ", i, ". Marking record as invalid")
             status[i] <- "invalid"
             next
          }
       }
       cor <- cor[sol[1,],,drop=FALSE]
       
-      #make flexible?
-      m[i, cor[,"i"]]  <- cor[,"x_r"]
+      #m[i, cor[,"var"]]  <- cor[,"new"]      
+      m[i, cor[,1]]  <- cor[,3]
       
       cor <- cbind(row=rep(i, nrow(cor)), cor)
       corrections <- rbind(corrections, cor)      
 	}
    
-   mdf <- as.data.frame(m)
-   vars <- colnames(mdf)
+   vars <- getVars(E)
    
    # recreate data.frame dat in original column order, but with the corrections applied
    corrected <- dat   
-   corrected[vars] <- mdf[]
+   corrected[vars] <- as.data.frame(m)[]
    
    cdf <- data.frame( row=corrections[,1]
                     , var=vars[corrections[,2]]
@@ -147,8 +143,11 @@ correctTypos <- function( E
 #'}
 getTypoCorrection <- function( E, x, eps=sqrt(.Machine$double.eps), maxdist=1){
    ret <- list(status=NA)
+   
+   a <- getC(E)
+   
    #violated edits (ignoring rounding errors)
-   E1 <- (abs(E%*%x) > eps)
+   E1 <- (abs(a-E%*%x) > eps)
    
    #non violated edits
    E2 <- !E1
@@ -184,7 +183,7 @@ getTypoCorrection <- function( E, x, eps=sqrt(.Machine$double.eps), maxdist=1){
                      edits <- E1 & (E[,i] != 0)
                      
                      # correction candidates
-                     x_i_c <- ( (E[edits,-i] %*% x[-i]) / (-E[edits,i]));
+                     x_i_c <- ( (a[edits]-(E[edits,-i] %*% x[-i])) / (E[edits,i]));
                      # count their numbers
                      kap <- table(x_i_c)
                      x_i_c <- as.integer(rownames(kap))
@@ -192,9 +191,9 @@ getTypoCorrection <- function( E, x, eps=sqrt(.Machine$double.eps), maxdist=1){
                      # and retrieve their distance from the current x[i]
                      sapply( seq_along(kap)
                            , function(j){
-                                c( i = i
-                                 , x = x[i]
-                                 , x_r = x_i_c[j]
+                                c( var = i
+                                 , old = x[i]
+                                 , new = x_i_c[j]
                                  , dist = damerauLevenshteinDistance(x_i_c[j], x[i])
                                  , kappa = kap[j]
                                  )
@@ -205,11 +204,11 @@ getTypoCorrection <- function( E, x, eps=sqrt(.Machine$double.eps), maxdist=1){
    cor <- t(do.call(cbind,cor))
    
    # filter out the corrections that have dist > 1
-   valid <- cor[,"dist"] <= maxdist
+   valid <- cor[,4] <= maxdist
    
    cor <- cor[valid,,drop=FALSE]
    # optimization matrix
-   B <- E[E1,cor[,"i"], drop=FALSE] != 0
+   B <- E[E1,cor[,1], drop=FALSE] != 0
    ret$cor <- cor
    ret$B <- B
    ret$status <- "corrected"

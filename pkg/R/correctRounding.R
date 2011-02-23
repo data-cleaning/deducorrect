@@ -1,4 +1,4 @@
- resample <- function(x, ...) {
+resample <- function(x, ...) {
    x[sample.int(length(x), ...)]
 }
 
@@ -17,16 +17,13 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
         krit <- colnames(R0) %in% krit
     }
     else krit <- logical(ncol(R0))
-    
     p <- 1:v
     perm <- c(resample(p[!krit]),resample(p[krit]))
-    #print(perm)
-    
+
     R0t <- R0[, perm, drop=FALSE]
-    print(a0)
     xt <- x[perm]
     
-	 #TODO check if R0 is totalunimodular, if so, then QR decomposition isn't necessary
+    #TODO check if R0 is totalunimodular, if so, then QR decomposition isn't necessary
 	 ks <- qr(R0t)$pivot;
     p1 <- ks[1:r0]
     p2 <- ks[(r0+1):v]
@@ -37,12 +34,10 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
     x2 <- xt[p2]
     
 	 c <- a0 - (R2 %*% x2)
-    x1 <- solve(R1, c)[1,]
+    x1 <- solve(R1, c)[,1]
 	 sol <- c(x1, x2)
-    #print(x1)
     #restore original order
     m <- match(names(x), names(sol))
-    print(sol[m])
     sol[m]
 }
 
@@ -51,28 +46,29 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
 #' Try to find and correct for rounding errors.
 #' @nord
 #' @param R editmatrix \eqn{Rx = a}
-#' @param Q editmatrix \eqn{Qx => b}
+#' @param Q optional editmatrix \eqn{Qx => b}
 #' @param dat \code{data.frame} with the data to be corrected
 #' @param delta tolerance on checking for rounding error
-#' @param K number of trials
-#' @param round \code{logical}, should the solution be a rounded?
+#' @param K number of trials per records see details
+#' @param round should the solution be a rounded, default TRUE
 #' @return list with....
-correctRounding <- function(R, Q, dat, delta=2, K=10, round=TRUE){
+correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
    stopifnot(is.editmatrix(R), is.data.frame(dat))
    krit <- character(0)
    
    if (!missing(Q)){
      stopifnot(is.editmatrix(Q))
      krit <- colnames(Q)
-   }   
+     b <- getC(Q)
+   }
    
-   m <- as.matrix(dat[colnames(R)])
+   m <- as.matrix(dat[getVars(R)])
    n <- nrow(m)
    status <- factor(integer(n), levels=c("valid", "corrected", "partial","invalid"), ordered=TRUE)
    
    corrections <- NULL
    a <- getC(R)
-   b <- getC(Q)
+   cc <- which(complete.cases(m))
    for (i in 1:n){
       x <- m[i,]
       E0 <- abs(a - (R %*% x)) <= delta
@@ -85,13 +81,17 @@ correctRounding <- function(R, Q, dat, delta=2, K=10, round=TRUE){
          next
       }
       k <- 0
-      while (k <- K){
+      while (k < K){
         k <- k + 1
         sol <- scapegoat(R0, a0, x, krit)
         if (round) 
             sol <- round(sol,0)
-        break
-        #TODO check Qx >= b
+        #TODO make this step more generic (so Q can be any inequality matrix)
+        if ( is.null(Q) 
+          || Q %*% x >= b
+           ){
+           break
+        }
       }
       
       if (k < K){
@@ -102,6 +102,7 @@ correctRounding <- function(R, Q, dat, delta=2, K=10, round=TRUE){
                     , var=colnames(R)[vars]
                     , old=x[vars]
                     , new=sol[vars]
+                    , attempts=k
                     )
         corrections <- rbind(corrections, cor)
         status[i] <- if (all(E0)) "corrected"

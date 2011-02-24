@@ -68,7 +68,7 @@ correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
    
    m <- as.matrix(dat[getVars(R)])
    n <- nrow(m)
-   status <- factor(integer(n), levels=c("valid", "corrected", "partial","invalid"), ordered=TRUE)
+   status <- status(n)
    attempts <- integer(n)
    
    corrections <- NULL

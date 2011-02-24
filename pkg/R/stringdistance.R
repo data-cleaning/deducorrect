@@ -1,7 +1,7 @@
 #' Damerau Levenshtein Distance calculates the difference between two strings
 #' used for typografiphical errors (typo's) 
 #'
-#' @references see
+#' @references
 #' 
 #' Scholtus S (2008). Algorithms for correcting some obvious
 #' inconsistencies and rounding errors in business survey data. Technical

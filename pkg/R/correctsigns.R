@@ -1,7 +1,8 @@
 #' Try to solve balance edit violations by sign changes
 #' 
-#' This is the workhorse function for \code{\link{correctSigns}}. It performs
-#' a breadth-first tree search to resolve (near) equality edit violations.
+#' This is one of the workhorse function for \code{\link{correctSigns}}, the other being \code{\link{flipAndSwap}} 
+#' It performs a breadth-first tree search to resolve (near) equality edit violations. The difference with \code{\link{flipAndSwap}}
+#' is that variable swaps are interpreted as two actions (two sign flips).
 #' The solution(s), if any, with as little as possible sign changes are returned.
 #'
 #'
@@ -44,6 +45,11 @@ getSignCorrection <- function(A, C, r, adapt, maxSigns, eps, w){
 }
 
 #' Try to solve balance edit violations by sign changes and/or variable swaps.
+#'
+#' This is one of the workhorse function for \code{\link{correctSigns}}, the other being \code{\link{flipAndSwap}} 
+#' It performs a breadth-first tree search to resolve (near) equality edit violations. The difference with 
+#' \code{\link{getSignCorrection}} is that variable swaps are interpreted as a single action.
+#' The solution(s), if any, with as little as possible sign changes are returned.
 #'
 #' @param A The \code{matrix} part of an \code{editmatrix}
 #' @param C The \code{CONSTANT} part of an \code{editmatrix}
@@ -95,8 +101,8 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 #'
 #' where \eqn{\delta} is the Kronecker delta function (the sum counts the number of occurences where \eqn{s_i=1}). Furthermore, 
 #' \eqn{E} is an \code{editmatrix}, \eqn{x} is a the subset of a record of \code{dat} corresponding to
-#' columns in \code{E}, and \eqn{b}  a vecor of constants. \eqn{V} is the set of vectors in \eqn{\{-1,1\}^n} where coefficients
-#' corresponding to variables not occuring in violated edits are \eqn{-1}.
+#' columns in \code{E}, and \eqn{b}  a vecor of constants. \eqn{V} is the set of vectors in \eqn{\{-1,1\}^n} excluded from the 
+#' search space because they flip signs of variables not occuring in violated restrictions.
 #' 
 #' When a set \eqn{S} of equivalent solutions is found, the solution minimizing a certain
 #' weight will be chosen. Rounding errors which mask sign  errors in \eqn{x} can be circumvented by setting \eqn{\varepsilon} to 2 or more
@@ -134,15 +140,15 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 #'
 #'
 #'
-#' @title Correct records violating linear restrictions 
+#' @title Correct records violating linear restrictions with sign flips and value swaps
 #'
 #'
 #' @param E An object of class \code{editmatrix}. It may contain equality as well as inequality constraints, 
-#        but only the equality constraints will be used.
+#'      but only the equality constraints will be used.
 #' @param dat The data to correct
 #' @param maxSigns Maximum number of signs that may be changed. Defaults to 
 #'      the number of variables that occur in violated edits if \code{swapIsOneFlip==FALSE}. Ignored otherwise.
-#' @param eps Tolerance on edit check. Defaults to \code{sqrt(.Machine.double.eps)}
+#' @param eps Tolerance on edit check. Defaults to \code{sqrt(.Machine.double.eps)}. Increase this to correct sign errors masked by rounding.
 #' @param flip Names of variables whos signs may be flipped, defaults to \code{colnames(E)}
 #' @param swap \code{list} of 2-vectors containing pairs of variable names who's values may 
 #'      be interchanged. Defaults to \code{NA}.
@@ -163,7 +169,7 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 #' }
 #'
 #'  \tabular{ll}{
-#'      \code{status}\tab a \code{status} factor, showing the status of the treated record.\cr
+#'      \code{status}\tab a \code{\link{status}} factor, showing the status of the treated record.\cr
 #'      \code{degeneracy}\tab the number of solutions found, \emph{after} applying the weight\cr
 #'      \code{weight}\tab the weight of the chosen solution\cr
 #'      \code{nflip}\tab the number of applied sign flips\cr
@@ -271,7 +277,6 @@ correctSigns <- function(
     nflip <- nswap <- weights <- numeric(nrow(dat))
     status <- status(nrow(D))
     corrections <- data.frame(row=integer(0), var=factor(levels=colnames(D)), old=numeric(0), new=numeric(0))
-
     for ( i in which(complete.cases(D)) ){
         r <- D[i,]
         violated <- abs(A%*%r - C) > eps            
@@ -299,6 +304,7 @@ correctSigns <- function(
                 nflip[i] <- sum(adapted) - 2*nswap[i]
                 D[i, ] <- r*s
                 status[i] <- "corrected"
+                # TODO - this data.frame stuff can slow things down and should be speeded up.
                 corrections <- rbind(corrections,
                     data.frame(
                         row = rep(i,sum(adapted)),

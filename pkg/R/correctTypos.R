@@ -36,7 +36,7 @@
 #'
 #' @return list with members
 #' \tabular{ll}{
-#' status      \tab an ordered \code{factor} with the status for each row: \code{valid, corrected, partial, invalid} \cr
+#' status      \tab a \code{\link{status}} vector. \cr
 #' corrected   \tab corrected \code{data.frame}: the original \code{dat} with the \code{corrections} applied \cr
 #' corrections \tab \code{data.frame} with all corrections. see details
 #' } 
@@ -70,7 +70,7 @@ correctTypos <- function( E
    m <- as.matrix(dat[colnames(E)])
    n <- nrow(m)
    
-   status <- factor(integer(n), levels=c("valid","corrected", "partial","invalid"), ordered=TRUE)   
+   status <- status(n)
    corrections <- NULL
 
    # only loop over complete records

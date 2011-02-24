@@ -6,7 +6,7 @@ dat <- data.frame(
     y = c(13,-4, 5, 2),
     z = c(10,10,-10, NA))
 # ... which has to obey
-E <- editmatrix(c("z == x-y", "x>0"))
+E <- editmatrix(c("z == x-y"))
 
 # All signs may be flipped, no swaps.
 correctSigns(E, dat)

@@ -193,13 +193,14 @@ correctSigns <- function(
     swapIsOneFlip = FALSE,
     weight = NA,
     fix = NA){
-# TODO check if swap-pairs have opposite signs in at least one edit.
-
+    
     # check that flip and swap are disjunct
-    lapply(swap, function(sw){ 
-        if (any(flip %in% sw)) 
-            stop("Variables in flip and swap must be mutually exclusive")
-    })
+    if (swapIsOneFlip){
+        lapply(swap, function(sw){ 
+            if (any(flip %in% sw)) 
+                stop("Variables in flip and swap must be mutually exclusive")
+        })
+    }
     
     # remove flips and swaps containing fixed variables.
     if (!identical(fix,NA)){

@@ -86,7 +86,7 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 }
 
 
-#' Correct records under linear restrictions with sign flips and variable swaps
+#' Correct records under linear restrictions using sign flips and variable swaps
 #'
 #' This algorithm tries to repair records that violate linear equality constraints by
 #' switching signs or swapping variable values, taking account of possible rounding errors. 
@@ -107,7 +107,7 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 #' The algorithm has two modes: one where a variable swap is counted as two sign flips (the default) and one where 
 #' a variable swap is counted as one sign flip. This can be set with the option  \code{swapIsOneFlip}. 
 #'
-#' If \code{swapIsOneFlip=FALSE}, the default, the algorithm tries to solve the minimization of Eqn.\ (1). When a set \eqn{S} of
+#' If \code{swapIsOneFlip=FALSE}, the default, the algorithm tries to solve the minimization of Eqn. (1). When a set \eqn{S} of
 #' multiple solutions is found the solution satisfying
 #'
 #' \eqn{(2)\quad \min_{s\in S}\sum_{i=1}^n w_is_i\delta_{s_i,-1}}
@@ -118,12 +118,12 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 #' swaps and if so, the swaps are applied.
 #'
 #' When \code{swapIsOneFlip=TRUE}, a value interchange counts as one sign change. The algorithm still searches for
-#' the minimum of Eqn. (1), however signs of swap-pairs are always changed simultaneously. Therefore the list of 
+#' the minimum of Eqn. (1). However, signs of swap-pairs are always changed simultaneously. Therefore the list of 
 #' variables who's signs may be changed (\code{flip} argument) must be disjunct from the list of variable pairs
-#' that may be swapped. When more then one solution is found, the solution satisfying
+#' that may be swapped (\code{swap}). When more then one solution is found, the solution satisfying
 #'
 #' 
-#' \eqn{(3)\quad \min_{s\in S}\sum_{i\in {\tt flips}}^{m} w_i  +\sum{i\in{\tt swaps}} w_i }
+#' \eqn{(3)\quad \min_{s\in S}\sum_{i\in {\tt flips}}^{m} w_i  +\sum_{i\in{\tt swaps}} w_i }
 #'
 #' is chosen. Here, \eqn{w} is a vector of length \code{length{flip}+length{swap}}, so a weight is assigned to every 
 #' action, not to every variable. The case where \code{swapIsOneFlip=TRUE}, is can be used in the the profit-loss account example
@@ -154,14 +154,21 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 #'      reliability weight are less likely to be changed. Defaults to \code{rep(1,ncol(E))}
 #' @param fix character vector. Names of variables which may not be changed. Ignored when \code{swapIsOneFlip==TRUE}
 #'
-#' @return a list containing repaired data and a vector of length \code{nrow(dat)} denoting 
-#'      the number of degenerate solutions found.
-#'
-#' \tabular{ll}{
-#' value \tab meaning \cr
-#' 0     \tab record contains an error that cannot be repaired by sign corrections \cr
-#' n     \tab there were $n$ solutions with equal reliability weights. The first one was chosen.\cr
+#' @return A \code{list} with the elements
+#' \itemize{
+#'  \item{\code{corrected}, the data in \code{dat}, corrected for sign flips and variable swaps against the linear equality restrictions in \code{E}, when possible.}
+#'  \item{\code{corrections}, a \code{data.frame} containing the row, column name, old value and new value for every correction.}
+#'  \item{\code{status}, a \code{data.frame} with the same number of rows as \code{dat} containing more information on applied corrections.
+#'   Row numbers in \code{status} correspond to row numbers in \code{dat}. The content of the columns is given in the table below.} 
 #' }
+#'
+#'  \tabular{ll}{
+#'      \code{status}\tab a \code{status} factor, showing the status of the treated record.\cr
+#'      \code{degeneracy}\tab the number of solutions found, \emph{after} applying the weight\cr
+#'      \code{weight}\tab the weight of the chosen solution\cr
+#'      \code{nflip}\tab the number of applied sign flips\cr
+#'      \code{nswap}\tab the number of applied value interchanges\cr
+#'  }
 #' @example examples/correctSigns.R
 #' @references
 #'

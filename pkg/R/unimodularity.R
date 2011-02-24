@@ -9,7 +9,7 @@
 #'
 #' @title Total unimodularity of a -1, 0, 1 matrix.
 #'
-#' @param A An object of class \code{\link{matrix}} with coefficients -1, 0, or 1
+#' @param A An object of class \code{\link{matrix}}.
 #' @return logical
 #' 
 #' @example examples/unimodular.R
@@ -61,12 +61,12 @@ isTotallyUnimodular <- function(A) {
 #' Let \eqn{A} be matrix containing only -1, 0 and 1 
 #' as coefficients. If, after a possible permutation of columns it can be written 
 #' in the form \eqn{A=[B,C]} where each column in \eqn{B} has at most 1 nonzero
-#' element, the \eqn{A} is totally unimodular if and only if \eqn{C} is totally
+#' element, then \eqn{A} is totally unimodular if and only if \eqn{C} is totally
 #' unimodular. By transposition, a similar theorem holds for the rows of A. This
 #' function iteratively removes rows and columns with only 1 nonzero element
 #' from \eqn{A} and returns the reduced result.
 #'
-#' @param A An object of class \code{matrix}, in {-1,0,1}
+#' @param A An object of class matrix in \eqn{\{-1,0,1\}^{m\times n}}. 
 #' @return The reduction of A.
 #' @seealso \code{\link{isTotallyUnimodular}}
 #'
@@ -84,8 +84,11 @@ reduceMatrix <- function(A){
 
 #' Determine if a matrix is totally unimodular using Heller and Tompkins criterium.
 #'
-#' @param A An object of class Matrix with coefficients in {-1,0,1}. Each column 
-#'      must have exactly 2 nonzero elements. (This is tested by 
+#' This function is \code{deducorrect} internal
+#' 
+#'
+#' @param A An object of class matrix in \eqn{\{-1,0,1\}^{m\times n}}. 
+#'  Each column  must have exactly 2 nonzero elements. (This is tested by 
 #'      \code{\link{isTotallyUnimodular}}).
 #'
 #' @return \code{TRUE} if matrix is unimodular, otherwise \code{FALSE}
@@ -129,9 +132,9 @@ allTotallyUnimodular <- function(L){
 
 #' Determine if a matrix is unimodular using recursive Raghavachari criterium
 #' 
-#' deducorrect internal function.
+#' This function is \code{deducorrect} internal
 #'
-#' @param A An object of class Matrix in \eqn{\-1,0,1\}^{m\times n}}. 
+#' @param A An object of class Matrix in \eqn{\{-1,0,1\}^{m\times n}}. 
 #' @return \code{TRUE} or \code{FALSE}
 #' @seealso \code{\link{isTotallyUnimodular}}
 raghavachari <- function(A){

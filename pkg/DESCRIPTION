@@ -12,4 +12,4 @@ URL: http://code.google.com/p/deducorrect/
 LazyLoad: yes
 Depends: editrules (>= 0.3)
 Collate: 'correctRounding.R' 'correctsigns.R' 'correctTypos.R' 'pkg.R'
-    'stringdistance.R' 'unimodularity.R'
+    'stringdistance.R' 'unimodularity.R' 'util.R'

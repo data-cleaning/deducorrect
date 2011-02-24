@@ -1,4 +1,3 @@
-
 #' Try to solve balance edit violations by sign changes
 #' 
 #' This is the workhorse function for \code{\link{correctSigns}}. It performs
@@ -89,14 +88,17 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 #' Correct records under linear restrictions using sign flips and variable swaps
 #'
 #' This algorithm tries to repair records that violate linear equality constraints by
-#' switching signs or swapping variable values, taking account of possible rounding errors. 
-#' Specifically, it tries to solve
+#' switching signs or swapping variable values occuring in violated edits. Possible rounding errors
+#' can be taken into account. Specifically, it tries to solve
 #' 
-#' \eqn{(1)\quad \min_{s\in\{-1,1\}^n}(\sum_{i=1}^n\delta_{s_i,-1}) \textrm{ under } |\sum_{i=1}^nE_{ji}x_is_i - b_j| \leq \varepsilon,\quad \forall j},
+#' \eqn{(1)\quad \min_{s\in\{-1,1\}^n\backslash V}(\sum_{i=1}^n\delta_{s_i,-1}) \textrm{ under } |\sum_{i=1}^nE_{ji}x_is_i - b_j| \leq \varepsilon,\quad \forall j},
 #'
 #' where \eqn{\delta} is the Kronecker delta function (the sum counts the number of occurences where \eqn{s_i=1}). Furthermore, 
-#' \eqn{E} is an \code{editmatrix}, \eqn{x} is a (partial) record of \code{dat} with
-#' numerical data, and \eqn{b}  a vecor of constants. When a set \eqn{S} of equivalent solutions is found, the solution minimizing a certain
+#' \eqn{E} is an \code{editmatrix}, \eqn{x} is a the subset of a record of \code{dat} corresponding to
+#' columns in \code{E}, and \eqn{b}  a vecor of constants. \eqn{V} is the set of vectors in \eqn{\{-1,1\}^n} where coefficients
+#' corresponding to variables not occuring in violated edits are \eqn{-1}.
+#' 
+#' When a set \eqn{S} of equivalent solutions is found, the solution minimizing a certain
 #' weight will be chosen. Rounding errors which mask sign  errors in \eqn{x} can be circumvented by setting \eqn{\varepsilon} to 2 or more
 #' units of measure. 
 #'
@@ -127,9 +129,7 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 #'
 #' is chosen. Here, \eqn{w} is a vector of length \code{length{flip}+length{swap}}, so a weight is assigned to every 
 #' action, not to every variable. The case where \code{swapIsOneFlip=TRUE}, is can be used in the the profit-loss account example
-#' in \cite{Scholtus, 2008}. TODO: elaborate in vignette.
-#'
-#'
+#' in \cite{Scholtus, 2008}. 
 #'
 #'
 #'
@@ -141,7 +141,7 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 #        but only the equality constraints will be used.
 #' @param dat The data to correct
 #' @param maxSigns Maximum number of signs that may be changed. Defaults to 
-#'      \code{ncol(E)} modulo 2 if \code{swapIsOneFlip==FALSE}. Ignored otherwise.
+#'      the number of variables that occur in violated edits if \code{swapIsOneFlip==FALSE}. Ignored otherwise.
 #' @param eps Tolerance on edit check. Defaults to \code{sqrt(.Machine.double.eps)}
 #' @param flip Names of variables whos signs may be flipped, defaults to \code{colnames(E)}
 #' @param swap \code{list} of 2-vectors containing pairs of variable names who's values may 
@@ -188,7 +188,6 @@ correctSigns <- function(
     weight = NA,
     fix = NA){
 # TODO check if swap-pairs have opposite signs in at least one edit.
-# TODO use only equality constraints.
 
     # check that flip and swap are disjunct
     lapply(swap, function(sw){ 
@@ -270,7 +269,7 @@ correctSigns <- function(
     # do the actual work
     degeneracy <- integer(nrow(dat))
     nflip <- nswap <- weights <- numeric(nrow(dat))
-    status <- factor(1:nrow(D),levels=c("valid","corrected","partial","invalid"))
+    status <- status(nrow(D))
     corrections <- data.frame(row=integer(0), var=factor(levels=colnames(D)), old=numeric(0), new=numeric(0))
 
     for ( i in which(complete.cases(D)) ){

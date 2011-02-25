@@ -11,9 +11,9 @@
 #' \code{correctTypos} returns a list with (amongst others) \code{corrections}. Each corrected
 #' \tabular{lll}{
 #'       row   \tab \code{integer}   \tab row number of \code{dat} \cr
-#'       var   \tab \code{character} \tab variable name \cr
-#'       old   \tab \code{numeric}   \tab old value of var in row \cr
-#'       new   \tab \code{numeric}   \tab new value of var in row \cr
+#'       variable   \tab \code{character} \tab variable name \cr
+#'       old   \tab \code{numeric}   \tab old value of variable in row \cr
+#'       new   \tab \code{numeric}   \tab new value of variable in row \cr
 #'     }
 #'
 #' Please note that if the returned status of a record is "partial" the corrected record is still not valid.
@@ -116,7 +116,7 @@ correctTypos <- function( E
    corrected[vars] <- as.data.frame(m)[]
    
    cdf <- data.frame( row=corrections[,1]
-                    , var=vars[corrections[,2]]
+                    , variable=vars[corrections[,2]]
                     , old=corrections[,3]
                     , new=corrections[,4]
                     )

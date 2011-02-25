@@ -74,7 +74,7 @@ correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
    corrections <- NULL
    a <- getC(R)
    cc <- which(complete.cases(m))
-   for (i in 1:n){
+   for (i in cc){
       x <- m[i,]
       E0 <- abs(a - (R %*% x)) <= delta
       R0 <- R[E0,,drop=FALSE]
@@ -104,7 +104,7 @@ correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
         vars <- which((sol-x) != 0)
         m[i,] <- sol
         cor <- cbind( row=i
-                    , var=colnames(R)[vars]
+                    , variable=colnames(R)[vars]
                     , old=x[vars]
                     , new=sol[vars]
                     )
@@ -120,9 +120,19 @@ correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
    
    corrected <- dat
    corrected[colnames(m)] <- as.data.frame(m)[]
-   
-   list( status=data.frame(status=status, attempts=attempts)
-       , corrected=corrected
-       , corrections=as.data.frame(corrections)
-       )
+    
+   if ( is.null(corrections) ){
+      corrections <- data.frame(
+            row=integer(0), 
+            variable=factor(levels=colnames(R)),
+            old=numeric(0), new=numeric(0)
+        )   
+   }
+   return(
+      newdeducorrect(
+         corrected   = corrected, 
+         corrections = as.data.frame(corrections), 
+         status      = data.frame(status=status, attempts=attempts)
+      )
+   )
 }

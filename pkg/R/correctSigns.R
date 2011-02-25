@@ -309,7 +309,7 @@ correctSigns <- function(
                 corrections <- rbind(corrections,
                     data.frame(
                         row = rep(i,sum(adapted)),
-                        col = colnames(D)[adapted],
+                        variable = colnames(D)[adapted],
                         old = oldrec[adapted],
                         new = D[i,adapted]))
             }

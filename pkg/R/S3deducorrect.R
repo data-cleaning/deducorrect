@@ -52,7 +52,7 @@ newdeducorrect <- function(corrected, corrections, status){
         ),
         class = c("deducorrect","list"),
         statsummary = addmargins(table(status$status, useNA="ifany")),
-        corrsummary = addmargins(table(corrections$col, useNA="no"))
+        corrsummary = addmargins(table(corrections$variable, useNA="no"))
     )
 }
 

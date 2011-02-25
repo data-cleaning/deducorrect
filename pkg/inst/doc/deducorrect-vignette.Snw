@@ -3,7 +3,7 @@
 \usepackage[english]{babel}
 \usepackage{amsmath, amssymb}
 \title{The {\tt deducorrect} vignette}
-\author{Edwin de Jonge and Mark van der Loo}
+\author{Mark van der Loo, Edwin de Jonge and Sander Scholtus}
 \begin{document}
 \maketitle
 \begin{abstract}

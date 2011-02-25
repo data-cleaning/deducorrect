@@ -6,7 +6,6 @@
 #' The status vector is an \code{ordered} factor with levels
 #'
 #' \tabular{ll}{
-#'  \code{NA}           \tab  non-validity of the record could not be established\cr
 #'  \code{invalid}      \tab record is invalid but could not be corrected\cr
 #'  \code{partially}    \tab record violates less edits then before entering the function\cr
 #'  \code{corrected}    \tab record satisfies all edit restrictions after correction\cr
@@ -14,7 +13,7 @@
 #' }
 #' where \code{invalid < partially < corrected < valid}
 #' 
-
+#'
 #'
 #' This function is \code{deducorrect} internal.
 #'

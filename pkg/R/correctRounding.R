@@ -41,21 +41,31 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
     sol[m]
 }
 
-#' Correct rounding errors Scholtus (2009)
+#' Correct records under linear restrictions for rounding errors
 #'
-#' Try to find and correct for rounding errors.
-#'
-#'
-#' @example examples/correctRounding.R
+#' This algorithm tries to detect and repair records that violate linear (in)equality constraints by correcting possible rounding errors as described by Scholtus(2008).
+#' Typically data is constrainted by \eqn{Rx=a} and \eqn{Qx \ge b}.
+#' 
+#' The algorithm first finds violated constraints
+#' \eqn{|r'_{i}x-a_i| > 0} , and selects edits that may be due to a rounding error \eqn{0 < |r'_{i}x-a_i| \leq \vardelta}. 
+#' The algorithm then makes a correction suggestion where the errors are attributed to randomly selected variables under the lineair equality constraints. It checks if the suggested correction is
+#' does not violate the inequality matrix \eqn{Q}. If it does, it will try to generate a different solution up till \code{K} times.
 #'
 #' @export
+#' @example examples/correctRounding.R
+#' @references See
+#'
+#' Scholtus S (2008). Algorithms for correcting some obvious
+#' inconsistencies and rounding errors in business survey data. Technical
+#' Report 08015, Netherlands.
+#'
 #' @param R editmatrix \eqn{Rx = a}
 #' @param dat \code{data.frame} with the data to be corrected
 #' @param Q optional editmatrix \eqn{Qx => b}
 #' @param delta tolerance on checking for rounding error
-#' @param K number of trials per records see details
+#' @param K number of trials per record see details
 #' @param round should the solution be a rounded, default TRUE
-#' @return list with....
+#' @return list deducorrrect
 correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
    stopifnot(is.editmatrix(R), is.data.frame(dat))
    krit <- character(0)

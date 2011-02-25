@@ -1,17 +1,18 @@
-#' Damerau Levenshtein Distance calculates the difference between two strings
-#' used for typografiphical errors (typo's) 
+#' Calculate the Damerau Levenshtein Distance between two strings
 #'
-#' @references
-#' 
-#' Scholtus S (2008). Algorithms for correcting some obvious
-#' inconsistencies and rounding errors in business survey data. Technical
-#' Report 08015, Netherlands.
+#' The Damerau Levenshtein Distance between two strings is commonly used for checking typographical errors in strings
+#' It takes the deletion and insertion of a character, a wrong character (substition) or the swapping (transposition) 
+#' of two characters into account. By default these operations each account for distance 1.
+#'
+#' @references see
 #' 
 #' Damerau F (1964). A technique for computer detection and correction of
 #' spelling errors. Communications of the ACM, 7,issue 3
 #'
 #' Levenshtein VI (1966). Binary codes capable of correcting deletions, insertions, 
 #' and reversals. Soviet Physics Doklady 10: 707-10
+#' Damerau Levenshtein Distance calculates the difference between two strings
+#' used for typographical errors (typo's) 
 #'
 #' @param sa character vector
 #' @param sb character vector of equal \code{length(sa)}

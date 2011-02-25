@@ -1,25 +1,22 @@
-#' detect and correct typing errors in \code{dat} based on the \code{editmatrix} E. 
+#' Correct records under linear restrictions using typographical error suggestions 
 #'
-#' This algorithm tries to repair records that violate linear equality constraints by correcting simple typo's
-#' It detects and corrects simple typing errors as described in Scholtus (2009). The implemention of the detection of typing errors 
-#' differs in that it uses the Damerau-Levensthein distance. Furthermore it solves a broader class of problems: the original  #' paper describes the class of inequalites: \eqn{Ex=0} and the implementation allows for  \eqn{Ex=a}.
+#' This algorithm tries to detect and repair records that violate linear equality constraints by correcting simple typo's as described in Scholtus (2009)
+#' The implemention of the detection of typing errors differs in that it uses the Damerau-Levensthein distance. Furthermore it solves a broader class of 
+#' problems: the original paper describes the class of equalities: \eqn{Ex=0} (balance edits) and this implementation allows for  \eqn{Ex=a}.
 #' 
-#' For each row in \code{dat} the correction algorithm first detects if row \code{x} violates the equality constraints of \code{E}. 
-#' In mathematical terms the matrix equation \eqn{Ex=a} should hold. The implementation checks these 
-#' constraints within rounding errors.
+#' For each row in \code{dat} the correction algorithm first detects if row \code{x} violates the equality constraints of \code{E} taking possible rounding errors into account.
+#' Mathematically:
+#' \eqn{|\sum_{i=1}^nE_{ji}x_is_i - a_j| \leq \varepsilon,\quad \forall j }
 #'
-#' \code{correctTypos} returns a list with (amongst others) \code{corrections}. Each corrected
-#' \tabular{lll}{
-#'       row   \tab \code{integer}   \tab row number of \code{dat} \cr
-#'       variable   \tab \code{character} \tab variable name \cr
-#'       old   \tab \code{numeric}   \tab old value of variable in row \cr
-#'       new   \tab \code{numeric}   \tab new value of variable in row \cr
-#'     }
+#' It then generates correction suggestions by deriving alternative values for variables only involved in the violated edits. The correction suggestions must be within a typographical
+#' edit distance (default = 1) to be selected. If there are more then 1 solutions possible the algorithm tries to derive a partial solution, otherwise the solution is applied to the data.
 #'
-#' Please note that if the returned status of a record is "partial" the corrected record is still not valid.
+#' \code{correctTypos} returns a deducorrect object describing the status of the record and the corrections that have been applied.
+#'
+#' Please note that if the returned status of a record is "partial" the corrected record still is not valid.
 #' The partially corrected record will contain less errors and will violate less constraints. 
 #' Also note that the status "valid" and "corrected" have to be interpreted in combination with \code{eps}.
-#' A common case is first to correct for typo's and then correct for rounding errors. This means that in the first
+#' A common scenario is first to correct for typo's and then correct for rounding errors. This means that in the first
 #' step the algorithm should allow for typo's (e.g. \code{eps==2}). The returned "valid"  record therefore may still contain 
 #' rounding errors.
 #'
@@ -34,18 +31,11 @@
 #' to allow for rounding errors. Set this parameter to 0 for exact checking.
 #' @param maxdist \code{numeric}, tolerance used in finding typographical corrections. Default value 1 allows for one error. Used in combination with \code{cost}.
 #'
-#' @return list with members
-#' \tabular{ll}{
-#' status      \tab a \code{\link{status}} vector. \cr
-#' corrected   \tab corrected \code{data.frame}: the original \code{dat} with the \code{corrections} applied \cr
-#' corrections \tab \code{data.frame} with all corrections. see details
-#' } 
+#' @return \code{deducorrect} object with corrected data.frame, applied corrections and status of the records.
 #' 
 #' @references see
 #' 
-#' Scholtus S (2008). Algorithms for correcting some obvious
-#' inconsistencies and rounding errors in business survey data. Technical
-#' Report 08015, Netherlands.
+#' Scholtus S (200). Automatric correction of simple typing errors in numerical data with balance edits.
 #' 
 #' Damerau F (1964). A technique for computer detection and correction of
 #' spelling errors. Communications of the ACM, 7,issue 3
@@ -194,6 +184,7 @@ getTypoCorrection <- function( E, x, eps=sqrt(.Machine$double.eps), maxdist=1){
                      edits <- E1 & (E[,i] != 0)
                      
                      # correction candidates
+                     #TODO check if solution has to be rounded!!!)
                      x_i_c <- ( (a[edits]-(E[edits,-i] %*% x[-i])) / (E[edits,i]));
                      # count their numbers
                      kap <- table(x_i_c)

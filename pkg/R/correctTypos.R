@@ -128,10 +128,14 @@ correctTypos <- function( E
             new = numeric(0)
         )
     }
-   newdeducorrect( status = data.frame(status=status)
-       , corrected = corrected
-       , corrections = cdf
-       )
+
+    return(
+        newdeducorrect(
+            status = data.frame(status=status),
+            corrected = corrected,
+            corrections = cdf
+        )
+    )
 }
 
 #' Check record validity and suggest typo corrections

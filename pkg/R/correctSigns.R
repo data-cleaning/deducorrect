@@ -160,13 +160,7 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 #'      reliability weight are less likely to be changed. Defaults to \code{rep(1,ncol(E))}
 #' @param fix character vector. Names of variables which may not be changed. Ignored when \code{swapIsOneFlip==TRUE}
 #'
-#' @return A \code{list} with the elements
-#' \itemize{
-#'  \item{\code{corrected}, the data in \code{dat}, corrected for sign flips and variable swaps against the linear equality restrictions in \code{E}, when possible.}
-#'  \item{\code{corrections}, a \code{data.frame} containing the row, column name, old value and new value for every correction.}
-#'  \item{\code{status}, a \code{data.frame} with the same number of rows as \code{dat} containing more information on applied corrections.
-#'   Row numbers in \code{status} correspond to row numbers in \code{dat}. The content of the columns is given in the table below.} 
-#' }
+#' @return An object of class \code{\link[=deducorrect-object]{deducorrect}}, where the \code{\link{status}} slot contains the following.
 #'
 #'  \tabular{ll}{
 #'      \code{status}\tab a \code{\link{status}} factor, showing the status of the treated record.\cr

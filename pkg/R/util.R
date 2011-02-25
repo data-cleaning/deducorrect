@@ -27,7 +27,7 @@
 #'
 status <- function(n, ini=NA){
     st <- c("invalid", "partially", "corrected", "valid")
-    if ( ! ini %in% st ){
+    if ( ! ini %in% c(st,NA) ){
         stop(paste("invalid status level, allowed are NA, ",paste(st,collapse=", ")))
     }
     return(ordered(rep(ini,n), levels=st))

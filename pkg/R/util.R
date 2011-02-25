@@ -7,11 +7,11 @@
 #'
 #' \tabular{ll}{
 #'  \code{invalid}      \tab record is invalid but could not be corrected\cr
-#'  \code{partially}    \tab record violates less edits then before entering the function\cr
+#'  \code{partial}    \tab record violates less edits then before entering the function\cr
 #'  \code{corrected}    \tab record satisfies all edit restrictions after correction\cr
 #'  \code{valid}        \tab record violates no edit restrictions\cr
 #' }
-#' where \code{invalid < partially < corrected < valid}
+#' where \code{invalid < partial < corrected < valid}
 #' 
 #'
 #'
@@ -25,7 +25,7 @@
 #' @example examples/status.R
 #'
 status <- function(n, ini=NA){
-    st <- c("invalid", "partially", "corrected", "valid")
+    st <- c("invalid", "partial", "corrected", "valid")
     if ( ! ini %in% c(st,NA) ){
         stop(paste("invalid status level, allowed are NA, ",paste(st,collapse=", ")))
     }

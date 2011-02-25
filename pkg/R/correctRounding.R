@@ -48,24 +48,27 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
 #' 
 #' The algorithm first finds violated constraints
 #' \eqn{|r'_{i}x-a_i| > 0} , and selects edits that may be due to a rounding error \eqn{0 < |r'_{i}x-a_i| \leq \delta}. 
-#' The algorithm then makes a correction suggestion where the errors are attributed to randomly selected variables under the lineair equality constraints. It checks if the suggested correction is
+#' The algorithm then makes a correction suggestion where the errors are attributed to randomly selected variables under the lineair equality constraints. 
+#' It checks if the suggested correction 
 #' does not violate the inequality matrix \eqn{Q}. If it does, it will try to generate a different solution up till \code{K} times.
 #'
 #' @export
 #' @example examples/correctRounding.R
-#' @references See
-#'
+#' @references 
 #' Scholtus S (2008). Algorithms for correcting some obvious
 #' inconsistencies and rounding errors in business survey data. Technical
 #' Report 08015, Netherlands.
 #'
 #' @param R editmatrix \eqn{Rx = a}
 #' @param dat \code{data.frame} with the data to be corrected
-#' @param Q optional editmatrix \eqn{Qx => b}
+#' @param Q optional editmatrix \eqn{Qx \ge b}
 #' @param delta tolerance on checking for rounding error
-#' @param K number of trials per record see details
+#' @param K number of trials per record. See details
 #' @param round should the solution be a rounded, default TRUE
-#' @return list deducorrrect
+#' @return A \code{\link[=deducorrect-object]{deducorrrect}} object.
+#' @seealso \code{\link{deducorrect-object}} \code{\link{status}}
+#'
+#'
 correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
    stopifnot(is.editmatrix(R), is.data.frame(dat))
    krit <- character(0)

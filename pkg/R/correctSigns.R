@@ -1,6 +1,6 @@
 #' Try to solve balance edit violations by sign changes
 #' 
-#' This is one of the workhorse function for \code{\link{correctSigns}}, the other being \code{\link{flipAndSwap}} 
+#' This is one of the workhorse functions for \code{\link{correctSigns}}, the other being \code{\link{flipAndSwap}}.
 #' It performs a breadth-first tree search to resolve (near) equality edit violations. The difference with \code{\link{flipAndSwap}}
 #' is that variable swaps are interpreted as two actions (two sign flips).
 #' The solution(s), if any, with as little as possible sign changes are returned.
@@ -46,7 +46,7 @@ getSignCorrection <- function(A, C, r, adapt, maxSigns, eps, w){
 
 #' Try to solve balance edit violations by sign changes and/or variable swaps.
 #'
-#' This is one of the workhorse function for \code{\link{correctSigns}}, the other being \code{\link{flipAndSwap}} 
+#' This is one of the workhorse functions for \code{\link{correctSigns}}, the other being \code{\link{getSignCorrection}}. 
 #' It performs a breadth-first tree search to resolve (near) equality edit violations. The difference with 
 #' \code{\link{getSignCorrection}} is that variable swaps are interpreted as a single action.
 #' The solution(s), if any, with as little as possible sign changes are returned.
@@ -133,9 +133,9 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 #' 
 #' \eqn{(3)\quad \min_{s\in S}\sum_{i\in {\tt flips}}^{m} w_i  +\sum_{i\in{\tt swaps}} w_i }
 #'
-#' is chosen. Here, \eqn{w} is a vector of length \code{length{flip}+length{swap}}, so a weight is assigned to every 
-#' action, not to every variable. The case where \code{swapIsOneFlip=TRUE}, is can be used in the the profit-loss account example
-#' in \cite{Scholtus, 2008}. 
+#' is chosen. Here, \eqn{w} is a vector of length \code{length{flip}+length{swap}}. The case where 
+#' \code{swapIsOneFlip=TRUE}, is can be used in the the profit-loss account example
+#' in \cite{Scholtus (2008)}. 
 #'
 #'
 #'
@@ -149,14 +149,11 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 #' @param maxSigns Maximum number of signs that may be changed. Defaults to 
 #'      the number of variables that occur in violated edits if \code{swapIsOneFlip==FALSE}. Ignored otherwise.
 #' @param eps Tolerance on edit check. Defaults to \code{sqrt(.Machine.double.eps)}. Increase this to correct sign errors masked by rounding.
-#' @param flip Names of variables whos signs may be flipped, defaults to \code{colnames(E)}
+#' @param flip Names of variables whos signs may be flipped. Defaults to \code{colnames(E)}, use \code{c()} to flip nothing.
 #' @param swap \code{list} of 2-vectors containing pairs of variable names who's values may 
 #'      be interchanged. Defaults to \code{NA}.
-#' @param swapIsOneFlip \code{logical}. Count a value interchange as 1 or 2 sign changes? 
-#'  If \code{TRUE}, a value swap is counted as 1 sign interchange, which corresponds with the 
-#'  formulation in Scholtus (2008). If \code{FALSE}, a swap counts as two sign changes,
-#'  (since \eqn{y-x=-(x-y))}). See also the details.
-#' @param weight Positive numeric vector of length ncol(E). Variables with heigher 
+#' @param swapIsOneFlip \code{logical}. Count a value interchange as 1 (TRUE) or 2 (default) sign changes. See details.
+#' @param weight Positive numeric vector of length \code{ncol(E)}. Variables with heigher 
 #'      reliability weight are less likely to be changed. Defaults to \code{rep(1,ncol(E))}
 #' @param fix character vector. Names of variables which may not be changed. Ignored when \code{swapIsOneFlip==TRUE}
 #'

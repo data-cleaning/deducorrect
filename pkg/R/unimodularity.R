@@ -1,18 +1,18 @@
 #' Check wether a matrix is totally unimodular.
 #'
 #'
-#' A matrix for which the determinant of every square submatrix is -1, 0 or 1
-#' is called _totally unimodular_. This function tests if a matrix with 
-#' coefficients in {-1,0,1} is unimodular. It tries to reduce the matrix
+#' A matrix for which the determinant of every square submatrix equals \eqn{-1}, \eqn{0} or \eqn{1}
+#' is called \emph{totally unimodular}. This function tests if a matrix with 
+#' coefficients in \eqn{\{-1,0,1\}} is totally unimodular. It tries to reduce the matrix
 #' using the reduction method described in Scholtus (2008). Next, a test based
 #' on Heller and Tompkins (1956) or Raghavachari is performed.
 #'
-#' @title Total unimodularity of a -1, 0, 1 matrix.
+#' @title Test for total unimodularity of a matrix.
 #'
 #' @param A An object of class \code{\link{matrix}}.
 #' @return logical
 #' 
-#' @example examples/unimodular.R
+#' @example examplts/unimodular.R
 #' @references 
 #' Heller I and Tompkins CB (1956). An extension of a theorem of Danttzig's In kuhn HW and Tucker AW (eds.),
 #' pp. 247-254. Princeton University Press.
@@ -58,8 +58,8 @@ isTotallyUnimodular <- function(A) {
 #' Apply reduction method from Scholtus (2008)
 #'
 #' Apply the reduction method in the appendix of Scholtus (2008) to a matrix.
-#' Let \eqn{A} be matrix containing only -1, 0 and 1 
-#' as coefficients. If, after a possible permutation of columns it can be written 
+#' Let \eqn{A} with coefficients in \eqn{\{-1,0,1\}}. If, after a possible 
+#' permutation of columns it can be written 
 #' in the form \eqn{A=[B,C]} where each column in \eqn{B} has at most 1 nonzero
 #' element, then \eqn{A} is totally unimodular if and only if \eqn{C} is totally
 #' unimodular. By transposition, a similar theorem holds for the rows of A. This
@@ -69,6 +69,12 @@ isTotallyUnimodular <- function(A) {
 #' @param A An object of class matrix in \eqn{\{-1,0,1\}^{m\times n}}. 
 #' @return The reduction of A.
 #' @seealso \code{\link{isTotallyUnimodular}}
+#'
+#' @references
+#'
+#' Scholtus S (2008). Algorithms for correcting some obvious
+#' inconsistencies and rounding errors in business survey data. Technical
+#' Report 08015, Netherlands.
 #'
 reduceMatrix <- function(A){
     d1 <- c(0,0)

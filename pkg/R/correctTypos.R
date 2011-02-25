@@ -1,17 +1,17 @@
 #' Correct records under linear restrictions using typographical error suggestions 
 #'
-#' This algorithm tries to detect and repair records that violate linear equality constraints by correcting simple typo's as described in Scholtus (2009)
+#' This algorithm tries to detect and repair records that violate linear equality constraints by correcting simple typo's as described in Scholtus (2009).
 #' The implemention of the detection of typing errors differs in that it uses the Damerau-Levensthein distance. Furthermore it solves a broader class of 
 #' problems: the original paper describes the class of equalities: \eqn{Ex=0} (balance edits) and this implementation allows for  \eqn{Ex=a}.
 #' 
 #' For each row in \code{dat} the correction algorithm first detects if row \code{x} violates the equality constraints of \code{E} taking possible rounding errors into account.
 #' Mathematically:
-#' \eqn{|\sum_{i=1}^nE_{ji}x_is_i - a_j| \leq \varepsilon,\quad \forall j }
+#' \eqn{|\sum_{i=1}^nE_{ji}x_i - a_j| \leq \varepsilon,\quad \forall j }
 #'
 #' It then generates correction suggestions by deriving alternative values for variables only involved in the violated edits. The correction suggestions must be within a typographical
 #' edit distance (default = 1) to be selected. If there are more then 1 solutions possible the algorithm tries to derive a partial solution, otherwise the solution is applied to the data.
 #'
-#' \code{correctTypos} returns a deducorrect object describing the status of the record and the corrections that have been applied.
+#' \code{correctTypos} returns an object of class \code{\link[=deducorrect-object]{deducorrect}} object describing the status of the record and the corrections that have been applied.
 #'
 #' Please note that if the returned status of a record is "partial" the corrected record still is not valid.
 #' The partially corrected record will contain less errors and will violate less constraints. 
@@ -26,16 +26,17 @@
 #'
 #' @param E \code{\link{editmatrix}} that constrains \code{x} 
 #' @param dat \code{data.frame} with data to be corrected.
-#' @param cost for an deletion, insertion, substition or transposition.
+#' @param cost for a deletion, insertion, substition or transposition.
 #' @param eps \code{numeric}, tolerance on edit check. Default value is \code{sqrt(.Machine$double.eps)}. Set to 2 
 #' to allow for rounding errors. Set this parameter to 0 for exact checking.
 #' @param maxdist \code{numeric}, tolerance used in finding typographical corrections. Default value 1 allows for one error. Used in combination with \code{cost}.
 #'
-#' @return \code{deducorrect} object with corrected data.frame, applied corrections and status of the records.
+#' @return \code{\link[=deducorrect-object]{deducorrect}} object with corrected data.frame, applied corrections and status of the records.
 #' 
-#' @references see
+#' @references
 #' 
-#' Scholtus S (200). Automatric correction of simple typing errors in numerical data with balance edits.
+#' Scholtus S (2009). Automatic correction of simple typing errors in numerical data with balance edits.
+#' Discussion paper 09046, Statistics Netherlands, The Hague/Heerlen.
 #' 
 #' Damerau F (1964). A technique for computer detection and correction of
 #' spelling errors. Communications of the ACM, 7,issue 3

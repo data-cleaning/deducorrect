@@ -177,10 +177,10 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 #'  }
 #' @example examples/correctSigns.R
 #' @references
-#'
 #' Scholtus S (2008). Algorithms for correcting some obvious
 #' inconsistencies and rounding errors in business survey data. Technical
 #' Report 08015, Netherlands.
+#' @seealso \code{\link{deducorrect-object}}
 #'
 #' @export
 correctSigns <- function(
@@ -319,15 +319,16 @@ correctSigns <- function(
     }
     dat[,cn] <- D
     rownames(corrections) <- NULL
-    return(list(
-        corrected=dat, 
-        corrections=corrections, 
+    return(newdeducorrect(
+        corrected  = dat,
+        corrections=corrections,
         status=data.frame(
-            status=status, 
-            degeneracy=degeneracy,
-            weight=weights,
-            nflip=nflip,
-            nswap=nswap)))
+            status     = status, 
+            degeneracy = degeneracy,
+            weight     = weights,
+            nflip      = nflip,
+            nswap      = nswap)))
+        
 }
 
 

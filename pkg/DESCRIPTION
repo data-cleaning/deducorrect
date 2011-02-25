@@ -10,6 +10,6 @@ Description: Deductive correction of simple rounding, typing and sign
 License: GPL-3
 URL: http://code.google.com/p/deducorrect/
 LazyLoad: yes
-Depends: editrules (>= 0.3)
+Depends: editrules (>= 0.4)
 Collate: 'correctRounding.R' 'correctSigns.R' 'correctTypos.R' 'pkg.R'
     'S3deducorrect.R' 'stringdistance.R' 'unimodularity.R' 'util.R'

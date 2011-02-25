@@ -120,8 +120,15 @@ correctTypos <- function( E
                     , old=corrections[,3]
                     , new=corrections[,4]
                     )
-                    
-   list( status = data.frame(status=status)
+    if ( nrow(cdf) == 0 ){
+        cdf <- data.frame(
+            row = integer(0),
+            variable = factor(levels=vars),
+            old = numeric(0),
+            new = numeric(0)
+        )
+    }
+   newdeducorrect( status = data.frame(status=status)
        , corrected = corrected
        , corrections = cdf
        )

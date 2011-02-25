@@ -19,7 +19,7 @@ correctSigns(E, dat,fix="z")
 correctSigns(E, dat, flip=c("x","y"))
 
 # make x and y swappable, if both x and y are flipped, it is interpreted as a swap.
-correctSigns(E, dat,flip=c(), swap=list(c("x","y"),c("y","z")))
+correctSigns(E, dat, flip=c(), swap=list(c("x","y")))
 
 # make x and y swappable, swap a counts as one flip
 correctSigns(E, dat, flip="z", swap=list(c("x","y")), swapIsOneFlip=TRUE)

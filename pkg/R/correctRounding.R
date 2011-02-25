@@ -47,7 +47,7 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
 #' Typically data is constrainted by \eqn{Rx=a} and \eqn{Qx \ge b}.
 #' 
 #' The algorithm first finds violated constraints
-#' \eqn{|r'_{i}x-a_i| > 0} , and selects edits that may be due to a rounding error \eqn{0 < |r'_{i}x-a_i| \leq \vardelta}. 
+#' \eqn{|r'_{i}x-a_i| > 0} , and selects edits that may be due to a rounding error \eqn{0 < |r'_{i}x-a_i| \leq \delta}. 
 #' The algorithm then makes a correction suggestion where the errors are attributed to randomly selected variables under the lineair equality constraints. It checks if the suggested correction is
 #' does not violate the inequality matrix \eqn{Q}. If it does, it will try to generate a different solution up till \code{K} times.
 #'

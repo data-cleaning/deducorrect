@@ -47,3 +47,21 @@ test_that("correctTypos reorder works",{
    expect_equivalent(corrected[2,], dat2[1,])
 })
 
+
+test_that("correctTypos with missing variable works",{   
+   # valid edit matrix (but missing x4)
+   E <- editmatrix(
+    "x1 == x2 + x3 + x5 + x6")
+
+   #print(E)
+   data <- data.frame(
+    x1 = 42280000,
+    x2 = 11289000,
+    x3 = 4328000,
+    x4 = 361300,
+    x5 = 11201000,
+    x6 = 11849000)
+
+   # fail:
+   correctTypos(E,data)
+})

@@ -57,8 +57,11 @@ correctTypos <- function( E
       stop("E must be an equality edit matrix. Edits ", which(!eq)," are inequalities.")
    }
    
+   
+   
+   vars <- getVars(E)
    #align names of E and dat, beware m contains only constrained, numeric variables at this point
-   m <- as.matrix(dat[colnames(E)])
+   m <- as.matrix(dat[vars])
    n <- nrow(m)
    
    status <- status(n)
@@ -67,7 +70,7 @@ correctTypos <- function( E
    # only loop over complete records
    cc <- which(complete.cases(m))
 	for (i in cc){
-	   chk <- getTypoCorrection(E,m[i,], eps, maxdist)
+      chk <- getTypoCorrection(E,m[i,], eps, maxdist)
       
       status[i] <- chk$status
       
@@ -77,6 +80,9 @@ correctTypos <- function( E
       }
 
       cor <- chk$cor
+      if (nrow(cor) == 0){
+         next
+      }
       #sol <- tree(chk$B, cor[,"kappa"])
       sol <- tree(chk$B, cor[,5])
       if (nrow(sol) > 1){
@@ -99,9 +105,7 @@ correctTypos <- function( E
       cor <- cbind(row=rep(i, nrow(cor)), cor)
       corrections <- rbind(corrections, cor)      
 	}
-   
-   vars <- getVars(E)
-   
+      
    # recreate data.frame dat in original column order, but with the corrections applied
    corrected <- dat   
    corrected[vars] <- as.data.frame(m)[]

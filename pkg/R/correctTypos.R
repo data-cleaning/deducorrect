@@ -81,6 +81,7 @@ correctTypos <- function( E
 
       cor <- chk$cor
       if (nrow(cor) == 0){
+         status[i] <- "invalid"
          next
       }
       #sol <- tree(chk$B, cor[,"kappa"])

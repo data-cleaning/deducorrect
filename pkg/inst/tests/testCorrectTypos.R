@@ -63,5 +63,6 @@ test_that("correctTypos with missing variable works",{
     x6 = 11849000)
 
    # fail:
-   correctTypos(E,data)
+   cor <- correctTypos(E,data)
+   #print(cor)
 })

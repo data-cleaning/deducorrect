@@ -241,8 +241,9 @@ correctSigns <- function(
     # Prepare matrices for correctSigns ans flipAndSwap
     cn <- colnames(E)
     D <- as.matrix(dat[ ,cn])
-    A <- as.matrix(E)[getOps(E) == "==", ,drop=FALSE]
-    C <- getC(E)
+    equalities <- getOps(E) == "=="
+    A <- as.matrix(E)[equalities, , drop=FALSE]
+    C <- getC(E)[equalities]
     # swap-names to swap-indices
     haveSwaps <- FALSE
     if (!identical(swap, NULL)){

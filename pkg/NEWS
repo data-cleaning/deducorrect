@@ -1,5 +1,6 @@
 version 0.9-1
 - Fixed a bug in correctTypos: when a record was invalid but no sensible corrections could be made, the function returned an error
+- Smashed a bug in correctSigns: error extracting constant for editmatrix containing equalities and inequalities
 
 version 0.9
 - initial version

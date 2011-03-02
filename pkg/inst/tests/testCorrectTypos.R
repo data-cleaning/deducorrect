@@ -47,6 +47,26 @@ test_that("correctTypos reorder works",{
    expect_equivalent(corrected[2,], dat2[1,])
 })
 
+test_that("correctTypos with noncorrectable record works",{   
+   # valid edit matrix (but missing x4)
+   E <- editmatrix( c( "x1 == x2"
+                     , "9*x1 == x3"
+                     )
+                  )
+
+   #print(E)
+   data <- data.frame(
+    x1 = 10,
+    x2 = 99,
+    x3 = 91)
+
+   # fail:
+   cor <- correctTypos(E,data)
+   #print(cor)
+   expect_equal(as.character(cor$status$status[1]), "invalid")
+})
+
+
 
 test_that("correctTypos with missing variable works",{   
    # valid edit matrix (but missing x4)

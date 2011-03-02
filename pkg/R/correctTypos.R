@@ -60,6 +60,8 @@ correctTypos <- function( E
    
    
    vars <- getVars(E)
+   a <- getC(E)
+   
    #align names of E and dat, beware m contains only constrained, numeric variables at this point
    m <- as.matrix(dat[vars])
    n <- nrow(m)
@@ -99,6 +101,9 @@ correctTypos <- function( E
       #m[i, cor[,"var"]]  <- cor[,"new"]      
       m[i, cor[,1]]  <- cor[,3]
       
+      # check if record is now valid with the corrections applied
+      status[i] <- if (sum(abs(a-E%*%m[i,]) > eps) == 0) "corrected"
+                   else "partial"
       cor <- cbind(row=rep(i, nrow(cor)), cor)
       corrections <- rbind(corrections, cor)      
 	}
@@ -210,14 +215,18 @@ getTypoCorrection <- function( E, x, eps=sqrt(.Machine$double.eps), maxdist=1){
    # filter out the corrections that have dist > 1
    valid <- cor[,4] <= maxdist
    
+   if (sum(valid) == 0){
+      # cannot correct this error
+      ret$status <- "invalid"
+      return(ret)
+   }
+   
    cor <- cor[valid,,drop=FALSE]
    # optimization matrix
-   # TODO test for partial
    B <- E[E1,cor[,1], drop=FALSE] != 0
    ret$cor <- cor
    ret$B <- B
-   ret$status <- if (nrow(cor) > 0) "corrected"
-                 else "invalid"
+   ret$status <- "partial"
    ret
 }
 

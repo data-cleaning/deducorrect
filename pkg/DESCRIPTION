@@ -1,7 +1,7 @@
 Package: deducorrect
 Type: Package
 Title: Deductive correction of simple rounding, typing and sign errors
-Version: 0.9
+Version: 0.9-1
 Date: 2011-02-22
 Author: Mark van der Loo, Edwin de Jonge, and Sander Scholtus
 Maintainer: Mark van der Loo <mark.vanderloo@gmail.com>

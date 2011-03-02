@@ -183,7 +183,8 @@ getTypoCorrection <- function( E, x, eps=sqrt(.Machine$double.eps), maxdist=1){
 		return(ret)
    }
    
-   names(I0) <- colnames(E)
+   names(I0) <- getVars(E)
+   names(x) <- NULL
    # retrieve correction canditates for variables that can be changed
    cor <- lapply( which(I0)
                 , function(i){
@@ -192,7 +193,7 @@ getTypoCorrection <- function( E, x, eps=sqrt(.Machine$double.eps), maxdist=1){
                      
                      # correction candidates
                      #TODO check if solution has to be rounded!!!)
-                     x_i_c <- ( (a[edits]-(E[edits,-i] %*% x[-i])) / (E[edits,i]));
+                     x_i_c <- ( (a[edits]-(E[edits,-i, drop=FALSE] %*% x[-i])) / (E[edits,i]));
                      # count their numbers
                      kap <- table(x_i_c)
                      x_i_c <- as.integer(rownames(kap))

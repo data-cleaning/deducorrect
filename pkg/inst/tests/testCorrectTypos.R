@@ -48,22 +48,18 @@ test_that("correctTypos reorder works",{
 })
 
 test_that("correctTypos with noncorrectable record works",{   
-   # valid edit matrix (but missing x4)
-   E <- editmatrix( c( "x1 == x2"
-                     , "9*x1 == x3"
+      # overconstraint editmatrix (only works for x1=0, and x2=0)
+      E <- editmatrix( c( "x1 == x2"
+                        , "9*x1 == x2"
+                        )
                      )
-                  )
+      data <- data.frame(
+       x1 = 10,
+       x2 = 99)
 
-   #print(E)
-   data <- data.frame(
-    x1 = 10,
-    x2 = 99,
-    x3 = 91)
+      cor <- correctTypos(E,data)
 
-   # fail:
-   cor <- correctTypos(E,data)
-   #print(cor)
-   expect_equal(as.character(cor$status$status[1]), "invalid")
+      expect_equal(as.character(cor$status$status[1]), "invalid")
 })
 
 

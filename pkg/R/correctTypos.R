@@ -80,10 +80,6 @@ correctTypos <- function( E
       }
 
       cor <- chk$cor
-      if (nrow(cor) == 0){
-         status[i] <- "invalid"
-         next
-      }
       #sol <- tree(chk$B, cor[,"kappa"])
       sol <- tree(chk$B, cor[,5])
       if (nrow(sol) > 1){
@@ -216,10 +212,12 @@ getTypoCorrection <- function( E, x, eps=sqrt(.Machine$double.eps), maxdist=1){
    
    cor <- cor[valid,,drop=FALSE]
    # optimization matrix
+   # TODO test for partial
    B <- E[E1,cor[,1], drop=FALSE] != 0
    ret$cor <- cor
    ret$B <- B
-   ret$status <- "corrected"
+   ret$status <- if (nrow(cor) > 0) "corrected"
+                 else "invalid"
    ret
 }
 

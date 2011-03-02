@@ -65,4 +65,5 @@ test_that("correctTypos with missing variable works",{
    # fail:
    cor <- correctTypos(E,data)
    #print(cor)
+   expect_equal(as.character(cor$status$status[1]), "invalid")
 })

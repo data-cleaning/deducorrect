@@ -62,6 +62,20 @@ test_that("correctTypos with noncorrectable record works",{
       expect_equal(as.character(cor$status$status[1]), "invalid")
 })
 
+test_that("correctTypos with noncorrectable record works",{   
+      # overconstraint editmatrix (only works for x1=0, and x2=0)
+      E <- editmatrix( c( "x1 <= x2"
+                        , "9*x1 == x2"
+                        )
+                     )
+      data <- data.frame(
+       x1 = 10,
+       x2 = 99)
+
+      cor <- correctTypos(E,data)
+
+      expect_equal(as.character(cor$status$status[1]), "invalid")
+})
 
 
 test_that("correctTypos with missing variable works",{   

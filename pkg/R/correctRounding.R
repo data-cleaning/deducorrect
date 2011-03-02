@@ -78,6 +78,17 @@ correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
      krit <- colnames(Q)
      b <- getC(Q)
    }
+   else {
+     q <- getOps(R) == ">="
+     if (any(q)){
+       Q <- R[q,,drop=FALSE]
+     }
+   }
+   
+   eq <- getOps(R) == "=="
+   if (!all(eq)){
+      R <- R[eq,,drop=FALSE]
+   }
    
    m <- as.matrix(dat[getVars(R)])
    n <- nrow(m)

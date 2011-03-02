@@ -13,6 +13,9 @@
 #'
 #' \code{correctTypos} returns an object of class \code{\link[=deducorrect-object]{deducorrect}} object describing the status of the record and the corrections that have been applied.
 #'
+#' Inequalities in editmatrix \code{E} will be ignored in this algorithm, so if this is the case, the corrected records
+#' are valid according to the equality restrictions, but may be incorrect for the given inequalities.
+#'
 #' Please note that if the returned status of a record is "partial" the corrected record still is not valid.
 #' The partially corrected record will contain less errors and will violate less constraints. 
 #' Also note that the status "valid" and "corrected" have to be interpreted in combination with \code{eps}.
@@ -52,15 +55,16 @@ correctTypos <- function( E
                         
    stopifnot(is.editmatrix(E), is.data.frame(dat))
    
+
+   a <- getC(E)
    eq <- getOps(E) == "=="
    if (!all(eq)){
-      stop("E must be an equality edit matrix. Edits ", which(!eq)," are inequalities.")
+      warning("E contains inequalities. Edits ", which(!eq)," will be ignored.\n Records with status 'valid' or 
+      'corrected' may therefore be invalid for the complete editmatrix E.")
+      E <- as.editmatrix(E[eq,,drop=FALSE], a[eq])
+      a <- a[eq]
    }
-   
-   
-   
-   vars <- getVars(E)
-   a <- getC(E)
+   vars <- getVars(E)   
    
    #align names of E and dat, beware m contains only constrained, numeric variables at this point
    m <- as.matrix(dat[vars])
@@ -70,7 +74,7 @@ correctTypos <- function( E
    corrections <- NULL
 
    # only loop over complete records
-   cc <- which(complete.cases(m))
+  cc <- which(complete.cases(m))
 	for (i in cc){
       chk <- getTypoCorrection(E,m[i,], eps, maxdist)
       
@@ -213,7 +217,7 @@ getTypoCorrection <- function( E, x, eps=sqrt(.Machine$double.eps), maxdist=1){
                 )
    cor <- t(do.call(cbind,cor))
    
-   # filter out the corrections that have dist > 1
+   # filter out the corrections that have dist > maxdist
    valid <- cor[,4] <= maxdist
    
    if (sum(valid) == 0){

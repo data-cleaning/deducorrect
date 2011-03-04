@@ -12,6 +12,9 @@ E <- editmatrix(c("z == x-y"))
 # All signs may be flipped, no swaps.
 correctSigns(E, dat)
 
+# Limit the number of combinations that may be tested 
+correctSigns(E, dat, maxCombinations=2)
+
 # fix z, flip everything else
 correctSigns(E, dat,fix="z")
 

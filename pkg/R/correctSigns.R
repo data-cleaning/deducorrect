@@ -11,13 +11,16 @@
 #' @param r A numerical record.
 #' @param adapt A logical vector of length \code{ncol(A)} indicating which variables may be changed.
 #' @param maxSigns how many signs may maximally be flipped? 
+#' @param maxCombinations how many sign flip combinations may be tested? Overrules maxSigns. 
 #' @param eps Tolerance for equality restriction checking
 #' @param w positive weight vector of \code{length(ncol(A))}
 #' 
 #' @return A \code{list} with vectors of length \code{r} with coefficients 
 #'      in \eqn{\{-1,1\}}. Empty \code{list} if no solution is found.
 #'
-getSignCorrection <- function(A, C, r, adapt, maxSigns, eps, w){
+#' @seealso \code{\link{correctSigns}}
+#'
+getSignCorrection <- function(A, C, r, adapt, maxSigns, maxCombinations, eps, w){
 
     v <- rep(1,length(r))
     if (all(abs(A%*%r - C) <= eps)) return(list(v))
@@ -27,6 +30,7 @@ getSignCorrection <- function(A, C, r, adapt, maxSigns, eps, w){
     weights <- NA 
     j <- 1
     for ( nsigns in 1:min(maxSigns, nViolated) ){
+        if ( choose(nViolated, nsigns) > maxCombinations ) break
         I <- combn(1:nViolated, nsigns)
         for ( i in 1:ncol(I) ){
            s <- v
@@ -56,6 +60,7 @@ getSignCorrection <- function(A, C, r, adapt, maxSigns, eps, w){
 #' @param r A numerical record.
 #' @param flip vector of  indices (integers) in r who's values may be swapped.
 #' @param swap nx2 array of index combinations of variables wich may be swapped.
+#' @param maxCombinations how many sign flip combinations may be tested? 
 #' @param eps Tolerance for equality restriction checking
 #' @param w weights vector of length length(flip)+nrow(swap), w[1:lenght(flip)] are penalties for changing variables 
 #'      corresponding to indices in \code{flip}, the remaining entries are penalties for the value interchanges in the
@@ -63,7 +68,7 @@ getSignCorrection <- function(A, C, r, adapt, maxSigns, eps, w){
 #' @return A \code{list} with vectors of length \code{r} with coefficients 
 #'      in \eqn{\{-1,1\}}. Empty \code{list} if no solution is found.
 #'
-flipAndSwap <- function(A, C, r, flip, swap, eps, w){
+flipAndSwap <- function(A, C, r, flip, swap, maxCombinations, eps, w){
     II <- rbind(cbind(flip,NA),swap)
    
     v <- rep(1,ncol(A))
@@ -73,6 +78,7 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
     weights <- numeric(0)
     j <- 1
     for ( nsigns in 1:(nrow(II))){    
+        if ( choose(nrow(II), nsigns) > maxCombinations ) break
         I <- combn(1:nrow(II), nsigns)
         for ( i in 1:ncol(I) ){
            s <- v
@@ -148,6 +154,7 @@ flipAndSwap <- function(A, C, r, flip, swap, eps, w){
 #' @param dat The data to correct
 #' @param maxSigns Maximum number of signs that may be changed. Defaults to 
 #'      the number of variables that occur in violated edits if \code{swapIsOneFlip==FALSE}. Ignored otherwise.
+#' @param maxCombinations how many sign flip combinations may be tested?  Overrules maxSigns
 #' @param eps Tolerance on edit check. Defaults to \code{sqrt(.Machine.double.eps)}. Increase this to correct sign errors masked by rounding.
 #' @param flip Names of variables whos signs may be flipped. Defaults to \code{colnames(E)}, use \code{c()} to flip nothing.
 #' @param swap \code{list} of 2-vectors containing pairs of variable names who's values may 
@@ -178,6 +185,7 @@ correctSigns <- function(
     E, 
     dat,
     maxSigns = length(unique(c(flip,unlist(swap)))),
+    maxCombinations = 1e5,
     eps=sqrt(.Machine$double.eps),
     flip = colnames(E),
     swap = NULL,
@@ -269,7 +277,7 @@ correctSigns <- function(
     degeneracy <- integer(nrow(dat))
     nflip <- nswap <- weights <- numeric(nrow(dat))
     status <- status(nrow(D))
-    corrections <- data.frame(row=integer(0), var=factor(levels=colnames(D)), old=numeric(0), new=numeric(0))
+    corrections <- data.frame(row=integer(0), variable=factor(levels=colnames(D)), old=numeric(0), new=numeric(0))
     for ( i in which(complete.cases(D)) ){
         r <- D[i,]
         violated <- abs(A%*%r - C) > eps            
@@ -280,9 +288,9 @@ correctSigns <- function(
             w1    <- wflip[which(flipable) %in% adapt]
             iSw   <- which(swapable[,1] %in% adapt & swapable[,2] %in%  adapt)
             w2    <- wswap[iSw]
-            S <- flipAndSwap(A, C, r, fl, swapable[iSw,], eps, c(w1,w2))
+            S <- flipAndSwap(A, C, r, fl, swapable[iSw,], maxCombinations, eps, c(w1,w2))
         } else {
-            S <- getSignCorrection(A, C, r, adapt, maxSigns, eps, weight)
+            S <- getSignCorrection(A, C, r, adapt, maxSigns, maxCombinations, eps, weight)
         }
         if ( length(S$signs) > 0 ){ # solution found
             s <- S$signs[[which.min(S$weights)]]

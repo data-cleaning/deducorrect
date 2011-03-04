@@ -35,11 +35,11 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
     x2 <- xt[p2]
     
 	 c <- a0 - (R2 %*% x2)
-    x1 <- solve(R1, c)[,1]
+   x1 <- solve(R1, c)[,1]
 	 sol <- c(x1, x2)
-    #restore original order
-    m <- match(names(x), names(sol))
-    sol[m]
+   #restore original order
+   m <- match(names(x), names(sol))
+   sol[m]
 }
 
 #' Correct records under linear restrictions for rounding errors

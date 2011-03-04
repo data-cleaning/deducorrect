@@ -47,6 +47,17 @@ test_that("correctTypos reorder works",{
    expect_equivalent(corrected[2,], dat2[1,])
 })
 
+test_that("correctTypos fixation works",{   
+   # fixate x2, no real fixation
+   cor <- correctTypos(E2,dat2, fixate="x2")
+   corrected <- cor$corrected
+   expect_equivalent(corrected[2,], dat2[1,])
+
+   # fixate x1, no solution
+   cor <- correctTypos(E2,dat2, fixate="x1")
+   expect_equal(nrow(cor$corrections), 0)
+})
+
 test_that("correctTypos with noncorrectable record works",{   
       # overconstraint editmatrix (only works for x1=0, and x2=0)
       E <- editmatrix( c( "x1 == x2"

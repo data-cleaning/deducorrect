@@ -29,6 +29,7 @@
 #'
 #' @param E \code{\link{editmatrix}} that constrains \code{x} 
 #' @param dat \code{data.frame} with data to be corrected.
+#' @param fixate \code{character} with variable names that should not be changed.
 #' @param cost for a deletion, insertion, substition or transposition.
 #' @param eps \code{numeric}, tolerance on edit check. Default value is \code{sqrt(.Machine$double.eps)}. Set to 2 
 #' to allow for rounding errors. Set this parameter to 0 for exact checking.
@@ -48,6 +49,7 @@
 #' and reversals. Soviet Physics Doklady 10: 707-10
 correctTypos <- function( E
                         , dat
+                        , fixate = NULL
                         , cost = c(1,1,1,1)
                         , eps = sqrt(.Machine$double.eps)
                         , maxdist = 1
@@ -64,7 +66,10 @@ correctTypos <- function( E
       E <- as.editmatrix(E[eq,,drop=FALSE], a[eq])
       a <- a[eq]
    }
-   vars <- getVars(E)   
+   vars <- getVars(E)
+   
+   fixate <- if(is.null(fixate)) {rep(FALSE, length(vars))}
+             else vars %in% fixate
    
    #align names of E and dat, beware m contains only constrained, numeric variables at this point
    m <- as.matrix(dat[vars])
@@ -72,11 +77,11 @@ correctTypos <- function( E
    
    status <- status(n)
    corrections <- NULL
-
-   # only loop over complete records
+   
+  # only loop over complete records
   cc <- which(complete.cases(m))
 	for (i in cc){
-      chk <- getTypoCorrection(E,m[i,], eps, maxdist)
+      chk <- getTypoCorrection(E,m[i,], fixate=fixate, eps=eps, maxdist=maxdist)
       
       status[i] <- chk$status
       
@@ -153,11 +158,11 @@ correctTypos <- function( E
 #' cor    \tab suggested corrections \cr
 #' B      \tab reduced binary editmatrix with violated edits, needed for choosing the suggested corrections\cr
 #'}
-getTypoCorrection <- function( E, x, eps=sqrt(.Machine$double.eps), maxdist=1){
+getTypoCorrection <- function( E, x, fixate=FALSE, eps=sqrt(.Machine$double.eps), maxdist=1){
    ret <- list(status=NA)
    
    a <- getC(E)
-   
+      
    #violated edits (ignoring rounding errors)
    E1 <- (abs(a-E%*%x) > eps)
    
@@ -179,7 +184,7 @@ getTypoCorrection <- function( E, x, eps=sqrt(.Machine$double.eps), maxdist=1){
          else TRUE
 
    # restrict I0 to the set of variables involved in violated edits that can be changed
-   I0 <- V1 & I0
+   I0 <- V1 & I0 & !fixate
    
    if (sum(I0) == 0){
 		# cannot correct this error

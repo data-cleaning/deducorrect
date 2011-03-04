@@ -1,5 +1,6 @@
 resample <- function(x, ...) {
-   x[sample.int(length(x), ...)]
+   if (length(x) <= 1) x
+   else sample(x)
 }
 
 #' Scapegoat algorithm
@@ -57,7 +58,7 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
 #' @references 
 #' Scholtus S (2008). Algorithms for correcting some obvious
 #' inconsistencies and rounding errors in business survey data. Technical
-#' Report 08015, Netherlands.
+#' Report 08015, Statistics Netherlands.
 #'
 #' @param R editmatrix \eqn{Rx = a}
 #' @param dat \code{data.frame} with the data to be corrected
@@ -81,13 +82,15 @@ correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
    else {
      q <- getOps(R) == ">="
      if (any(q)){
-       Q <- R[q,,drop=FALSE]
+       Q <- as.editmatrix(R[q,,drop=FALSE])
+       krit <- colnames(Q)
+       b <- getC(Q)
      }
    }
    
    eq <- getOps(R) == "=="
    if (!all(eq)){
-      R <- R[eq,,drop=FALSE]
+      R <- as.editmatrix(R[eq,,drop=FALSE])
    }
    
    m <- as.matrix(dat[getVars(R)])

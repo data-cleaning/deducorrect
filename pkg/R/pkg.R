@@ -6,7 +6,7 @@
 #'
 #' \itemize{
 #' \item{\code{\link{correctRounding}}}
-#' \item{\code{\link{correctSigns}}}
+#' \item{\code{\link{old.correctSigns}}}
 #' \item{\code{\link{correctTypos}}}
 #' \item{\code{\link{deducorrect-object}} and \code{\link{status}} for output specification}
 #' \item{\code{\link{isTotallyUnimodular}}}

@@ -1,44 +1,46 @@
 
 require(editrules)
-
 # some data 
 dat <- data.frame(
-    x = c( 3,14,15, 1),
-    y = c(13,-4, 5, 2),
-    z = c(10,10,-10, NA))
+    x = c( 3,14,15,  1, 17,12.3),
+    y = c(13,-4, 5,  2,  7, -2.1),
+    z = c(10,10,-10, NA,10,10 ))
 # ... which has to obey
 E <- editmatrix(c("z == x-y"))
 
 # All signs may be flipped, no swaps.
 correctSigns(E, dat)
 
+# Allow for rounding errors
+correctSigns(E, dat, eps=2)
+
 # Limit the number of combinations that may be tested 
 correctSigns(E, dat, maxCombinations=2)
 
 # fix z, flip everything else
-correctSigns(E, dat,fix="z")
+correctSigns(E, dat,fixate="z")
 
 # the same result is achieved with
 correctSigns(E, dat, flip=c("x","y"))
 
-# make x and y swappable, if both x and y are flipped, it is interpreted as a swap.
+# make x and y swappable, allow no flips
 correctSigns(E, dat, flip=c(), swap=list(c("x","y")))
 
 # make x and y swappable, swap a counts as one flip
-correctSigns(E, dat, flip="z", swap=list(c("x","y")), swapIsOneFlip=TRUE)
+correctSigns(E, dat, flip="z", swap=list(c("x","y")))
 
-# make x and y swappable, swap counts as one flip, flipping z gets higher penalty
-correctSigns(E, dat, flip="z", swap=list(c("x","y")), swapIsOneFlip=TRUE, weight=c(2,1))
+# same, but now, swapping is preferred (has lower weight)
+correctSigns(E, dat, flip="z", swap=list(c("x","y")), weight=c(2,1))
 
+# same, but now becayse x any y carry lower weight. Also allow for rounding errors
+correctSigns(E, dat, flip="z", swap=list(c("x","y")), eps=2, weight=c(x=1, y=1, z=3))
 
+# demand that solution has y>0
+E <- editmatrix(c("z==x-y", "y>0"))
+correctSigns(E,dat)
 
-
-
-
-
-
-
-
+# demand that solution has y>0, taking acount of roundings in equalities
+correctSigns(E,dat,eps=2)
 
 
 

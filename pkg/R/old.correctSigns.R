@@ -1,6 +1,9 @@
 #' Try to solve balance edit violations by sign changes
 #' 
-#' This is one of the workhorse functions for \code{\link{correctSigns}}, the other being \code{\link{flipAndSwap}}.
+#' WARNING: THIS FUNCTION IS DEPRECATED AND NO LONGER MAINTAINED.
+#' IT WILL BE REMOVED IN VERSION 1.0
+#' 
+#' This is one of the workhorse functions for \code{\link{old.correctSigns}}, the other being \code{\link{flipAndSwap}}.
 #' It performs a breadth-first tree search to resolve (near) equality edit violations. The difference with \code{\link{flipAndSwap}}
 #' is that variable swaps are interpreted as two actions (two sign flips).
 #' The solution(s), if any, with as little as possible sign changes are returned.
@@ -18,9 +21,9 @@
 #' @return A \code{list} with vectors of length \code{r} with coefficients 
 #'      in \eqn{\{-1,1\}}. Empty \code{list} if no solution is found.
 #'
-#' @seealso \code{\link{correctSigns}}
+#' @seealso \code{\link{old.correctSigns}}
 #'
-getSignCorrection <- function(A, C, r, adapt, maxSigns, maxCombinations, eps, w){
+old.getSignCorrection <- function(A, C, r, adapt, maxSigns, maxCombinations, eps, w){
 
     v <- rep(1,length(r))
     if (all(abs(A%*%r - C) <= eps)) return(list(v))
@@ -50,9 +53,14 @@ getSignCorrection <- function(A, C, r, adapt, maxSigns, maxCombinations, eps, w)
 
 #' Try to solve balance edit violations by sign changes and/or variable swaps.
 #'
-#' This is one of the workhorse functions for \code{\link{correctSigns}}, the other being \code{\link{getSignCorrection}}. 
+#' WARNING: THIS FUNCTION IS DEPRECATED AND NO LONGER MAINTAINED.
+#' IT WILL BE REMOVED IN VERSION 1.0
+#'
+#'
+#'
+#' This is one of the workhorse functions for \code{\link{old.correctSigns}}, the other being \code{\link{old.getSignCorrection}}. 
 #' It performs a breadth-first tree search to resolve (near) equality edit violations. The difference with 
-#' \code{\link{getSignCorrection}} is that variable swaps are interpreted as a single action.
+#' \code{\link{old.getSignCorrection}} is that variable swaps are interpreted as a single action.
 #' The solution(s), if any, with as little as possible sign changes are returned.
 #'
 #' @param A The \code{matrix} part of an \code{editmatrix}
@@ -99,6 +107,10 @@ flipAndSwap <- function(A, C, r, flip, swap, maxSigns, maxCombinations, eps, w){
 
 
 #' Correct records under linear restrictions using sign flips and variable swaps
+#'
+#' WARNING: THIS FUNCTION IS DEPRECATED AND NO LONGER MAINTAINED.
+#' IT WILL BE REMOVED IN VERSION 1.0 see \code{\link{old.correctSigns}}.
+#'
 #'
 #' This algorithm tries to repair records that violate linear equality constraints by
 #' switching signs or swapping variable values occuring in violated edits. It does
@@ -183,7 +195,7 @@ flipAndSwap <- function(A, C, r, flip, swap, maxSigns, maxCombinations, eps, w){
 #'      \code{nflip}\tab the number of applied sign flips\cr
 #'      \code{nswap}\tab the number of applied value interchanges\cr
 #'  }
-#' @example examples/correctSigns.R
+#' 
 #' @references
 #' Scholtus S (2008). Algorithms for correcting some obvious
 #' inconsistencies and rounding errors in business survey data. Technical
@@ -191,7 +203,7 @@ flipAndSwap <- function(A, C, r, flip, swap, maxSigns, maxCombinations, eps, w){
 #' @seealso \code{\link{deducorrect-object}}
 #'
 #' @export
-correctSigns <- function(
+old.correctSigns <- function(
     E, 
     dat,
     maxSigns = length(unique(c(flip,unlist(swap)))),
@@ -300,7 +312,7 @@ correctSigns <- function(
             w2    <- wswap[iSw]
             S <- flipAndSwap(A, C, r, fl, swapable[iSw,], maxSigns, maxCombinations, eps, c(w1,w2))
         } else {
-            S <- getSignCorrection(A, C, r, adapt, maxSigns, maxCombinations, eps, weight)
+            S <- old.getSignCorrection(A, C, r, adapt, maxSigns, maxCombinations, eps, weight)
         }
         if ( length(S$signs) > 0 ){ # solution found
             s <- S$signs[[which.min(S$weights)]]

@@ -184,9 +184,7 @@ correctSigns <- function(
     # from flip and swap names to indices
     flip <- sapply(flip, function(fl) which(colnames(E)==fl))
     swap <- sapply(swap, function(sw) c(which(colnames(E)==sw[1]), which(colnames(E)==sw[2])))
-print(swap)
     swap <- array(t(swap), dim=c(length(swap)/2, 2))
-print(swap)
     status <- status(nrow(dat))
     wgt <- degeneracy <- nflips <- nswaps <- numeric(nrow(dat))
     corrections <- data.frame(row=numeric(),variable=factor(levels=colnames(E)),old=numeric(),new=numeric())

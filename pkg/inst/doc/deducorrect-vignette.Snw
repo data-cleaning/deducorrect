@@ -2,20 +2,164 @@
 \documentclass[10pt, fleqn, a4paper]{article}
 \usepackage[english]{babel}
 \usepackage{amsmath, amssymb}
+\usepackage{natbib}
+
+%\newenvironment{pseudocode}{
+%\begin{itemize}
+%  \setlength{\itemsep}{1pt}
+%  \setlength{\parskip}{0pt}
+%  \setlength{\parsep}{0pt}
+%}{\end{itemize}}
+
+\newenvironment{pseudocode}{
+\begin{list}{}{\leftmargin=0pt\itemsep=-0.5ex\labelwidth=0pt}
+}{\end{list}}
+
+\renewcommand{\labelitemi}{}
+\renewcommand{\labelitemii}{}
+
+\newcommand{\ind}{$\phantom{X}$}
 \title{The {\tt deducorrect} vignette}
 \author{Mark van der Loo, Edwin de Jonge and Sander Scholtus}
 \begin{document}
 \maketitle
 \begin{abstract}
-To do...
+This vignette is unfinished. Version 1.0 of the package will contain a full vignette.
 \end{abstract}
 
-
-\section{Introduction}
-<<echo=FALSE, keep.source=FALSE>>=
+<<echo=FALSE,results=hide, keep.source=FALSE>>=
 library(deducorrect)
 @
 \maketitle
+\tableofcontents
+
+\section{Introduction}
+Survey data is often plagued with internal inconsistencies wich have to be repaired
+before reliable statistical analysis can take place. Establishment surveys in particular
+are prone to errors, since they can consist of many numerical variables, interelated by 
+numerous mathematical relationships. In particular, this package focuses on linear
+equalities and inequalities, which may be entered in any of the forms
+%
+\begin{eqnarray}
+\label{edits1}
+Ax &=& b\\
+\label{edits2}
+Ax &<& b \\
+\label{edits3}
+Ax &\leq& b \\
+\label{edits4}
+Ax &>& b \\
+\label{edits5}
+Ax &\geq& b 
+\label{edits6}
+\end{eqnarray}
+or combinations thereof.
+%
+Here, every $A$ is a matrix, $x$ a numerical data record and $b$ a constant vector. To read, store
+and manipulate these relationships, the package relies on functionality of the {\tt editrules}
+package.
+
+The algorithms of this package are generalisations of the algorithms described in \cite{scholtus:2008}
+and \cite{scholtus:2009}. This vignette is aimend to point out the generalisations and to 
+provide the user with some coded examples, including the examples mentioned in the references.
+
+Both papers are included in the {\tt /doc} directory of this package.
+
+\section{The {\tt deducorrect} object}
+
+\section{Correcting sign errors and value swaps}
+\subsection{How it works}
+
+\subsection{Some simple examples}
+
+
+\subsection{Sign errors in a profit-loss account}
+Here, we will work through the example of chapter $3$ of \citet{scholtus:2009}.
+This example considers 4 records, labeled case a, b, c, and d, which can 
+be defined in {\tt R} as
+<<keep.source=TRUE>>=
+dat <- data.frame(
+   case = c("a","b","c","d"),
+   x0r = c(2100,5100,3250,5726),
+   x0c = c(1950,4650,3550,5449),
+   x0  = c( 150, 450, 300, 276),
+   x1r = c(   0,   0, 110,  17),
+   x1c = c(  10, 130,  10,  26),
+   x1  = c(  10, 130, 100,  10),
+   x2r = c(  20,  20,  50,   0),
+   x2c = c(   5,   0,  90,  46),
+   x2  = c(  15,  20,  40,  46),
+   x3r = c(  50,  15,  30,   0),
+   x3c = c(  10,  25,  10,   0),
+   x3  = c(  40,  10,  20,   0),
+   x4  = c( 195, 610,-140, 221))
+@
+A record consists of 3 balance accounts wose results have to add up to a total.
+Each $x_{i,r}$ denotes some kind of return, $x_{ic}$ some kind of cost and
+$x_i$ the difference $x_{i,r}-x_{i,c}$. There are operating, financial,
+provisions and exeptional incomes and expenditures. The differences $x_1$,
+$x_2$ and $x_3$ have to add up to a given total $x_4$.  These linear
+restrictions can be defined with the use of the {\tt editrules} package.
+<<keep.source=TRUE>>=
+require(editrules)
+E <-editmatrix(c(
+    "x0 == x0r - x0c",
+    "x1 == x1r - x1c",
+    "x2 == x2r - x2c",
+    "x3 == x3r - x3c",
+    "x4 == x0 + x1 + x2 + x3"))
+E
+@
+Checking which records violate what edit rules can be done with the {\tt violatedEdits}
+function of {\tt editrules}. 
+<<>>=
+violatedEdits(E,dat)
+@
+So record 1 (case a) for examplem, violates the restrictions $e_1$: $x_1=x_{1,r}-x_{1,c}$
+and $e_5$, $x_1+x_2+sx_3=x_4$. 
+We can try to solve the inconsistencies by allowing the following flips
+and swaps:
+<<keep.source=TRUE>>= 
+swap <- list(
+    c("x1r","x1c"), 
+    c("x2r","x2c"), 
+    c("x3r","x3c"))
+flip <- c("x0","x1","x2","x3","x4")
+@
+%
+Trying to correct the records by just flipping and swapping variables
+indicated above corresponds to trying to solve the system of equations
+\begin{equation}
+\left\{\begin{array}{lcl}
+x_0s_0 &=& x_{0,r}-x_{0,c}\\
+x_1s_1 &=& (x_{1,r}-x_{1,c})t_1\\
+x_2s_2 &=& (x_{2,r}-x_{2,c})t_2\\
+x_3s_3 &=& (x_{3,r}-x_{3,c})t_3\\
+x_4s_4 &=& x_0s_0 + x_1s_1 + x_2s_2 + x_3s_3\\
+\multicolumn{3}{l}{(s_0,s_1,s_2,s_3,s_4,t_1,t_2,t_3)\in\{-1,1\}^{8}},
+\end{array}\right.
+\end{equation}
+where every $s_i$ corresponds to a sign flip and $t_j$ corresponds
+to a value swap, see also Eqn.\ (3.4) in \cite{scholtus:2009}.
+Using the {\tt correctSigns} function, we get the following.
+<<>>=
+cor <- correctSigns(E, dat, flip=flip, swap=swap)
+cor$status
+@
+As expected from the example in the reference, the last record could
+not be corrected because the solution is masked by a rounding errors.
+This can be solved by allowing a tolerance of two measurements units 
+(in this case 1).
+<<>>=
+cor <- correctSigns(E, dat, flip=flip, swap=swap, eps=2)
+cor$status
+cor$corrected
+@
+The latter table corresponds exactly to Table $2$ in the reference.
+
+
+\bibliographystyle{chicago}
+\bibliography{deducorrect}
 
 
 \end{document}

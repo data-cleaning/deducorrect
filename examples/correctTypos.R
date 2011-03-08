@@ -19,4 +19,4 @@ dat <- read.csv(txt<-textConnection(
 4.4, 1452, 116, 1568, 161, 323, 76, 12,   0, 19979, 1842, 137"
 ))
 close(txt)
-(cor <- correctTypos(E,dat))
+#(cor <- correctTypos(E,dat))

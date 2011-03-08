@@ -22,7 +22,7 @@
 
 
 .onLoad <- function(libname, pkgname){
-    cat("\nWARNING:\n")
+    cat("\nBE CAREFUL:\n")
     cat("  As of version 0.9-2, the function correctSigns is no longer backwards compatible.\n")
     cat("  Use old.correctSigns for the old interface. This function will dissapear before the release of 1.0.\n")
 

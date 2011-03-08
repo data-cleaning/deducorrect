@@ -1,4 +1,5 @@
 version 0.9-2
+- correctSigns has new, easier interface and can take inequalities into account.
 - correctSigns now breaks of a 1e5 sign flip combinations - can be adjusted by setting "maxCombinations"
 - solved bug causing correctSigs to crash if no records at all were fixed.
 - correctRounding failed when running on R 2.10, is fixed.

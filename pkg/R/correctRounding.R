@@ -7,11 +7,11 @@ resample <- function(x, ...) {
 #'
 #' @nord
 scapegoat <- function(R0, a0, x,krit=NULL) {
-	 r0 <- nrow(R0)
+	  r0 <- nrow(R0)
     v <- ncol(R0)
     
     if (v < r0){
-       stop("...")
+       return(x)
     }
     
     if (!is.null(krit)){
@@ -72,6 +72,7 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
 #'
 correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
    stopifnot(is.editmatrix(R), is.data.frame(dat))
+   #TODO add fixate
    krit <- character(0)
    
    if (!missing(Q)){
@@ -119,8 +120,10 @@ correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
         if (round) 
             sol <- round(sol,0)
         #TODO make this step more generic (so Q can be any inequality matrix)
-        if ( is.null(Q) 
-          || Q %*% x >= b
+        if ( R0 %*% sol == a0
+          && (  is.null(Q) 
+             || Q %*% sol >= b
+             )
            ){
            break
         }

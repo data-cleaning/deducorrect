@@ -15,6 +15,6 @@ E <- editmatrix("z == x-y")
 # All signs may be flipped, no swaps.
  correctSigns(E, dat)
 
-#correctTypos(E, dat)
+correctTypos(E, dat)
 
-#correctRounding(E, dat)
+correctRounding(E, dat)

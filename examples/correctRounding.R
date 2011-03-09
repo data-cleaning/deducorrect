@@ -21,4 +21,4 @@ dat <- data.frame( x1=12
                  , x11=-13
                  )
 
-#sol <- correctRounding(E, dat)
+sol <- correctRounding(E, dat)

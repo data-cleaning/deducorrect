@@ -3,22 +3,10 @@
 \usepackage[english]{babel}
 \usepackage{amsmath, amssymb}
 \usepackage{natbib}
+\usepackage{algorithmic}
 
-%\newenvironment{pseudocode}{
-%\begin{itemize}
-%  \setlength{\itemsep}{1pt}
-%  \setlength{\parskip}{0pt}
-%  \setlength{\parsep}{0pt}
-%}{\end{itemize}}
 
-\newenvironment{pseudocode}{
-\begin{list}{}{\leftmargin=0pt\itemsep=-0.5ex\labelwidth=0pt}
-}{\end{list}}
 
-\renewcommand{\labelitemi}{}
-\renewcommand{\labelitemii}{}
-
-\newcommand{\ind}{$\phantom{X}$}
 \title{The {\tt deducorrect} vignette}
 \author{Mark van der Loo, Edwin de Jonge and Sander Scholtus}
 \begin{document}
@@ -69,6 +57,43 @@ Both papers are included in the {\tt /doc} directory of this package.
 
 \section{Correcting sign errors and value swaps}
 \subsection{How it works}
+The algorithm of correctsigns performs the following actions for each record in the {\tt dat} argument.
+
+\begin{algorithmic}
+\STATE {\bf Input:} 
+\STATE $-$ A numeric record $x$ 
+\STATE $-$ A set of equality and inequality conditions of the form
+\begin{eqnarray*}
+Ax - b &=& 0\\
+Bx - c &\geq& \varepsilon,
+\end{eqnarray*}
+where $\varepsilon$ is a vector with coefficients either 0 (if the condition is $\geq0$) or \makebox{\tt .Machine\$double.eps} 
+(if the condition is $<0$).
+\STATE $-$ A list {\tt flip} of variables whos signs may be fliped.
+\STATE $-$ A list {\tt swap} of variable pairs whos values may be interchanged
+\STATE $-$ An integer {\tt maxActions} 
+\STATE $-$ An integer {\tt maxCombinations} 
+
+\STATE
+\IF {$Ax-b=0$} 
+\STATE Set {\tt status} to {\tt valid} and we are done.
+\ELSE
+\STATE Create a list {\tt actions}, of length $n$ containing those elements of {\tt flip} and {\tt swap} that
+    affect variables that occur in violated rows of $A$.
+\STATE Create an empty list $S$.
+\STATE $k\leftarrow 0$
+\WHILE {$S=\varnothing$ \AND $k<\min({\tt maxActions},n)$}
+  \IF {\NOT ${n\choose k}>{\tt maxCombinations}$}
+   \STATE $k\leftarrow k+1$ 
+   \STATE Generate all ${n\choose k}$ combinations of $k$ actions.
+   \STATE Loop over those combinations, applying them to $x$. Add solutions obeying $Ax-b=0$ and $Ax-c\geq\varepsilon$ to $S$.
+  \ENDIF
+\ENDWHILE
+\IF {\NOT $S=\varnothing$ }
+\STATE Compute solution weights and choose solution with minimum weight. Choose the first solution in the case of degeneracy.
+\ENDIF
+\ENDIF
+\end{algorithmic}
 
 \subsection{Some simple examples}
 

@@ -16,6 +16,7 @@
 #'  a column called \code{\link{status}}. Further columns might be present, depending on the used correction function.}
 #'  \item{\code{generatedby} The name of the function that called \code{\link{newdeducorrect}} to construct the object.}
 #'  \item{\code{timestamp} The time and date when the object was generated, as returned by \code{\link{date}}.}
+#'  \item{\code{user} The system's username of the user running R. Note that this may yield unexpected results when R accessed on a remote (web)server.}
 #' } 
 #' 
 #' 
@@ -45,7 +46,8 @@ newdeducorrect <- function(corrected, corrections, status){
             corrections = corrections, 
             status      = status,
             timestamp   = date(),
-            generatedby = sys.call(-1)[[1]]
+            generatedby = sys.call(-1)[[1]],
+            user        = getUsername()
         ),
         class = c("deducorrect","list"),
         statsummary = addmargins(table(status$status, useNA="ifany")),

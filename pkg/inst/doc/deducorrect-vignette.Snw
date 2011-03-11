@@ -4,7 +4,9 @@
 \usepackage{amsmath, amssymb}
 \usepackage{natbib}
 \usepackage{algorithmic}
+\usepackage{algorithm}
 
+\usepackage{threeparttable}
 
 
 \title{The {\tt deducorrect} vignette}
@@ -21,6 +23,7 @@ library(deducorrect)
 \maketitle
 \tableofcontents
 
+\newpage
 \section{Introduction}
 Survey data is often plagued with internal inconsistencies wich have to be repaired
 before reliable statistical analysis can take place. Establishment surveys in particular
@@ -54,28 +57,101 @@ provide the user with some coded examples, including the examples mentioned in t
 Both papers are included in the {\tt /doc} directory of this package.
 
 \section{The {\tt deducorrect} object}
+When transforming raw data to a form suitable for statistical processing, it is important to keep
+track of the applied transformations so they can be taken into account when interpreting the results
+of the statistical analyses. To facilitate logging, every {\tt correct-} function of the package 
+returns does not only return the corrected data, but also information on the applied corrections,
+a timestamp and the user running R. See Table \ref{deducorrectObject} for an overview.
 
-\section{Correcting sign errors and value swaps}
+\begin{table}
+\begin{threeparttable}
+\caption{Contents of the {\tt deducorrect} object. All slots can be accessed or reassigned through the {\tt \$} operator.}
+\label{deducorrectObject}
+\begin{tabular}{lp{0.7\textwidth}}
+\hline
+{\tt corrected}   & The input data with records corrected where possible.\\
+{\tt corrections} & A {\tt data.frame} describing the corrections. Every record contains a row number, labeling the
+row in the input data, a variable name of the input data, the old value and the new value.\\
+{\tt status} & A {\tt data.frame} with at least one column giving treatment information of every record in the input data.
+    Depending on the {\tt correct} function, some extra columns may be added. \\
+{\tt timestamp}   & The date and time when the {\tt deducorrect} object was created.\\
+{\tt generatedby} & The name of the function that called {\tt newdeducorrect} to create the object.\\
+{\tt user}        & The name of the user running R, deduced from the environment variables of the system using R.\\
+\hline
+\end{tabular}
+\end{threeparttable}
+\end{table}
+
+\section{Correcting for rounding errors}
 \subsection{How it works}
-The algorithm of correctsigns performs the following actions for each record in the {\tt dat} argument.
+\subsection{Some simple examples}
 
+\section{Correcting for tying errors}
+\subsection{How it works}
+\subsection{Some simple examples}
+
+
+\section{Correcting for sign errors and value swaps}
+\subsection{How it works}
+The function {\tt correctSigns} tries to correct records violating equality contraints as in Eq.\ \eqref{edits1}
+while making sure that possible inequality constraints as in Eqs.\ \eqref{edits2}-\eqref{edits6} are not
+violated in the process. To do so it tries to change the sign of (combinations of) variables and/or swap
+the order of variables. Sign flips and value swaps are closely related since
+\begin{equation}
+-(x - y) = y - x,
+\end{equation}
+These simple linear relations frequently occur in profit-loss accounts for
+example. 
+Basically, {\tt correctSigns} first tries to correct a record by changing one
+sign, if that doesn't yield any solution, it tries changing two, and so on. If
+the user allows value swaps as well, it starts by trying to correct the record
+with a single sign flip or variable swap, if no solution is found, a
+combination is tried, and so on. The algorithm only treats the variables which
+have nonzero coefficients in one of the violated rows of Eq.\ \eqref{edits1}.
+Since the number of combinations grows exponentially with the number of
+variables to treat, the user is given some control over the volume of the
+search space to cover when trying solotions in a number of ways. First of all,
+the variables which are allowed to flip signs or variable pairs which may be
+interchanged simultaneously can be determined by the user. Knowledge of the
+origin of the data and meaning of the questionaire will usually give a good
+idea on which variables are prone to sign errors. For example, in surveys on
+profit-loss accounts, respondents sometimes erroneously submit the cost as a
+negative number. Secondly, the user may limit the maximum number of simultaneous
+sign flips and or value swaps that may be tested. The third option limiting the
+search space is to cut of the algorithm when the number of combinations, given
+a number of actions to try becomes too large.
+
+To account for sign errors and variable swap errors which are masked by 
+rounding errors, the user can provide a nonegative tolerance $\varepsilon$, so the
+set of equality constraints are checked as
+\begin{equation}
+|Ax -b| < \varepsilon,
+\end{equation}
+where $|\cdot|$ indicates the elementwise absolute value. The default value of
+$\varepsilon$ is the machine accuracy ({\tt .Machine\$double.eps}). See
+Algorithm \eqref{correctSigns} on page \pageref{correctSigns} for a more
+detailed description in pseudocode.
+
+
+\begin{algorithm}[p]
+\caption{Record correction for {\tt correctSigns}}
+\label{correctSigns}
 \begin{algorithmic}
 \STATE {\bf Input:} 
 \STATE $-$ A numeric record $x$ 
-\STATE $-$ A set of equality and inequality conditions of the form
+\STATE $-$ A tolerance, $\varepsilon$
+\STATE $-$ A set of equality and inequality constraints of the form
 \begin{eqnarray*}
 Ax - b &=& 0\\
-Bx - c &\geq& \varepsilon,
+Bx - c &\geq& 0,
 \end{eqnarray*}
-where $\varepsilon$ is a vector with coefficients either 0 (if the condition is $\geq0$) or \makebox{\tt .Machine\$double.eps} 
-(if the condition is $<0$).
 \STATE $-$ A list {\tt flip} of variables whos signs may be fliped.
 \STATE $-$ A list {\tt swap} of variable pairs whos values may be interchanged
 \STATE $-$ An integer {\tt maxActions} 
 \STATE $-$ An integer {\tt maxCombinations} 
 
 \STATE
-\IF {$Ax-b=0$} 
+\IF {$|Ax-b|<\varepsilon$ (elementwise) } 
 \STATE Set {\tt status} to {\tt valid} and we are done.
 \ELSE
 \STATE Create a list {\tt actions}, of length $n$ containing those elements of {\tt flip} and {\tt swap} that
@@ -86,19 +162,124 @@ where $\varepsilon$ is a vector with coefficients either 0 (if the condition is 
   \IF {\NOT ${n\choose k}>{\tt maxCombinations}$}
    \STATE $k\leftarrow k+1$ 
    \STATE Generate all ${n\choose k}$ combinations of $k$ actions.
-   \STATE Loop over those combinations, applying them to $x$. Add solutions obeying $Ax-b=0$ and $Ax-c\geq\varepsilon$ to $S$.
+   \STATE Loop over those combinations, applying them to $x$. Add solutions obeying $|Ax-b|<\varepsilon$ and $Ax-c\geq0$ to $S$.
   \ENDIF
 \ENDWHILE
 \IF {\NOT $S=\varnothing$ }
 \STATE Compute solution weights and choose solution with minimum weight. Choose the first solution in the case of degeneracy.
+\STATE Set {\tt status} to {\tt corrected}
+\ELSE
+\STATE Set {\tt status} to invalid
 \ENDIF
 \ENDIF
 \end{algorithmic}
-
+\end{algorithm}
 \subsection{Some simple examples}
+In this section we walk through most of the options of the {\tt correctSigns} function.
+Let's generate some data\footnote{brackets are included only to force R to print the result}:
+<<keep.source=TRUE>>=
+(dat <- data.frame(
+    x = c( 3, 14, 15,  1, 17, 12.3),
+    y = c(13, -4,  5,  2,  7, -2.1),
+    z = c(10, 10,-10, NA, 10, 10 )))
+@
+We subject this data to the rule
+\begin{equation}
+z = x-y.
+\end{equation}
+With the {\tt editrules} package, this rule can be parsed to an {\tt editmatrix}.
+<<keep.source=true>>=
+require(editrules)
+(E <- editmatrix(c("z == x-y")))
+@
+Obviously, not all records in {\tt dat} obey this rule. Let's check it with 
+a function from the {\tt editrules} package:
+<<>>=
+cbind(dat, violatedEdits(E,dat))
+@
+Records 1, 2, 3 and 6 violate the editrule, record 5 is valid and for record 4
+validity cannot be established since it has no value for $z$. 
+If  {\tt correctSigns} is called without any options, all variables $x$, $y$ and $z$
+can be sign-flipped:
+<<>>=
+sol <- correctSigns(E, dat)
+cbind(sol$corrected, sol$status)
+sol$corrections
+@
+So, the first three records have been correcte by flipping the sign of $z$, $y$ and $z$ respectively.
+Since no weight parameter was given, the weight is just the number of variables whose have been sign-flipped.
+Record 4 is not treated, since validity could not be established, record 5 was valid to begin with and
+record 6 could not be repaired with sign flips. However, record 6 seems to have a rounding error.
+We can try to accomodate for that by allowing a tolerance when checking equalities.
+<<>>=
+sol <- correctSigns(E, dat, eps=2)
+cbind(sol$corrected, sol$status)
+sol$corrections
+@
+Indeed, changing the sign of $y$ in the last record brings the record within the allowed tolerance.
+Suppose that we have so much faith in the value of $z$, that we do not wish to change it's sign.
+This can be done with the {\tt fixate} option:
+<<>>=
+sol <- correctSigns(E, dat, eps=2, fixate="z")
+cbind(sol$corrected, sol$status)
+sol$corrections
+@
+Indeed, we now find solutions whitout changing $z$, but at the price of more sign flips.
+By the way, the same result could have been obtained by
+<<results=hide>>=
+correctSigns(E, dat, flip=c("x","y"))
+@
+The sign flips in record 1 and three have the same effect of a variable swap. Allowing
+for swaps can be done as follows.
+<<keep.source=true>>=
+sol <- correctSigns(E, dat, swap=list(c("x","y")), 
+    eps=2, fixate="z")
+cbind(sol$corrected, sol$status)
+sol$corrections
+@
+Notice that apart from swapping, the algorithm still tries to correct records by flipping signs.
+What happens is that the algorithm first tries to flip the sign of $x$, then of $y$, and then it tries to swap $x$ and $y$.
+Each is counted as a single action. If no solution is found, it starts trying combinations. In this relatively simple 
+example the result turned out well. In cases with more elaborate systems of equalities and inequalities, the 
+result of the algorithm becomes harder to predict for users. It is therefore in general advisable to 
+\begin{itemize}
+\item Use as much knowledge about the data as possible to decide which variables to flip sign and which variable pairs to swap.
+    The problem treated in section \ref{exScholtusCorrectSigns} is a good example of this.
+\item Keep {\tt flip} and {\tt swap} disjunct. It is better to run the data a few times 
+        times through {\tt correctSigns} with different settings.
+\end{itemize}
+Not allowing any sign flips can be done with the option {\tt flip=c()}.
+<<>>=
+sol <- correctSigns(E, dat, flip=c(), swap=list(c("x","y")))
+cbind(sol$corrected, sol$status)
+sol$corrections
+@
+This yields less corrected records. However running the data through 
+<<>>==
+correctSigns(E, sol$corrected, eps=2)$status
+@
+will fix the remaining edit violations, and yields code which is a lot easyer to interpret.
 
+<<echo=false, results=hide>>=
+# make x and y swappable, swap a counts as one flip
+correctSigns(E, dat, flip="z", swap=list(c("x","y")))
+
+# same, but now, swapping is preferred (has lower weight)
+correctSigns(E, dat, flip="z", swap=list(c("x","y")), weight=c(2,1))
+
+# same, but now becayse x any y carry lower weight. Also allow for rounding errors
+correctSigns(E, dat, flip="z", swap=list(c("x","y")), eps=2, weight=c(x=1, y=1, z=3))
+
+# demand that solution has y>0
+E <- editmatrix(c("z==x-y", "y>0"))
+correctSigns(E,dat)
+
+# demand that solution has y>0, taking acount of roundings in equalities
+correctSigns(E,dat,eps=2)
+@
 
 \subsection{Sign errors in a profit-loss account}
+\label{exScholtusCorrectSigns}
 Here, we will work through the example of chapter $3$ of \citet{scholtus:2009}.
 This example considers 4 records, labeled case a, b, c, and d, which can 
 be defined in {\tt R} as
@@ -140,7 +321,7 @@ function of {\tt editrules}.
 <<>>=
 violatedEdits(E,dat)
 @
-So record 1 (case a) for examplem, violates the restrictions $e_1$: $x_1=x_{1,r}-x_{1,c}$
+So record 1 (case a) for example, violates the restrictions $e_1$: $x_1=x_{1,r}-x_{1,c}$
 and $e_5$, $x_1+x_2+sx_3=x_4$. 
 We can try to solve the inconsistencies by allowing the following flips
 and swaps:

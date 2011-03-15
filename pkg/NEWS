@@ -1,3 +1,6 @@
+version 0.9-3
+- added index.html for vignettes
+
 version 0.9-2
 - some work on vignette
 - deducorrect object how has "user" slot

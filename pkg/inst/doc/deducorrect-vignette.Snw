@@ -25,11 +25,49 @@ library(deducorrect)
 
 \newpage
 \section{Introduction}
-Survey data is often plagued with internal inconsistencies wich have to be repaired
-before reliable statistical analysis can take place. Establishment surveys in particular
-are prone to errors, since they can consist of many numerical variables, interelated by 
-numerous mathematical relationships. In particular, this package focuses on linear
-equalities and inequalities, which may be entered in any of the forms
+Raw data  is often plagued with internal inconsistencies which interfere with
+statistical analysis. Data stemming from establishment surveys are particularly
+prone to inconsistencies since they consist of many numerical variables,
+interrelated by numerous mathematical relationships. Before statistical
+analysis can take place, these relationships have to be checked on a
+record-by-record basis, and violations resolved as much as possible.  While
+establishing that a records violates certain relationships is simple, deciding
+which fields in a record contains the actual errors can be a difficult task. In
+the past, much attention has been paid to this decision problem, often using
+Fellegi and Holt's principle \cite{fellegi:1976} as a starting point. This
+principle states that for non-systematic errors, and with no information on the
+cause of the errors, one should try to make a record consistent by changing as
+few variables as possible.
+
+This principle precludes using the data available in the (possibly erroneous)
+fields to detect and correct the error. In certain cases, naivelily applying
+Fellegi and Holt's principle will yield consistent records with nevertheless
+faulty data. As an example, consider a survey record with three variables $x$,
+$y$ and $z$, which have to obey the relationship $x=y-z$. Such relationships
+frequently occur in profit-loss accounts. If a record happens to have values
+such that $x=z-y$, then Fellegi and Holt's principle suggests that either the
+numerical value of $x$, $y$ or $z$ should be adapted in such a way that the
+relationship holds, while the values in the record suggest that the values in
+fields $y$ and $z$ have been interchanged. Swapping the values of $z$ and 
+$y$ therefore seems a reasonable solution although it formally means changing
+two values.
+
+
+\subsection{Deductive correction}
+We use the term deductive correction to indicate methods wich use information
+available in inconsistent records to deduce and solve the probable cause of
+error. Recently, a number of algorithms for deductive correction have
+been proposed by \cite{scholtus:2008, scholtus:2009}. These algorithms
+can solve problems not uncommon in numerical survey data, namely
+%
+\begin{itemize}
+\item Rounding errors.
+\item Simple typing errors.
+\item Sign swaps and/or value interchanges.
+\end{itemize}
+%
+The algorithms focus on solving problems in records with linear relationships,
+which can be written in any (combination of) the forms
 %
 \begin{eqnarray}
 \label{edits1}
@@ -44,25 +82,31 @@ Ax &>& b \\
 Ax &\geq& b 
 \label{edits6}
 \end{eqnarray}
-or combinations thereof.
 %
-Here, every $A$ is a matrix, $x$ a numerical data record and $b$ a constant vector. To read, store
-and manipulate these relationships, the package relies on functionality of the {\tt editrules}
-package.
+Here, every $A$ is a matrix, $x$ a numerical data record and $b$ a constant
+vector. In this paper, we describe the {\tt deducorrect} package for R
+\citep{R-core:2011}, which implements (slight) generalisations of the
+algorithms proposed by \cite{scholtus:2008, scholtus:2009}. The purpose of this
+paper is to provide details on the algorithms and to familiarize users with the
+syntax of the package. The correction algorithms in the package report the
+results in a uniform matter. Section \ref{deducorrectObject} provides details
+on this. Sections \ref{roundingErrors}, \ref{typingErrors} and
+\ref{signErrors}, provide details on the classes of problems that may be
+treated with the package, an exposition of the algorithms used and coded
+examples with analysis of the results. It is also shown how the examples
+from \cite{scholtus:2008} and \cite{scholtus:2009} can be treated with
+this software. The package requires that linear relationships are 
+defined with the {\tt editrules} package \citep{jonge:2011}
 
-The algorithms of this package are generalisations of the algorithms described in \cite{scholtus:2008}
-and \cite{scholtus:2009}. This vignette is aimend to point out the generalisations and to 
-provide the user with some coded examples, including the examples mentioned in the references.
 
-Both papers are included in the {\tt /doc} directory of this package.
-
-\section{The {\tt deducorrect} object}
+\subsection{The {\tt deducorrect} object and {\tt status} values}
+\label{deducorrectObject}
 When transforming raw data to a form suitable for statistical processing, it is important to keep
 track of the applied transformations so they can be taken into account when interpreting the results
 of the statistical analyses. To facilitate logging, every {\tt correct-} function of the package 
-returns does not only return the corrected data, but also information on the applied corrections,
+does not only return the corrected data, but also information on the applied corrections,
 a timestamp and the user running R. See Table \ref{deducorrectObject} for an overview.
-
+%
 \begin{table}
 \begin{threeparttable}
 \caption{Contents of the {\tt deducorrect} object. All slots can be accessed or reassigned through the {\tt \$} operator.}
@@ -81,22 +125,86 @@ row in the input data, a variable name of the input data, the old value and the 
 \end{tabular}
 \end{threeparttable}
 \end{table}
+%
 
-\section{Correcting for rounding errors}
+When printed, not al slots are written to the screen. In stead, a summary of it's contents is given.
+In this example, we define one record of data, a linear restriction, in the form of an {\tt editmatrix},
+and apply the {\tt correctSigns} correction method\footnote{sometimes extra
+brackets are included to force R to print the result}.
+<<>>=
+(d <- data.frame(x=1,y=0,z=1))
+require(editmatrix)
+E <- editmatrix("x==y-z")
+sol <- correctSigns(E,d)
+sol
+@
+%
+\begin{table}
+\caption{Status values in the {\tt deducorrect} object.}
+\label{statusvalues}
+\begin{tabular}{lp{0.7\textwidth}}
+\hline
+Status & description\\
+\hline
+{\tt NA}        & Validity of the record could not be established.\\
+{\tt valid}     & The record obeys all restrictions.\\
+{\tt corrected} & The record contained inconsistencies but now obeys all restrictions.\\
+{\tt partially} & The record contained inconsistencies which could partially be solved.\\
+{\tt invalid}   & The record containes inconsistencies which could not be solved.\\
+\hline
+\end{tabular}
+\end{table}
+%
+The individual components of {\tt sol} can be retrieved with the dollar-operator. The slot
+{\tt corrected} is the same as the input data, but with corrected records, where possible:
+<<>>=
+sol$corrected
+@
+The applied corrections are stored in the {\tt corrections} slot.
+<<>>=
+sol$corrections
+@
+Every row in {\tt corrections} tells wich variable in which row of the input
+data was changed, and what the old and new values are. The {\tt status} slot
+gives details on the status of the record.
+<<>>=
+sol$status
+@
+The first column is an indicator which can take five different values, indicating
+whether validity could be established, and/or if the record could be (partially)
+corrected by the method which created the deducorrect object. See Table \ref{statusvalues}
+for details. The rest of the columns depend on the function which created the
+object and can provide more details on the chosen solutions. These are 
+described in the following sections.
+
+
+
+
+
+
+\section{Correcting for rounding errors with {\tt correctRoundings}}
+\label{roundingErrors}
 \subsection{How it works}
 \subsection{Some simple examples}
 
-\section{Correcting for tying errors}
+\section{Correcting for tying errors with {\tt correctTypos}}
+\label{typingErrors}
 \subsection{How it works}
 \subsection{Some simple examples}
 
 
-\section{Correcting for sign errors and value swaps}
+\section{Correcting for sign errors and value swaps with {\tt correctSigns}}
+\label{signErrors}
+\subsection{Area of application}
+This function can be used to solve sign errors and value swaps which cause
+linear equalities (Eq. \ref{edits1}) to fail. Possible presence of linear
+inequalities [Eq. \eqref{edits2}-\eqref{edits6}] are taken into account
+when resolving errors, but they are not part of the error detection process.
+
 \subsection{How it works}
-The function {\tt correctSigns} tries to correct records violating equality contraints as in Eq.\ \eqref{edits1}
-while making sure that possible inequality constraints as in Eqs.\ \eqref{edits2}-\eqref{edits6} are not
-violated in the process. To do so it tries to change the sign of (combinations of) variables and/or swap
-the order of variables. Sign flips and value swaps are closely related since
+The function {\tt correctSigns} tries to change the sign of (combinations of)
+variables and/or swap the order of variables to repair inconsistent records.
+Sign flips and value swaps are closely related since
 \begin{equation}
 -(x - y) = y - x,
 \end{equation}
@@ -176,7 +284,7 @@ Bx - c &\geq& 0,
 \end{algorithm}
 \subsection{Some simple examples}
 In this section we walk through most of the options of the {\tt correctSigns} function.
-Let's generate some data\footnote{brackets are included only to force R to print the result}:
+Let's generate some data:
 <<keep.source=TRUE>>=
 (dat <- data.frame(
     x = c( 3, 14, 15,  1, 17, 12.3),

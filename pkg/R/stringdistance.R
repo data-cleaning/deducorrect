@@ -32,21 +32,26 @@ damerauLevenshteinDistance <- function(sa,sb, w=c(1,1,1,1)){
       
       d[,1] <- 0:(la-1)
       d[1,] <- 0:(lb-1)
+      
+      eq <- outer(a,b, "==")
+      
       for(i in 2:la){
          for(j in 2:lb) {
-            cost <- if (a[i] == b[j]) 0
-                    else w[3]
-            d[i,j] <- min( (d[i-1, j  ] + w[1])      # deletion
-                         , (d[i  , j-1] + w[2])      # insert
-                         , (d[i-1, j-1] + cost)   # substitution
-                         )
-            if (a[i]==b[j-1] && a[i-1]==b[j]){
-             cost <- if (a[i] == b[j]) 0
-                   else w[4]
-               d[i,j] <- min( d[i  ,j  ] 
-                            , d[i-2,j-2] + cost   # transposition
-                            )
+         
+            if (eq[i,j]){
+               d[i,j] <- d[i-1,j-1]
+               next
             }
+
+            cost <- c( d[i-1, j  ]      # deletion
+                     , d[i  , j-1]      # insert
+                     , d[i-1, j-1]      # substitution
+                     , d[i-2,j-2]       # transposition
+                     ) + w
+            if (!(eq[i-1,j] && eq[i,j-1]))
+               cost <- cost[-4]
+ 
+            d[i,j] <- min(cost) 
          }
       }
       d[la,lb]

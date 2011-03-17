@@ -194,6 +194,8 @@ described in the following sections.
 \section{\tt correctRoundings}
 \label{roundingErrors}
 \subsection{Area of application}
+This function can be used to correct records which violate linear equality restrictions because of
+rounding errors in one or more variables.
 \subsection{How it works}
 \subsection{Some simple examples}
 

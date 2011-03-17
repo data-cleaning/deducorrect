@@ -52,6 +52,9 @@ fields $y$ and $z$ have been interchanged. Swapping the values of $z$ and
 $y$ therefore seems a reasonable solution although it formally means changing
 two values.
 
+\paragraph{Note.} In data-editing literature the restrictions imposed on records
+are often called edit rules or edits, in short. We will use these terms 
+as well.
 
 \subsection{Deductive correction}
 We use the term deductive correction to indicate methods wich use information
@@ -90,13 +93,15 @@ algorithms proposed by \cite{scholtus:2008, scholtus:2009}. The purpose of this
 paper is to provide details on the algorithms and to familiarize users with the
 syntax of the package. The correction algorithms in the package report the
 results in a uniform matter. Section \ref{deducorrectObject} provides details
-on this. Sections \ref{roundingErrors}, \ref{typingErrors} and
+on the {\tt deducorrect} output object. Sections \ref{roundingErrors}, \ref{typingErrors} and
 \ref{signErrors}, provide details on the classes of problems that may be
 treated with the package, an exposition of the algorithms used and coded
 examples with analysis of the results. It is also shown how the examples
 from \cite{scholtus:2008} and \cite{scholtus:2009} can be treated with
 this software. The package requires that linear relationships are 
-defined with the {\tt editrules} package \citep{jonge:2011}
+defined with the {\tt editrules} package \citep{jonge:2011}. All
+R-code examples in this paper can be executed from the R commandline
+after loading the {\tt deducorrect} and {\tt editrules} package.
 
 
 \subsection{The {\tt deducorrect} object and {\tt status} values}
@@ -140,7 +145,10 @@ sol
 @
 %
 \begin{table}
-\caption{Status values in the {\tt deducorrect} object.}
+\begin{threeparttable}
+\caption{Status values in the {\tt deducorrect} object. The precise meaning depends on the 
+applied {\tt correct-} function. See sections  \ref{roundingErrors}, \ref{typingErrors} and \ref{signErrors}
+for the appropriate descriptions.}
 \label{statusvalues}
 \begin{tabular}{lp{0.7\textwidth}}
 \hline
@@ -153,6 +161,7 @@ Status & description\\
 {\tt invalid}   & The record containes inconsistencies which could not be solved.\\
 \hline
 \end{tabular}
+\end{threeparttable}
 \end{table}
 %
 The individual components of {\tt sol} can be retrieved with the dollar-operator. The slot
@@ -182,24 +191,38 @@ described in the following sections.
 
 
 
-\section{Correcting for rounding errors with {\tt correctRoundings}}
+\section{\tt correctRoundings}
 \label{roundingErrors}
+\subsection{Area of application}
 \subsection{How it works}
 \subsection{Some simple examples}
 
-\section{Correcting for tying errors with {\tt correctTypos}}
+\section{\tt correctTypos}
 \label{typingErrors}
+\subsection{Area of application}
 \subsection{How it works}
 \subsection{Some simple examples}
 
 
-\section{Correcting for sign errors and value swaps with {\tt correctSigns}}
+\section{\tt correctSigns}
 \label{signErrors}
 \subsection{Area of application}
 This function can be used to solve sign errors and value swaps which cause
 linear equalities (Eq. \ref{edits1}) to fail. Possible presence of linear
 inequalities [Eq. \eqref{edits2}-\eqref{edits6}] are taken into account
 when resolving errors, but they are not part of the error detection process.
+The {\tt status} values for a record treated by {\tt correctSigns} therefore
+has the following meanings.
+
+\begin{description}
+\item[{\tt valid}] No linear equalities were violated. Linear inequalities might be violated however.
+\item[{\tt corrected}] The record violate linear equalities, and possible linear inequalities. All (in)equalities
+    are obeyed by the treated record.
+\item[{\tt partially}] Does not occur.
+\item[{\tt invalid}] The record violates linear inequalities which could not be repaired by {\tt correctSigns}.
+\item[{\tt NA}]  Validity of record could not be established.
+\end{description}
+
 
 \subsection{How it works}
 The function {\tt correctSigns} tries to change the sign of (combinations of)
@@ -209,25 +232,27 @@ Sign flips and value swaps are closely related since
 -(x - y) = y - x,
 \end{equation}
 These simple linear relations frequently occur in profit-loss accounts for
-example. 
-Basically, {\tt correctSigns} first tries to correct a record by changing one
-sign, if that doesn't yield any solution, it tries changing two, and so on. If
-the user allows value swaps as well, it starts by trying to correct the record
-with a single sign flip or variable swap, if no solution is found, a
-combination is tried, and so on. The algorithm only treats the variables which
-have nonzero coefficients in one of the violated rows of Eq.\ \eqref{edits1}.
-Since the number of combinations grows exponentially with the number of
-variables to treat, the user is given some control over the volume of the
-search space to cover when trying solotions in a number of ways. First of all,
-the variables which are allowed to flip signs or variable pairs which may be
-interchanged simultaneously can be determined by the user. Knowledge of the
-origin of the data and meaning of the questionaire will usually give a good
-idea on which variables are prone to sign errors. For example, in surveys on
-profit-loss accounts, respondents sometimes erroneously submit the cost as a
-negative number. Secondly, the user may limit the maximum number of simultaneous
-sign flips and or value swaps that may be tested. The third option limiting the
-search space is to cut of the algorithm when the number of combinations, given
-a number of actions to try becomes too large.
+example.  Basically, {\tt correctSigns} first tries to correct a record by
+changing one sign. If that doesn't yield any solution, it tries changing two,
+and so on. If the user allows value swaps as well, it starts by trying to
+correct the record with a single sign flip or variable swap. If no solution is
+found, a combination is tried, and so on. The algorithm only treats the
+variables which have nonzero coefficients in one of the violated rows of Eq.\
+\eqref{edits1}.  Since the number of combinations grows exponentially with the
+number of variables to treat, the user is given some control over the volume of
+the search space to cover in a number of ways. First of all, the variables
+which are allowed to flip signs or variable pairs which may be interchanged
+simultaneously can be determined by the user. Knowledge of the origin of the
+data will usually give a good idea on which variables are prone to sign errors.
+For example, in surveys on profit-loss accounts, respondents sometimes
+erroneously submit the cost as a negative number. Secondly, the user may limit
+the maximum number of simultaneous sign flips and or value swaps that may be
+tested. This is controled by the {\tt maxActions} parameter in Algorithm
+\ref{correctSigns}.  The third option limiting the search space is to break
+when the number of combinations, given a number of actions to try becomes too
+large. This is controlled by the {\tt maxCombinations} parameter in Algorithm
+\ref{correctSigns}.
+
 
 To account for sign errors and variable swap errors which are masked by 
 rounding errors, the user can provide a nonegative tolerance $\varepsilon$, so the
@@ -236,9 +261,27 @@ set of equality constraints are checked as
 |Ax -b| < \varepsilon,
 \end{equation}
 where $|\cdot|$ indicates the elementwise absolute value. The default value of
-$\varepsilon$ is the machine accuracy ({\tt .Machine\$double.eps}). See
-Algorithm \eqref{correctSigns} on page \pageref{correctSigns} for a more
-detailed description in pseudocode.
+$\varepsilon$ is the square root of machine accuracy which amounts to
+approximately $10^{-8}$ on a 32-bit architecture. 
+
+The purpose of this algorithm is to find and apply the minimal number of
+actions (sign flips and/or variable swaps) necessary to repair the record. It
+is not guaranteed that a solution exists, nor that the solution is unique. If
+multiple solutions are found, the solution which minimizes a weight is chosen.
+The user has the option to assign weights to every variable, or to every
+action.  The total weight of a solution is the sum over the weights of the
+altered variables or the sum over the weight of the actions performed. Actions
+with heigher weight are therefore less likely to be performed and variables
+with higher weight are less likely to be altered.
+
+This algorithm is a generalization of the original algorithms in \cite{scholtus:2009}
+in two ways. First, the original algorithm was designed with a specific type of
+profit-loss account in mind, while the algorithm of {\tt deducorrect} can handle any
+set of linear equalities. Second, the original algorithm was not designed to 
+take account of inequality restrictions, which is a feature of the algorithm
+in this work. In Section \ref{exScholtusCorrectSigns} it is shown how the 
+results of the original example can be reproduced.
+
 
 
 \begin{algorithm}[p]
@@ -257,10 +300,11 @@ Bx - c &\geq& 0,
 \STATE $-$ A list {\tt swap} of variable pairs whos values may be interchanged
 \STATE $-$ An integer {\tt maxActions} 
 \STATE $-$ An integer {\tt maxCombinations} 
+\STATE $-$ A weight vector.
 
 \STATE
 \IF {$|Ax-b|<\varepsilon$ (elementwise) } 
-\STATE Set {\tt status} to {\tt valid} and we are done.
+\STATE Set {\tt status} to {\tt valid}.
 \ELSE
 \STATE Create a list {\tt actions}, of length $n$ containing those elements of {\tt flip} and {\tt swap} that
     affect variables that occur in violated rows of $A$.
@@ -284,7 +328,7 @@ Bx - c &\geq& 0,
 \end{algorithm}
 \subsection{Some simple examples}
 In this section we walk through most of the options of the {\tt correctSigns} function.
-Let's generate some data:
+We will work with the following six records as example.
 <<keep.source=TRUE>>=
 (dat <- data.frame(
     x = c( 3, 14, 15,  1, 17, 12.3),
@@ -298,9 +342,9 @@ z = x-y.
 With the {\tt editrules} package, this rule can be parsed to an {\tt editmatrix}.
 <<keep.source=true>>=
 require(editrules)
-(E <- editmatrix(c("z == x-y")))
+E <- editmatrix(c("z == x-y"))
 @
-Obviously, not all records in {\tt dat} obey this rule. Let's check it with 
+Obviously, not all records in {\tt dat} obey this rule. This can be checked with 
 a function from the {\tt editrules} package:
 <<>>=
 cbind(dat, violatedEdits(E,dat))
@@ -408,11 +452,11 @@ dat <- data.frame(
    x3  = c(  40,  10,  20,   0),
    x4  = c( 195, 610,-140, 221))
 @
-A record consists of 3 balance accounts wose results have to add up to a total.
+A record consists of 4 balance accounts wose results have to add up to a total.
 Each $x_{i,r}$ denotes some kind of return, $x_{ic}$ some kind of cost and
 $x_i$ the difference $x_{i,r}-x_{i,c}$. There are operating, financial,
-provisions and exeptional incomes and expenditures. The differences $x_1$,
-$x_2$ and $x_3$ have to add up to a given total $x_4$.  These linear
+provisional and exeptional incomes and expenditures. The differences $x_0$,
+$x_1$, $x_2$, and $x_3$ have to add up to a given total $x_4$.  These linear
 restrictions can be defined with the use of the {\tt editrules} package.
 <<keep.source=TRUE>>=
 require(editrules)
@@ -462,18 +506,24 @@ cor$status
 @
 As expected from the example in the reference, the last record could
 not be corrected because the solution is masked by a rounding errors.
-This can be solved by allowing a tolerance of two measurements units 
-(in this case 1).
+This can be solved by allowing a tolerance of two measurements units.
 <<>>=
 cor <- correctSigns(E, dat, flip=flip, swap=swap, eps=2)
 cor$status
 cor$corrected
 @
-The latter table corresponds exactly to Table $2$ in the reference.
+The latter table corresponds exactly to Table $2$ of \cite{scholtus:2009}.
 
 
 \bibliographystyle{chicago}
 \bibliography{deducorrect}
 
+\newpage
+\appendix
+\section{Some notes on the {\tt editrules} package}
+
+The {\tt editmatrix} function translates verbose editrules to the matrix equivalent.
+The result should be read as follows: a record is valid when it obeys
+$-1\cdot x + 1\cdot y + 1\cdot z = 0$.
 
 \end{document}

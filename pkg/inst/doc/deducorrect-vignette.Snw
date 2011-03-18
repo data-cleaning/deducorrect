@@ -202,7 +202,27 @@ rounding errors in one or more variables.
 \section{\tt correctTypos}
 \label{typingErrors}
 \subsection{Area of application}
+This function can be used to correct typographical errors in a numerical record violating 
+linear equality constraints. Linear inequalities are currently ignored completely.
+
 \subsection{How it works}
+
+
+\begin{algorithm}
+\begin{algorithmic}
+\STATE Determine $J_0=\{j: x_j \textrm{ occurs {\em only} in violated edits and not in {\tt fixate}}\}$
+\FOR { $j\in J_0$}
+\STATE Determine the matrix $A^{(j)}$ of violated edits containing $x_j$ and associated constant vector $b^{(j)}$
+\FOR { every row $i$ of $A^{(j)}$}
+\STATE $\tilde{x}_i^{(j)} \leftarrow \left(b_i^{(j)}-\sum_{j'\not=j}A_{ij'}^{(j)}x_{j'}\right)/A_{ij}^{(j)} $
+\STATE $d^{(j)}_i \leftarrow d_{\rm DL}(\tilde{x}^{(j)}_i,x_j)$
+\ENDFOR
+\ENDFOR
+\STATE Remove $x^{(j)}_i$ and $d^{(j)}_i$ for which $d^{(j)}_i>{\tt maxdist}$ 
+
+\end{algorithmic}
+\end{algorithm}
+
 \subsection{Some simple examples}
 
 
@@ -276,7 +296,7 @@ altered variables or the sum over the weight of the actions performed. Actions
 with heigher weight are therefore less likely to be performed and variables
 with higher weight are less likely to be altered.
 
-This algorithm is a generalization of the original algorithms in \cite{scholtus:2009}
+This algorithm is a generalization of the original algorithms in \cite{scholtus:2008}
 in two ways. First, the original algorithm was designed with a specific type of
 profit-loss account in mind, while the algorithm of {\tt deducorrect} can handle any
 set of linear equalities. Second, the original algorithm was not designed to 
@@ -434,7 +454,7 @@ correctSigns(E,dat,eps=2)
 
 \subsection{Sign errors in a profit-loss account}
 \label{exScholtusCorrectSigns}
-Here, we will work through the example of chapter $3$ of \citet{scholtus:2009}.
+Here, we will work through the example of chapter $3$ of \citet{scholtus:2008}.
 This example considers 4 records, labeled case a, b, c, and d, which can 
 be defined in {\tt R} as
 <<keep.source=TRUE>>=
@@ -500,7 +520,7 @@ x_4s_4 &=& x_0s_0 + x_1s_1 + x_2s_2 + x_3s_3\\
 \end{array}\right.
 \end{equation}
 where every $s_i$ corresponds to a sign flip and $t_j$ corresponds
-to a value swap, see also Eqn.\ (3.4) in \cite{scholtus:2009}.
+to a value swap, see also Eqn.\ (3.4) in \cite{scholtus:2008}.
 Using the {\tt correctSigns} function, we get the following.
 <<>>=
 cor <- correctSigns(E, dat, flip=flip, swap=swap)
@@ -514,7 +534,7 @@ cor <- correctSigns(E, dat, flip=flip, swap=swap, eps=2)
 cor$status
 cor$corrected
 @
-The latter table corresponds exactly to Table $2$ of \cite{scholtus:2009}.
+The latter table corresponds exactly to Table $2$ of \cite{scholtus:2008}.
 
 
 \bibliographystyle{chicago}

@@ -3,9 +3,11 @@
 \usepackage[english]{babel}
 \usepackage{amsmath, amssymb}
 \usepackage{natbib}
-\usepackage{algorithmic}
+%\usepackage{algorithmic}
+\usepackage{algpseudocode}
 \usepackage{algorithm}
-
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
 \usepackage{threeparttable}
 
 
@@ -207,21 +209,53 @@ linear equality constraints. Linear inequalities are currently ignored completel
 
 \subsection{How it works}
 
+The {\em Damerau-Levenstein} distance $d_{\rm DL}$ between two strings $x$ and
+$y$ is the minimum number of insertions, deletions, substitutions and
+transpositions necessary to change $x$ into $y$ or {\em vice versa}.
 
 \begin{algorithm}
-\begin{algorithmic}
-\STATE Determine $J_0=\{j: x_j \textrm{ occurs {\em only} in violated edits and not in {\tt fixate}}\}$
-\FOR { $j\in J_0$}
-\STATE Determine the matrix $A^{(j)}$ of violated edits containing $x_j$ and associated constant vector $b^{(j)}$
-\FOR { every row $i$ of $A^{(j)}$}
-\STATE $\tilde{x}_i^{(j)} \leftarrow \left(b_i^{(j)}-\sum_{j'\not=j}A_{ij'}^{(j)}x_{j'}\right)/A_{ij}^{(j)} $
-\STATE $d^{(j)}_i \leftarrow d_{\rm DL}(\tilde{x}^{(j)}_i,x_j)$
-\ENDFOR
-\ENDFOR
-\STATE Remove $x^{(j)}_i$ and $d^{(j)}_i$ for which $d^{(j)}_i>{\tt maxdist}$ 
-
+\caption{Generate solution candidates}
+\begin{algorithmic}[1]
+\Require Record $x$, a set of linear equality restrictions and a list of variables to {\tt fixate}. A maximum
+Damerau-Levenstein distance {\tt maxdist}.
+\State $L\leftarrow\varnothing$
+\State Determine $J_0=\{j: x_j \textrm{ occurs {\em only} in violated edits and not in {\tt fixate}}\}$
+\For { $j\in J_0$}
+\State Determine the matrix $A^{(j)}$ of violated edits containing $x_j$ and associated constant vector $b^{(j)}$
+\For { every row $i$ of $A^{(j)}$}
+\State $\tilde{x}_i^{(j)} \leftarrow \left(b_i^{(j)}-\sum_{j'\not=j}A_{ij'}^{(j)}x_{j'}\right)/A_{ij}^{(j)} $
+\State $L\leftarrow L\cup\tilde{x}_i^{(j)}$
+\EndFor
+\EndFor
+\State Remove $\tilde{x}^{(j)}_i$ from $L$ for which $d_{\rm DL}(\tilde{x}^{(j)}_i,x_j)>{\tt maxdist}$ 
+\Ensure List $L$ of $m$ solution suggestions for record $x$.
 \end{algorithmic}
 \end{algorithm}
+
+\begin{algorithm}
+\caption{Maximize number of resolved edits}
+\begin{algorithmic}[1]
+\Require Record $x$, a list of linear equality restrictions and a list of solution suggestions
+$L = \{L_i=\tilde{x}^{(j_i)}_{t_i}:i=1,2,\ldots, m\}$
+\State $k\leftarrow 0$ 
+\State $s\leftarrow {\sf NULL}$
+\Procedure{tree}{$x,L$}
+\If{$L\not=\varnothing$}
+\State {\sc tree}$(x,L\backslash L_1)$\Comment{Left branche: don't use suggestion}
+\State $x_{j_1}\leftarrow L_1$ \Comment{Right branche: use suggestion}
+\State $L\leftarrow L\backslash \{x^{(j_\ell)}_{t_\ell}\in L: j_\ell=j_1 \textrm{ \bf  or } x^{(j_\ell)}_{t_\ell}\textrm{ resolves the same edit as } L_1\}$
+\State {\sc tree}$(x,L)$
+\Else
+\If{Number of edits $n$ resolved by $x$ larger then $k$}
+\State $k \leftarrow n$
+\State $s \leftarrow x$
+\EndIf
+\EndIf
+\EndProcedure
+\Ensure { (partial) solution $s$, resolving maximum number of edits. }
+\end{algorithmic}
+\end{algorithm}
+
 
 \subsection{Some simple examples}
 
@@ -309,43 +343,37 @@ results of the original example can be reproduced.
 \begin{algorithm}[p]
 \caption{Record correction for {\tt correctSigns}}
 \label{correctSigns}
-\begin{algorithmic}
-\STATE {\bf Input:} 
-\STATE $-$ A numeric record $x$ 
-\STATE $-$ A tolerance, $\varepsilon$
-\STATE $-$ A set of equality and inequality constraints of the form
+\begin{algorithmic}[1]
+\Require A numeric record $x$, a tolerance $\varepsilon$. A set of equality and inequality constraints of the form
 \begin{eqnarray*}
 Ax - b &=& 0\\
 Bx - c &\geq& 0,
 \end{eqnarray*}
-\STATE $-$ A list {\tt flip} of variables whos signs may be fliped.
-\STATE $-$ A list {\tt swap} of variable pairs whos values may be interchanged
-\STATE $-$ An integer {\tt maxActions} 
-\STATE $-$ An integer {\tt maxCombinations} 
-\STATE $-$ A weight vector.
+A list {\tt flip} of variables whos signs may be fliped, a list {\tt swap} of
+variable pairs whos values may be interchanged, an integer {\tt maxActions}, an
+integer {\tt maxCombinations} and a weight vector.
 
-\STATE
-\IF {$|Ax-b|<\varepsilon$ (elementwise) } 
-\STATE Set {\tt status} to {\tt valid}.
-\ELSE
-\STATE Create a list {\tt actions}, of length $n$ containing those elements of {\tt flip} and {\tt swap} that
+\If {$|Ax-b|<\varepsilon$ (elementwise) } 
+\State Set {\tt status} to {\tt valid}.
+\Else
+\State Create a list {\tt actions}, of length $n$ containing those elements of {\tt flip} and {\tt swap} that
     affect variables that occur in violated rows of $A$.
-\STATE Create an empty list $S$.
-\STATE $k\leftarrow 0$
-\WHILE {$S=\varnothing$ \AND $k<\min({\tt maxActions},n)$}
-  \IF {\NOT ${n\choose k}>{\tt maxCombinations}$}
-   \STATE $k\leftarrow k+1$ 
-   \STATE Generate all ${n\choose k}$ combinations of $k$ actions.
-   \STATE Loop over those combinations, applying them to $x$. Add solutions obeying $|Ax-b|<\varepsilon$ and $Ax-c\geq0$ to $S$.
-  \ENDIF
-\ENDWHILE
-\IF {\NOT $S=\varnothing$ }
-\STATE Compute solution weights and choose solution with minimum weight. Choose the first solution in the case of degeneracy.
-\STATE Set {\tt status} to {\tt corrected}
-\ELSE
-\STATE Set {\tt status} to invalid
-\ENDIF
-\ENDIF
+\State Create an empty list $S$.
+\State $k\leftarrow 0$
+\While {$S=\varnothing$ {\bf and} $k<\min({\tt maxActions},n)$}
+  \If {{\bf not} ${n\choose k}>{\tt maxCombinations}$}
+   \State $k\leftarrow k+1$ 
+   \State Generate all ${n\choose k}$ combinations of $k$ actions.
+   \State Loop over those combinations, applying them to $x$. Add solutions obeying $|Ax-b|<\varepsilon$ and $Ax-c\geq0$ to $S$.
+  \EndIf
+\EndWhile
+\If {{\bf not} $S=\varnothing$ }
+\State Compute solution weights and choose solution with minimum weight. Choose the first solution in the case of degeneracy.
+\State Set {\tt status} to {\tt corrected}
+\Else
+\State Set {\tt status} to invalid
+\EndIf
+\EndIf
 \end{algorithmic}
 \end{algorithm}
 \subsection{Some simple examples}

@@ -66,8 +66,10 @@ fields $y$ and $z$ have been interchanged. Swapping the values of $z$ and
 $y$ therefore seems a reasonable solution although it formally means changing
 two values.
 
-\paragraph{Note.} In data-editing literature the restrictions imposed on records
-are often called edit rules or edits, in short. We will use these terms 
+\paragraph{Note.} 
+
+
+We will use these terms 
 as well.
 
 \subsection{Deductive correction}
@@ -101,7 +103,14 @@ Ax &\geq& b
 \end{eqnarray}
 %
 Here, every $A$ is a matrix, $x$ a numerical data record and $b$ a constant
-vector. In this paper, we describe the {\tt deducorrect} package for R
+vector. Every row of the combined matrix $[A,b]$ represents one linear restriction. In
+data-editing literature the restrictions imposed on records are often called
+edit rules or edits, in short. If an edit describes a relationship between
+a number of variables $\{x_j\}$, we say that the edit {\em contain} the variables
+$\{x_j\}$. Conversely, when $x_j$ is part of a relationship defined by an edit
+we say that $x_j$ {\em occurs} in the edit. 
+
+In this paper, we describe the {\tt deducorrect} package for R
 \citep{R-core:2011}, which implements (slight) generalisations of the
 algorithms proposed by \cite{scholtus:2008, scholtus:2009}. The purpose of this
 paper is to provide details on the algorithms and to familiarize users with the
@@ -266,7 +275,7 @@ allow for multiple typos in a single field.
 \label{generateCandidates}
 \begin{algorithmic}[1]
 \Require Record $x$, a set of linear equality restrictions and a list of variables to {\tt fixate}. A maximum
-Damerau-Levenstein distance {\tt maxdist}.
+Damerau-Levenshtein distance {\tt maxdist}.
 \State $L\leftarrow\varnothing$
 \State Determine $J_0=\{j: x_j \textrm{ occurs {\em only} in violated edits and not in {\tt fixate}}\}$
 \For { $j\in J_0$}

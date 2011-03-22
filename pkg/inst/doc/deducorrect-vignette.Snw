@@ -3,7 +3,6 @@
 \usepackage[english]{babel}
 \usepackage{amsmath, amssymb}
 \usepackage{natbib}
-%\usepackage{algorithmic}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
@@ -65,12 +64,6 @@ relationship holds, while the values in the record suggest that the values in
 fields $y$ and $z$ have been interchanged. Swapping the values of $z$ and 
 $y$ therefore seems a reasonable solution although it formally means changing
 two values.
-
-\paragraph{Note.} 
-
-
-We will use these terms 
-as well.
 
 \subsection{Deductive correction}
 We use the term deductive correction to indicate methods wich use information
@@ -260,14 +253,18 @@ is selected which maximizes the number of resolved edits. The tree
 search is sped up considerably by pruning branches which resolve the same
 edit multiple times or use multiple suggestions for the same variable.
 
-This algorithm generalizes the algorithms of \cite{scholtus:2009} in the following
-two ways: first, the imposed linear restrictions are generalised from $Ax=0$ to
-$Ax=b$. Secondly, the original algorithm allowed for a single {\em digit} insertion,
-deletion, transposition or substitution. The more general Damerau-Levenshtein distance
-used here treats the digits as characters, allowing for sign changing (inserting a{\tt -} sign
-is one insertion). Also, by applying a standard Damerau-Levenshtein algorithm it is easy
-to allow for corrections spanning larger values $d_{\rm DL}$. That is, one could
-allow for multiple typos in a single field.
+This algorithm generalizes the algorithms of \cite{scholtus:2009} in the
+following two ways: first, the imposed linear restrictions are generalised from
+$Ax=0$ to $Ax=b$. Secondly, the original algorithm allowed for a single {\em
+digit} insertion, deletion, transposition or substitution. The more general
+Damerau-Levenshtein distance used here treats the digits as characters,
+allowing for sign changing, which is forbidden if only digit changes are
+allowed. Also, by applying a standard Damerau-Levenshtein algorithm it is easy
+to allow for corrections spanning larger values $d_{\rm DL}$. That is, one
+could allow for multiple typos in a single field. Moreover, the Damerau-Levenstein
+distance as implemented in the {\tt deducorrect} package allows one to define
+different weights to the four types of operations involved, adding some extra 
+flexibility to the method.
 %
 %
 \begin{algorithm}[t]
@@ -315,8 +312,28 @@ $L = \{L_\ell=\tilde{x}^{(i_\ell)}_{j_\ell}:\ell=1,2,\ldots, m\}$
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Some simple examples}
+\subsection{Examples}
+In this section we show the most important options of the {\tt correctTypos} function.
+In the end we reproduce the results in Chapter 4 of \cite{scholtus:2009}.
 
+First, define a simple one-record dataset with an associated edit rule.
+<<>>=
+dat <- data.frame(x = 123, y = 192, z = 252)
+E <- editmatrix("z == x + y")
+@
+Obviously, the edit in {\tt E} is not satisfied since $123+192=315$. However,
+the difference $315-252=63$ is divisable by nine, which suggests the transposition
+of adjecent digits in one of the terms\footnote{
+In the decimal positional number system any integer $n=\pm\sum_{j=0}^k \xi_j\cdot10^j$ 
+is denoted as $\pm\xi_k\xi_{k-1}\ldots\xi_0$. If $n'$ has the same positional representation
+as $n$, except that the digits $\xi_{j}$ and $\xi_{j+1}$ are interchanged, the difference 
+$n-n'=(\xi_{j+1}-\xi_{j})(10^{j+1}-10^j)$, which obviously is dividable by 9.
+}. 
+Running the record through correctsigns finds the digit swap:
+<<>>=
+correctTypos(E, dat)$corrected
+@
+Indeed, replacing $192$ by $129$ corrects the record.
 
 \section{\tt correctSigns}
 \label{signErrors}

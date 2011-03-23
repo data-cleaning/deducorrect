@@ -166,6 +166,7 @@ sol
 \caption{The number of equalities $n$ and inequalities $m$ violated by an edit, before and after being
 treated by one of the correct-functions of {\tt deducorrect}. The label {\rm N/A} indicates
 that this exit status does not occur in the function.}
+\caption{statusvalues}
 \begin{tabular}{cccclll}
 \hline
 \multicolumn{2}{c}{Before}&\multicolumn{2}{c}{After}&\multicolumn{3}{c}{status}\\

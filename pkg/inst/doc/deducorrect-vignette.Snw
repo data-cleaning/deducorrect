@@ -163,10 +163,10 @@ sol
 
 \begin{table}
 \begin{threeparttable}
-\caption{The number of equalities $n$ and inequalities $m$ violated by an edit, before and after being
-treated by one of the correct-functions of {\tt deducorrect}. The label {\rm N/A} indicates
+\caption{The number of equalities $n$ and inequalities $m$ violated by an edit, before and after
+treatment with one of the correct-functions of {\tt deducorrect}. The label {\rm N/A} indicates
 that this exit status does not occur in the function.}
-\caption{statusvalues}
+\label{statusvalues}
 \begin{tabular}{cccclll}
 \hline
 \multicolumn{2}{c}{Before}&\multicolumn{2}{c}{After}&\multicolumn{3}{c}{status}\\
@@ -325,21 +325,38 @@ In the end we reproduce the results in Chapter 4 of \cite{scholtus:2009}.
 First, define a simple one-record dataset with an associated edit rule.
 <<>>=
 dat <- data.frame(x = 123, y = 192, z = 252)
-E <- editmatrix("z == x + y")
+(E <- editmatrix("z == x + y"))
 @
-Obviously, the edit in {\tt E} is not satisfied since $123+192=315$. However,
-the difference $315-252=63$ is divisable by nine, which suggests the transposition
-of adjecent digits in one of the terms\footnote{
-In the decimal positional number system any integer $n=\pm\sum_{j=0}^k \xi_j\cdot10^j$ 
-is denoted as $\pm\xi_k\xi_{k-1}\ldots\xi_0$. If $n'$ has the same positional representation
-as $n$, except that the digits $\xi_{j}$ and $\xi_{j+1}$ are interchanged, the difference 
-$n-n'=(\xi_{j+1}-\xi_{j})(10^{j+1}-10^j)$, which obviously is dividable by 9.
-}. 
-Running the record through correctsigns finds the digit swap:
+Obviously, the edit in {\tt E} is not satisfied since $123+192=315$. As can be
+seen from the output of {\tt editmatrix}, we have $b=0$, so the correction
+candidates here are:
+\begin{eqnarray}
+\tilde{x}^{(1)} &=& 0 - \frac{-1\cdot 192+1\cdot252}{-1} = 60\\
+\tilde{y}^{(1)} &=& 0 - \frac{-1\cdot 123+1\cdot252}{-1} = 129\\
+\tilde{z}^{(1)} &=& 0 - \frac{-1\cdot 123-1\cdot192}{1} = 315 
+\end{eqnarray}
+The Damerau-Levenshtein distances between the candidates and their originals are given by:
+\begin{eqnarray}
+d_{\rm DL}(\tilde{x}^{(1)},x) &=& 3\textrm{ (two substitutions and an insertion)}\\
+d_{\rm DL}(\tilde{y}^{(1)},y) &=& 1\textrm{ (one transposition)}\\
+d_{\rm DL}(\tilde{z}^{(1)},z) &=& 3\textrm{ (three substitutions)}
+\end{eqnarray}
+In this case, there is just one candidate with $d_{\rm DL}=1$, solving the 
+inconsistency with just one digit transposition. Running the record through 
+{\tt correctTypos} indeed finds the digit transposition:
 <<>>=
 correctTypos(E, dat)$corrected
 @
-Indeed, replacing $192$ by $129$ corrects the record.
+
+
+
+%The difference $315-252=63$ is divisable by nine, which suggests the transposition
+%of adjecent digits in one of the terms\footnote{
+%In the decimal positional number system any integer $n=\pm\sum_{j=0}^k \xi_j\cdot10^j$ 
+%is denoted as $\pm\xi_k\xi_{k-1}\ldots\xi_0$. If $n'$ has the same positional representation
+%as $n$, except that the digits $\xi_{j}$ and $\xi_{j+1}$ are interchanged, the difference 
+%$n-n'=(\xi_{j+1}-\xi_{j})(10^{j+1}-10^j)$, which obviously is dividable by 9.
+%}. 
 
 \section{\tt correctSigns}
 \label{signErrors}

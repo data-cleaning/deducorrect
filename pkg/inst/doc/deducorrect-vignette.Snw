@@ -160,26 +160,31 @@ sol <- correctSigns(E,d)
 sol
 @
 %
+
 \begin{table}
 \begin{threeparttable}
-\caption{Status values in the {\tt deducorrect} object. The precise meaning depends on the 
-applied {\tt correct-} function. See sections  \ref{roundingErrors}, \ref{typingErrors} and \ref{signErrors}
-for the appropriate descriptions.}
-\label{statusvalues}
-\begin{tabular}{lp{0.7\textwidth}}
+\caption{The number of equalities $n$ and inequalities $m$ violated by an edit, before and after being
+treated by one of the correct-functions of {\tt deducorrect}. The label {\rm N/A} indicates
+that this exit status does not occur in the function.}
+\begin{tabular}{cccclll}
 \hline
-Status & description\\
+\multicolumn{2}{c}{Before}&\multicolumn{2}{c}{After}&\multicolumn{3}{c}{status}\\
+Eqs&  Ineqs &  Eqs  &Ineqs   &{\tt correctSigns}   & {\tt correctRounding} &{\tt correctTypos}\\
 \hline
-{\tt NA}        & Validity of the record could not be established.\\
-{\tt valid}     & The record obeys all restrictions.\\
-{\tt corrected} & The record contained inconsistencies but now obeys all restrictions.\\
-{\tt partially} & The record contained inconsistencies which could partially be solved.\\
-{\tt invalid}   & The record containes inconsistencies which could not be solved.\\
+$0$  &  $0$     &  $0$    &$0$      &valid          & valid           &valid\\
+$0$  &  $m$     &  $0$    &$m$      &invalid        & invalid         &invalid\\
+$n$  &  $0$     &  $n$    &$0$      &invalid        & invalid         &invalid\\
+$n$  &  $0$     &  $<n$   &$0$      &N/A              & partial         &partial\\
+$n$  &  $0$     &  $0$    &$0$      &corrected      & corrected       &corrected\\
+$n$  &  $m$     &  $n$    &$m$      &invalid        & invalid         &invalid\\
+$n$  &  $m$     &  $<n$   &$0$      &N/A               & partial         &partial\\
+$n$  &  $m$     &  $<n$   &$<m$     &N/A               & partial         &partial?\\
+$n$  &  $m$     &  $0$    &$0$      &corrected      &corrected        &corrected\\
 \hline
 \end{tabular}
 \end{threeparttable}
 \end{table}
-%
+
 The individual components of {\tt sol} can be retrieved with the dollar-operator. The slot
 {\tt corrected} is the same as the input data, but with corrected records, where possible:
 <<>>=

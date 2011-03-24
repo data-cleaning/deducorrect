@@ -34,6 +34,9 @@ This vignette is unfinished. Version 1.0 of the package will contain a full vign
 library(deducorrect)
 @
 \maketitle
+
+\newpage
+
 \tableofcontents
 \listofalgorithms
 \newpage
@@ -209,7 +212,48 @@ object and can provide more details on the chosen solutions. These are
 described in the following sections.
 
 
+\subsection{Balance accounts and totally unimodular matrices}
+Most algorithms described here have been designed with financial balance
+accounts in mind. The balance accounts encountered in establishment surveys
+mostly involve integer records since financial amounts are usually reported in
+currency (kilo-)units. Therefore, linear editrules of the form
+%
+\begin{equation}
+\label{integerRestrictions}
+Ax = b \textrm{ with } A\in \{-1,0,1\}^{m\times n}\textrm{, } x\in \mathbb{Z}^{n},\textrm{ and } b\in\mathbb{Z}^m.
+\end{equation}
+are frequently encountered. Before correcting records, one might want to check
+whether \eqref{integerRestrictions} has integer solutions. A well-known
+theorem from linear algebra states that a sufficient condition for
+\eqref{integerRestrictions} to have an integer solution $x$ is for the matrix
+$A$ to be totally unimodular. A (not necessarily square) matrix is called {\em
+totally unimodular} when every square submatrix has determinant ${-1}$, $0$, or
+$1$. Since a $1\times1$ submatrix is also square, this means that a matrix cannot
+be totally unimodular unless all its coefficients have values in $\{-1,0,1\}$.
+See the appendix op \cite{scholtus:2008} for a further discussion of total unimodularity.
+Deducorrect offers the function {\tt isTotallyUnimodular} which checks
+wether a matrix has this property. The algorithm follows  a recursive procedure
+given below.
 
+\begin{algorithmic}
+\Procedure{isTotallyUnimodular}{$A$}
+\State $A\leftarrow${\sc reduceMatrix}$(A)$
+\If {$A=\varnothing$}
+\State\Return {\sc TRUE}
+\ElsIf {Each column of $A$ (or $A'$) has exactly 2 nonzero elements}
+\State\Return {\sc hellerTompkins}$(A)$
+\Else
+\State\Return {\sc rachavachari}$(A)$
+\EndIf
+\EndProcedure
+\end{algorithmic}
+Here, {\sc reduceMatrix} removes all rows and columns of $A$ which have a single nonzero element.
+When possible, the criterium of \cite{heller:1956}, which is $\mathcal{O}(2^n)$ in the number of columns 
+is used to determine unimodularity. If this is not possible, the matrix is split in a series of submatrices
+according to the method of \cite{raghavachari:1976}. Every submatrix is subsequently checked for
+total unimodularity by calling {\sc isTotallyUnimodular}. In the worst case, Rachavachari's method
+must be called recursively and checking for unimodularity is approximately $\mathcal{O}(n!)$ in
+the number of columns.
 
 
 
@@ -224,10 +268,18 @@ rounding errors in one or more variables.
 \section{\tt correctTypos}
 \label{typingErrors}
 \subsection{Area of application}
-This function can be used to correct typographical errors in a numerical record
-violating linear equality constraints. \marginpar{TODO: describe behaviour
-under inequalities for version 1.0} The algorithm can only be applied to records
-containing integer data.
+\marginpar{NOTE: The behaviour in the presence of inequalities is currently not implemented (it is an issue)}
+This function can be used to correct typographical errors in an integer record
+violating linear equality constraints as in Eq.\ \eqref{integerRestrictions}:
+\begin{displaymath}
+Ax = b \textrm{ with } A\in \{-1,0,1\}^{m\times n}\textrm{, } x\in \mathbb{Z}^{n},\textrm{ and } b\in\mathbb{Z}^m.
+\end{displaymath}
+The algorithm was developed with sets of financial balance equations in mind,
+where these type of problems are very common. As far as inequalities are concerned,
+they are currently ignored by the algorithm, in the sense that no attempt is made
+to repair inequality violations. However, the algorithm does not allow solutions
+causing extra inequality violations.
+ 
 
 \subsection{How it works}
 In short, the algorithm first computes a list of suggestions which correct one
@@ -365,17 +417,6 @@ This function can be used to solve sign errors and value swaps which cause
 linear equalities (Eq. \ref{edits1}) to fail. Possible presence of linear
 inequalities [Eq. \eqref{edits2}-\eqref{edits6}] are taken into account
 when resolving errors, but they are not part of the error detection process.
-The {\tt status} values for a record treated by {\tt correctSigns} therefore
-has the following meanings.
-
-\begin{description}
-\item[{\tt valid}] No linear equalities were violated. Linear inequalities might be violated however.
-\item[{\tt corrected}] The record violate linear equalities, and possible linear inequalities. All (in)equalities
-    are obeyed by the treated record.
-\item[{\tt partially}] Does not occur.
-\item[{\tt invalid}] The record violates linear inequalities which could not be repaired by {\tt correctSigns}.
-\item[{\tt NA}]  Validity of record could not be established.
-\end{description}
 
 
 \subsection{How it works}

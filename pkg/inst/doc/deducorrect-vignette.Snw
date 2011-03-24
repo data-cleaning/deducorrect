@@ -1,5 +1,5 @@
 %\VignetteIndexEntry{deducorrect}
-\documentclass[10pt, fleqn, a4paper]{article}
+\documentclass[11pt, fleqn, a4paper]{article}
 \usepackage[english]{babel}
 \usepackage{amsmath, amssymb}
 \usepackage{natbib}
@@ -22,7 +22,7 @@
 \renewcommand{\dbltopfraction}{.9}
 
 
-\title{The {\tt deducorrect} vignette}
+\title{Correction of rounding, typing, and sign errors with the {\tt deducorrect} package}
 \author{Mark van der Loo, Edwin de Jonge and Sander Scholtus}
 \begin{document}
 \maketitle

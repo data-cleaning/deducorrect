@@ -41,32 +41,32 @@ library(deducorrect)
 \listofalgorithms
 \newpage
 \section{Introduction}
-Raw data  is often plagued with internal inconsistencies which interfere with
-statistical analysis. Data stemming from establishment surveys are particularly
-prone to inconsistencies since they consist of many numerical variables,
-interrelated by numerous mathematical relationships. Before statistical
-analysis can take place, these relationships have to be checked on a
-record-by-record basis, and violations resolved as much as possible.  While
-establishing that a records violates certain relationships is simple, deciding
-which fields in a record contains the actual errors can be a difficult task. In
-the past, much attention has been paid to this decision problem, often using
-Fellegi and Holt's principle \cite{fellegi:1976} as a starting point. This
-principle states that for non-systematic errors, and with no information on the
-cause of the errors, one should try to make a record consistent by changing as
-few variables as possible.
+Raw statistical data  is often plagued with internal inconsistencies and errors
+which inhibit reliable statistical analysis. Establishment survey data is
+particularly prone to in-record inconsistencies, because the numerical
+variables contained in these data are usually interrelated by many mathematical
+relationships. Before statistical analysis can take place, these relationships
+have to be checked and violations should be resolved as much as possible.
+While establishing that a record violates certain relationships is
+straightforward, deciding which fields in a record contain the actual errors
+can be a daunting task. In the past, much attention has been paid to this
+decision problem, often using Fellegi and Holt's principle \citep{fellegi:1976}
+as the point of departure. This principle states that for non-systematic errors, and
+with no information on the cause of errors, one should try to make a record
+consistent by changing as few variables as possible.
 
 This principle precludes using the data available in the (possibly erroneous)
-fields to detect and correct the error. In certain cases, naivelily applying
+fields to detect and correct the error. In certain cases, naively applying
 Fellegi and Holt's principle will yield consistent records with nevertheless
 faulty data. As an example, consider a survey record with three variables $x$,
 $y$ and $z$, which have to obey the relationship $x=y-z$. Such relationships
-frequently occur in profit-loss accounts. If a record happens to have values
-such that $x=z-y$, then Fellegi and Holt's principle suggests that either the
-numerical value of $x$, $y$ or $z$ should be adapted in such a way that the
-relationship holds, while the values in the record suggest that the values in
-fields $y$ and $z$ have been interchanged. Swapping the values of $z$ and 
-$y$ therefore seems a reasonable solution although it formally means changing
-two values.
+frequently occur in financial profit-loss accounts. If a record happens to have
+values such that $x=z-y$, then Fellegi and Holt's principle suggests that
+either the numerical value of $x$, $y$ or $z$ should be adapted in such a way
+that the relationship holds, while the values in the record suggest that the
+values in fields $y$ and $z$ might have been interchanged. Swapping the values
+of $z$ and $y$ therefore seems a reasonable solution although it formally means
+changing two values.
 
 \subsection{Deductive correction}
 We use the term deductive correction to indicate methods wich use information
@@ -101,8 +101,8 @@ Ax &\geq& b
 Here, every $A$ is a matrix, $x$ a numerical data record and $b$ a constant
 vector. Every row of the combined matrix $[A,b]$ represents one linear restriction. In
 data-editing literature the restrictions imposed on records are often called
-edit rules or edits, in short. If an edit describes a relationship between
-a number of variables $\{x_j\}$, we say that the edit {\em contain} the variables
+edit rules, or edits in short. If an edit describes a relationship between
+a number of variables $\{x_j\}$, we say that the edit {\em contains} the variables
 $\{x_j\}$. Conversely, when $x_j$ is part of a relationship defined by an edit
 we say that $x_j$ {\em occurs} in the edit. 
 
@@ -111,25 +111,28 @@ In this paper, we describe the {\tt deducorrect} package for R
 algorithms proposed by \cite{scholtus:2008, scholtus:2009}. The purpose of this
 paper is to provide details on the algorithms and to familiarize users with the
 syntax of the package. The correction algorithms in the package report the
-results in a uniform matter. Section \ref{deducorrectObjectSection} provides details
-on the {\tt deducorrect} output object. Sections \ref{roundingErrors}, \ref{typingErrors} and
-\ref{signErrors}, provide details on the classes of problems that may be
-treated with the package, an exposition of the algorithms used and coded
-examples with analysis of the results. It is also shown how the examples
-from \cite{scholtus:2008} and \cite{scholtus:2009} can be treated with
-this software. The package requires that linear relationships are 
-defined with the {\tt editrules} package \citep{jonge:2011}. All
-R-code examples in this paper can be executed from the R commandline
-after loading the {\tt deducorrect} and {\tt editrules} package.
+results in a uniform matter. Section \ref{deducorrectObjectSection} provides
+details on the {\tt deducorrect} output object which stores information on
+corrected records, applied corrections, and more. Sections
+\ref{roundingErrors}, \ref{typingErrors} and \ref{signErrors}, provide details
+on the classes of problems that may be treated with the package, an exposition
+of the algorithms used and coded examples with analysis of the results. It is
+also shown how the examples from \cite{scholtus:2008} and \cite{scholtus:2009}
+can be treated with this software. The package requires that linear
+relationships are defined with the {\tt editrules} package \citep{jonge:2011}.
+Unless noted otherwise, all R-code examples in this paper can be executed from
+the R commandline after loading the {\tt deducorrect} and {\tt editrules}
+package. 
 
 
 \subsection{The {\tt deducorrect} object and {\tt status} values}
 \label{deducorrectObjectSection}
-When transforming raw data to a form suitable for statistical processing, it is important to keep
-track of the applied transformations so they can be taken into account when interpreting the results
-of the statistical analyses. To facilitate logging, every {\tt correct-} function of the package 
-does not only return the corrected data, but also information on the applied corrections,
-a timestamp and the user running R. See Table \ref{deducorrectObject} for an overview.
+Apart from the corrected records, every {\tt correct-} function of the {\tt
+deducorrect} package returns some logging information on the applied
+corrections. Information on applied corrections, a status indicator per record,
+a timestamp and user information are included and stored uniformily in a
+{\tt deducorrect} object. See Table \ref{deducorrectObject} for an
+overview of the contents of a {\tt deducorrect} object.
 %
 \begin{table}
 \begin{threeparttable}
@@ -150,9 +153,9 @@ row in the input data, a variable name of the input data, the old value and the 
 \end{threeparttable}
 \end{table}
 %
-
-When printed, not al slots are written to the screen. In stead, a summary of it's contents is given.
-In this example, we define one record of data, a linear restriction, in the form of an {\tt editmatrix},
+Because of the large amount of information in a {\tt deducorrect} object, the
+contents are summarized for printing to screen. In the example below, we define
+one record of data, a linear restriction in the form of an {\tt editmatrix},
 and apply the {\tt correctSigns} correction method\footnote{sometimes extra
 brackets are included to force R to print the result}.
 <<>>=
@@ -182,7 +185,7 @@ $n$  &  $0$     &  $<n$   &$0$      &N/A              & partial         &partial
 $n$  &  $0$     &  $0$    &$0$      &corrected      & corrected       &corrected\\
 $n$  &  $m$     &  $n$    &$m$      &invalid        & invalid         &invalid\\
 $n$  &  $m$     &  $<n$   &$0$      &N/A               & partial         &partial\\
-$n$  &  $m$     &  $<n$   &$<m$     &N/A               & partial         &partial?\\
+$n$  &  $m$     &  $<n$   &$<m$     &N/A               & partial         &partial\\
 $n$  &  $m$     &  $0$    &$0$      &corrected      &corrected        &corrected\\
 \hline
 \end{tabular}
@@ -230,7 +233,7 @@ square submatrix has determinant ${-1}$, $0$, or $1$. The scapegoat
 algorithm \citep{scholtus:2008}, which is used in the {\tt correctRoundings}
 function, requires $A$ to be totally unimodular. See appendix B of
 \cite{scholtus:2008} for a further discussion of total unimodularity.  The {\tt
-deducorrect} packages offers the function {\tt isTotallyUnimodular} which
+deducorrect} package offers the function {\tt isTotallyUnimodular} which
 checks if a matrix is totally unimodular. The algorithm follows  a recursive
 procedure given below.
 \begin{algorithmic}
@@ -238,7 +241,7 @@ procedure given below.
 \State $A\leftarrow${\sc reduceMatrix}$(A)$
 \If {$A=\varnothing$}
 \State\Return {\sc TRUE}
-\ElsIf {Each column of $A$ (or $A'$) has exactly 2 nonzero elements}
+\ElsIf {Each column of $A$ has exactly 2 nonzero elements}
 \State\Return {\sc hellerTompkins}$(A)$
 \Else
 \State $\mathcal{B} \leftarrow${\sc raghavachari}$(A)$
@@ -252,10 +255,10 @@ procedure given below.
 \end{algorithmic}
 Here, {\sc reduceMatrix} iteratively removes all rows and columns of $A$ which
 have a single nonzero element (an operation of $\mathcal{O}(n)$ in the number
-of columns).  When possible, the criterium of \cite{heller:1956}, which is
+of columns and rows).  When possible, the criterium of \cite{heller:1956}, which is
 $\mathcal{O}(2^n)$ in the number of columns is used to determine unimodularity.
-If this is not possible, a series of smaller matrices is derived with
-the method of \cite{raghavachari:1976}. Every submatrix is subsequently checked
+If this is not possible, a series of smaller matrices $\mathcal{B}$ is derived with
+the method of \cite{raghavachari:1976}. Every matrix in $\mathcal{B}$ is subsequently checked
 for total unimodularity by calling {\sc isTotallyUnimodular}. In the worst
 case, Rachavachari's method must be called recursively and checking for
 unimodularity is $\mathcal{O}(n!)$ in the number of columns. In practical

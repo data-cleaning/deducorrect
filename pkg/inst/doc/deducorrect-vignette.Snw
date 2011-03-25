@@ -415,18 +415,43 @@ E <- editmatrix( c("x1 + x2 == x3"
                   ,"x9 - x10 == x11"))
 @
 %
-The 
-<<keep.source=true>>==
-dat <- matrix(c(
+The following dataframe contains the correct record ({\tt example 4.0}) as well as the manipulated
+erroneous records.
+<<keep.source=true,echo=false>>==
+dat <-as.data.frame( matrix(c(
     1452, 116, 1568, 116, 323, 76, 12, 411,  1979, 1842, 137,
     1452, 116, 1568, 161, 323, 76, 12, 411,  1979, 1842, 137,
     1452, 116, 1568, 161, 323, 76, 12, 411, 19979, 1842, 137,
     1452, 116, 1568, 161,   0,  0,  0, 411, 19979, 1842, 137,
-    1452, 116, 1568, 161, 323, 76, 12,   0, 19979, 1842, 137),byrow=true,nrow=5)
+    1452, 116, 1568, 161, 323, 76, 12,   0, 19979, 1842, 137), 
+    byrow=TRUE,nrow=5))
 rownames(dat) <- paste("example 4.",0:4,sep="")
 colnames(dat) <- paste("x",1:11,sep="")
-
 @
+<<>>=
+dat
+@
+This {\tt data.frame} can be read into R by copying the code from the {\tt correctTypos} help
+page. As can be seen, example 4.1 has a single digit transposition in $x_4$, 
+example 4.2 has the same error, and an extra 1 prefixed to $x_9$, example 4.3 contains multiple
+extra errors (in $x_5$, $x_6$ and $x_7$ which cannot be explained bby simple typing errors.
+Finally, example 4.4 also has multiple errors which cannot all be explained by simple
+typing errors. This example has multiple solutions which solve an equal amount of errors.
+
+The violated edit rules may be listed with the function
+<<>>=
+violatedEdits(E,dat)
+@
+Now, to apply as many typo-corrections as possible:
+<<>>=
+sol <- correctTypos(E, dat)
+cbind(sol$corrected, sol$status)
+@
+Our implementation finds the exact same solutions as in the original paper of
+\cite{scholtus:2009}.  Also see this reference for a through analysis of the
+outcomes.
+
+
 
 
 %The difference $315-252=63$ is divisable by nine, which suggests the transposition

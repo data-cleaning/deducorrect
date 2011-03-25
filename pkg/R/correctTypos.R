@@ -57,15 +57,12 @@ correctTypos <- function( E
                         
    stopifnot(is.editmatrix(E), is.data.frame(dat))
    
-
+   # separate equalities and inequalities
    a <- getC(E)
    eq <- getOps(E) == "=="
-   if (!all(eq)){
-      warning("E contains inequalities. Edits ", which(!eq)," will be ignored.\n Records with status 'valid' or 
-      'corrected' may therefore be invalid for the complete editmatrix E.")
-      E <- as.editmatrix(E[eq,,drop=FALSE], a[eq])
-      a <- a[eq]
-   }
+   F <- E[!eq,]
+   E <- E[eq,]
+   a <- a[eq]
    vars <- getVars(E)
    
    fixate <- if(is.null(fixate)) {rep(FALSE, length(vars))}
@@ -81,7 +78,7 @@ correctTypos <- function( E
   # only loop over complete records
   cc <- which(complete.cases(m))
 	for (i in cc){
-      chk <- getTypoCorrection(E,m[i,], fixate=fixate, eps=eps, maxdist=maxdist)
+      chk <- getTypoCorrection(E, F, m[i,], fixate=fixate, eps=eps, maxdist=maxdist)
       
       status[i] <- chk$status
       
@@ -158,11 +155,13 @@ correctTypos <- function( E
 #' cor    \tab suggested corrections \cr
 #' B      \tab reduced binary editmatrix with violated edits, needed for choosing the suggested corrections\cr
 #'}
-getTypoCorrection <- function( E, x, fixate=FALSE, eps=sqrt(.Machine$double.eps), maxdist=1){
+getTypoCorrection <- function( E, F, x, fixate=FALSE, eps=sqrt(.Machine$double.eps), maxdist=1){
    ret <- list(status=NA)
    
    a <- getC(E)
-      
+   
+   # we need this later to check for inequalities   
+   x_F <- as.data.frame(t(x))
    #violated edits (ignoring rounding errors)
    E1 <- (abs(a-E%*%x) > eps)
    
@@ -198,11 +197,11 @@ getTypoCorrection <- function( E, x, fixate=FALSE, eps=sqrt(.Machine$double.eps)
    cor <- lapply( which(I0)
                 , function(i){
                      # edits valid for current variable v_i
-                     edits <- E1 & (E[,i] != 0)
-                     
+                     eqs <- E1 & (E[,i] != 0)
+                     ineqs <- F[,i] != 0 
                      # correction candidates
                      #TODO check if solution has to be rounded!!!)
-                     x_i_c <- ( (a[edits]-(E[edits,-i, drop=FALSE] %*% x[-i])) / (E[edits,i]));
+                     x_i_c <- ( (a[eqs]-(E[eqs,-i, drop=FALSE] %*% x[-i])) / (E[eqs,i]))
                      # count their numbers
                      kap <- table(x_i_c)
                      x_i_c <- as.integer(rownames(kap))
@@ -224,7 +223,19 @@ getTypoCorrection <- function( E, x, fixate=FALSE, eps=sqrt(.Machine$double.eps)
    
    # filter out the corrections that have dist > maxdist
    valid <- cor[,4] <= maxdist
-   
+  
+   # violated inequalities
+   v <- violatedEdits(F, x_F)
+   # filter out the corrections that cause new inequality violations.                 
+   valid <- valid & apply(cor, 1, 
+       function(cr,x_F, v){
+        print(cr)
+print(x_F)  
+        x_F[1,cr[1]] <- cr[3]
+          return( all(which(violatedEdits(F,x_F) %in% v)) ) 
+       }, x_F, v)                 
+
+ 
    if (sum(valid) == 0){
       # cannot correct this error
       ret$status <- "invalid"

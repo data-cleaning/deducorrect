@@ -213,6 +213,7 @@ described in the following sections.
 
 
 \subsection{Balance accounts and totally unimodular matrices}
+\label{totallyUnimodularSection}
 Most algorithms described here have been designed with financial balance
 accounts in mind. The balance accounts encountered in establishment surveys
 mostly involve integer records since financial amounts are usually reported in
@@ -267,7 +268,14 @@ be treated with the Rachavachari method.
 \label{roundingErrors}
 \subsection{Area of application}
 This function can be used to correct records which violate linear equality restrictions because of
-rounding errors in one or more variables.
+rounding errors in one or more variables. The linear equality restrictions must be of
+the form
+\begin{displaymath}
+Ax = b \textrm{ with } A\in \{-1,0,1\}^{m\times n}\textrm{, } x\in \mathbb{Z}^{n},\textrm{ and } b\in\mathbb{Z}^m.
+\end{displaymath}
+where $A$ is a totally unimodular matrix (see Section \ref{totallyUnimodularSection}), which
+can be tested with the function {\tt isTotallyUnimodular}.
+
 \subsection{How it works}
 \subsection{Examples}
 
@@ -284,6 +292,11 @@ where these type of problems are very common. As far as inequalities are concern
 they are currently ignored by the algorithm, in the sense that no attempt is made
 to repair inequality violations. However, the algorithm does not allow solutions
 causing extra inequality violations.
+
+Records which violate the equality restrictions are treated. There is an option {\tt eps}
+which allows for a tolerance in checking if records should be treated. This way, records
+containing ony rounding errors can be ignored but do note that they will retrieve the
+status {\tt valid}.
  
 
 \subsection{How it works}
@@ -404,9 +417,9 @@ inconsistency with just one digit transposition. Running the record through
 <<>>=
 correctTypos(E, dat)$corrected
 @
-
-\cite{scholtus:2009} (Chapter 4) treats a series of example which we will reproduce here.
-We consider a dataset with 11 variables, subjected to the following edit rules.
+%
+\cite{scholtus:2009} (Chapter 4) treats a series of examples which we will reproduce here.
+We consider a dataset with 11 variables, subject to the following edit rules.
 <<keep.source=true>>=
 E <- editmatrix( c("x1 + x2 == x3"
                   ,"x2 == x4"

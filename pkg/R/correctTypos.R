@@ -225,13 +225,11 @@ getTypoCorrection <- function( E, F, x, fixate=FALSE, eps=sqrt(.Machine$double.e
    valid <- cor[,4] <= maxdist
   
    # violated inequalities
-   v <- violatedEdits(F, x_F)
+   v <- which(violatedEdits(F, x_F))
    # filter out the corrections that cause new inequality violations.                 
    valid <- valid & apply(cor, 1, 
        function(cr,x_F, v){
-        print(cr)
-print(x_F)  
-        x_F[1,cr[1]] <- cr[3]
+          x_F[1,cr[1]] <- cr[3]
           return( all(which(violatedEdits(F,x_F) %in% v)) ) 
        }, x_F, v)                 
 

@@ -253,13 +253,13 @@ Here, {\sc reduceMatrix} iteratively removes all rows and columns of $A$ which
 have a single nonzero element (an operation of $\mathcal{O}(n)$ in the number
 of columns).  When possible, the criterium of \cite{heller:1956}, which is
 $\mathcal{O}(2^n)$ in the number of columns is used to determine unimodularity.
-If this is not possible, the matrix a series of smaller matrices are derived
-according to the method of \cite{raghavachari:1976}. Every submatrix is
-subsequently checked for total unimodularity by calling {\sc
-isTotallyUnimodular}. In the worst case, Rachavachari's method must be called
-recursively and checking for unimodularity is $\mathcal{O}(n!)$ in the number
-of columns. In practical applications $A$ is often fairly sparse and
-only a small portion of $A$ has to be treated with the Rachavachari method.
+If this is not possible, a series of smaller matrices is derived with
+the method of \cite{raghavachari:1976}. Every submatrix is subsequently checked
+for total unimodularity by calling {\sc isTotallyUnimodular}. In the worst
+case, Rachavachari's method must be called recursively and checking for
+unimodularity is $\mathcal{O}(n!)$ in the number of columns. In practical
+applications $A$ is often fairly sparse and only a small portion of $A$ has to
+be treated with the Rachavachari method.
 
 
 
@@ -274,7 +274,6 @@ rounding errors in one or more variables.
 \section{\tt correctTypos}
 \label{typingErrors}
 \subsection{Area of application}
-\marginpar{NOTE: The behaviour in the presence of inequalities is currently not implemented (it is an issue)}
 This function can be used to correct typographical errors in an integer record
 violating linear equality constraints as in Eq.\ \eqref{integerRestrictions}:
 \begin{displaymath}
@@ -378,7 +377,7 @@ $L = \{L_\ell=\tilde{x}^{(i_\ell)}_{j_\ell}:\ell=1,2,\ldots, m\}$
 
 \subsection{Examples}
 In this section we show the most important options of the {\tt correctTypos} function.
-In the end we reproduce the results in Chapter 4 of \cite{scholtus:2009}.
+After a simple, worked-out example we reproduce the results in Chapter 4 of \cite{scholtus:2009}.
 
 First, define a simple one-record dataset with an associated edit rule.
 <<>>=
@@ -406,6 +405,28 @@ inconsistency with just one digit transposition. Running the record through
 correctTypos(E, dat)$corrected
 @
 
+\cite{scholtus:2009} (Chapter 4) treats a series of example which we will reproduce here.
+We consider a dataset with 11 variables, subjected to the following edit rules.
+<<keep.source=true>>=
+E <- editmatrix( c("x1 + x2 == x3"
+                  ,"x2 == x4"
+                  ,"x5 + x6 + x7 == x8"
+                  ,"x3 + x8 == x9"
+                  ,"x9 - x10 == x11"))
+@
+%
+The 
+<<keep.source=true>>==
+dat <- matrix(c(
+    1452, 116, 1568, 116, 323, 76, 12, 411,  1979, 1842, 137,
+    1452, 116, 1568, 161, 323, 76, 12, 411,  1979, 1842, 137,
+    1452, 116, 1568, 161, 323, 76, 12, 411, 19979, 1842, 137,
+    1452, 116, 1568, 161,   0,  0,  0, 411, 19979, 1842, 137,
+    1452, 116, 1568, 161, 323, 76, 12,   0, 19979, 1842, 137),byrow=true,nrow=5)
+rownames(dat) <- paste("example 4.",0:4,sep="")
+colnames(dat) <- paste("x",1:11,sep="")
+
+@
 
 
 %The difference $315-252=63$ is divisable by nine, which suggests the transposition
@@ -426,9 +447,36 @@ when resolving errors, but they are not part of the error detection process.
 
 
 \subsection{How it works}
+The function {\tt correctSigns} tries to change the sign of (combinations of)
+variables and/or swap the order of variables to repair inconsistent records.
+Sign flips and value swaps are closely related since
+\begin{equation}
+-(x - y) = y - x,
+\end{equation}
+These simple linear relations frequently occur in profit-loss accounts for
+example.  Basically, {\tt correctSigns} first tries to correct a record by
+changing one sign. If that doesn't yield any solution, it tries changing two,
+and so on. If the user allows value swaps as well, it starts by trying to
+correct the record with a single sign flip or variable swap. If no solution is
+found, a combination is tried, and so on. The algorithm only treats the
+variables which have nonzero coefficients in one of the violated rows of Eq.\
+\eqref{edits1}.  Since the number of combinations grows exponentially with the
+number of variables to treat, the user is given some control over the volume of
+the search space to cover in a number of ways. First of all, the variables
+which are allowed to flip signs or variable pairs which may be interchanged
+simultaneously can be determined by the user. Knowledge of the origin of the
+data will usually give a good idea on which variables are prone to sign errors.
+For example, in surveys on profit-loss accounts, respondents sometimes
+erroneously submit the cost as a negative number. Secondly, the user may limit
+the maximum number of simultaneous sign flips and or value swaps that may be
+tested. This is controled by the {\tt maxActions} parameter in Algorithm
+\ref{correctSigns}.  The third option limiting the search space is to break
+when the number of combinations, given a number of actions to try becomes too
+large. This is controlled by the {\tt maxCombinations} parameter in Algorithm
+\ref{correctSigns}.
 %
 %
-\begin{algorithm}
+\begin{algorithm}[t]
 \caption{Record correction for {\tt correctSigns}}
 \label{correctSigns}
 \begin{algorithmic}[1]
@@ -457,34 +505,6 @@ integer {\tt maxCombinations} and a weight vector.
 \EndIf
 \end{algorithmic}
 \end{algorithm}
-The function {\tt correctSigns} tries to change the sign of (combinations of)
-variables and/or swap the order of variables to repair inconsistent records.
-Sign flips and value swaps are closely related since
-\begin{equation}
--(x - y) = y - x,
-\end{equation}
-These simple linear relations frequently occur in profit-loss accounts for
-example.  Basically, {\tt correctSigns} first tries to correct a record by
-changing one sign. If that doesn't yield any solution, it tries changing two,
-and so on. If the user allows value swaps as well, it starts by trying to
-correct the record with a single sign flip or variable swap. If no solution is
-found, a combination is tried, and so on. The algorithm only treats the
-variables which have nonzero coefficients in one of the violated rows of Eq.\
-\eqref{edits1}.  Since the number of combinations grows exponentially with the
-number of variables to treat, the user is given some control over the volume of
-the search space to cover in a number of ways. First of all, the variables
-which are allowed to flip signs or variable pairs which may be interchanged
-simultaneously can be determined by the user. Knowledge of the origin of the
-data will usually give a good idea on which variables are prone to sign errors.
-For example, in surveys on profit-loss accounts, respondents sometimes
-erroneously submit the cost as a negative number. Secondly, the user may limit
-the maximum number of simultaneous sign flips and or value swaps that may be
-tested. This is controled by the {\tt maxActions} parameter in Algorithm
-\ref{correctSigns}.  The third option limiting the search space is to break
-when the number of combinations, given a number of actions to try becomes too
-large. This is controlled by the {\tt maxCombinations} parameter in Algorithm
-\ref{correctSigns}.
-
 
 To account for sign errors and variable swap errors which are masked by 
 rounding errors, the user can provide a nonegative tolerance $\varepsilon$, so the
@@ -581,11 +601,14 @@ sol <- correctSigns(E, dat, swap=list(c("x","y")),
 cbind(sol$corrected, sol$status)
 sol$corrections
 @
-Notice that apart from swapping, the algorithm still tries to correct records by flipping signs.
-What happens is that the algorithm first tries to flip the sign of $x$, then of $y$, and then it tries to swap $x$ and $y$.
-Each is counted as a single action. If no solution is found, it starts trying combinations. In this relatively simple 
-example the result turned out well. In cases with more elaborate systems of equalities and inequalities, the 
-result of the algorithm becomes harder to predict for users. It is therefore in general advisable to 
+Notice that apart from swapping, the algorithm still tries to correct records
+by flipping signs.  What happened here is that the algorithm first tries to
+flip the sign of $x$, then of $y$, and then it tries to swap $x$ and $y$.  Each
+is counted as a single action. If no solution is found, it starts trying
+combinations. In this relatively simple example the result turned out well. In
+cases with more elaborate systems of equalities and inequalities, the result of
+the algorithm becomes harder to predict for users. It is therefore in general
+advisable to 
 \begin{itemize}
 \item Use as much knowledge about the data as possible to decide which variables to flip sign and which variable pairs to swap.
     The problem treated in section \ref{exScholtusCorrectSigns} is a good example of this.

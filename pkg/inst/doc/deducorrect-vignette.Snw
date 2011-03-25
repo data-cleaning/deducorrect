@@ -222,19 +222,16 @@ currency (kilo-)units. Therefore, linear editrules of the form
 \label{integerRestrictions}
 Ax = b \textrm{ with } A\in \{-1,0,1\}^{m\times n}\textrm{, } x\in \mathbb{Z}^{n},\textrm{ and } b\in\mathbb{Z}^m.
 \end{equation}
-are frequently encountered. Before correcting records, one might want to check
-whether \eqref{integerRestrictions} has integer solutions. A well-known
-theorem from linear algebra states that a sufficient condition for
-\eqref{integerRestrictions} to have an integer solution $x$ is for the matrix
-$A$ to be totally unimodular. A (not necessarily square) matrix is called {\em
-totally unimodular} when every square submatrix has determinant ${-1}$, $0$, or
-$1$. Since a $1\times1$ submatrix is also square, this means that a matrix cannot
-be totally unimodular unless all its coefficients have values in $\{-1,0,1\}$.
-See the appendix op \cite{scholtus:2008} for a further discussion of total unimodularity.
-Deducorrect offers the function {\tt isTotallyUnimodular} which checks
-wether a matrix has this property. The algorithm follows  a recursive procedure
-given below.
-
+are frequently encountered. In all the examples of financial balance accounts
+encountered by the authors, the matrix $A$ happened to be totally unimodular.
+A (not necessarily square) matrix is called {\em totally unimodular} when every
+square submatrix has determinant ${-1}$, $0$, or $1$. The scapegoat
+algorithm \citep{scholtus:2008}, which is used in the {\tt correctRoundings}
+function, requires $A$ to be totally unimodular. See appendix B of
+\cite{scholtus:2008} for a further discussion of total unimodularity.  The {\tt
+deducorrect} packages offers the function {\tt isTotallyUnimodular} which
+checks if a matrix is totally unimodular. The algorithm follows  a recursive
+procedure given below.
 \begin{algorithmic}
 \Procedure{isTotallyUnimodular}{$A$}
 \State $A\leftarrow${\sc reduceMatrix}$(A)$
@@ -243,17 +240,26 @@ given below.
 \ElsIf {Each column of $A$ (or $A'$) has exactly 2 nonzero elements}
 \State\Return {\sc hellerTompkins}$(A)$
 \Else
-\State\Return {\sc rachavachari}$(A)$
+\State $\mathcal{B} \leftarrow${\sc raghavachari}$(A)$
+\If { Every $B\in\mathcal{B}$ {\sc isTotallyUnimodoular}($B$) }
+\State \Return {\sc TRUE}
+\Else
+\State \Return{\sc FALSE}
+\EndIf
 \EndIf
 \EndProcedure
 \end{algorithmic}
-Here, {\sc reduceMatrix} removes all rows and columns of $A$ which have a single nonzero element.
-When possible, the criterium of \cite{heller:1956}, which is $\mathcal{O}(2^n)$ in the number of columns 
-is used to determine unimodularity. If this is not possible, the matrix is split in a series of submatrices
-according to the method of \cite{raghavachari:1976}. Every submatrix is subsequently checked for
-total unimodularity by calling {\sc isTotallyUnimodular}. In the worst case, Rachavachari's method
-must be called recursively and checking for unimodularity is approximately $\mathcal{O}(n!)$ in
-the number of columns.
+Here, {\sc reduceMatrix} iteratively removes all rows and columns of $A$ which
+have a single nonzero element (an operation of $\mathcal{O}(n)$ in the number
+of columns).  When possible, the criterium of \cite{heller:1956}, which is
+$\mathcal{O}(2^n)$ in the number of columns is used to determine unimodularity.
+If this is not possible, the matrix a series of smaller matrices are derived
+according to the method of \cite{raghavachari:1976}. Every submatrix is
+subsequently checked for total unimodularity by calling {\sc
+isTotallyUnimodular}. In the worst case, Rachavachari's method must be called
+recursively and checking for unimodularity is $\mathcal{O}(n!)$ in the number
+of columns. In practical applications $A$ is often fairly sparse and
+only a small portion of $A$ has to be treated with the Rachavachari method.
 
 
 

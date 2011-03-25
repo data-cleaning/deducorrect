@@ -16,7 +16,6 @@ applyFix <- function(flips, swaps, r){
 
 #' Workhorse for correctSigns
 #'
-#' Warning. this function replaces the deprecated \code{\link{old.getSignCorrection}}
 #' 
 #' @title workhorse for correctSigns
 #'
@@ -80,7 +79,7 @@ getSignCorrection <- function( r, A1, C1, eps, A2, C2, epsvec, flip, swap, w,
     return(list(S=S, weight=weight, nFlip=nFlip, nSwap=nSwap))
 }
 
-#' Correct sign errors and value interchanges in data records. It replaces \code{\link{old.correctSigns}}.
+#' Correct sign errors and value interchanges in data records. 
 #'
 #' This algorithm tries to correct records violating linear equalities by sign flipping and/or value interchanges.
 #' Linear inequalities are taken into account when judging possible solutions. If one or more inequality restriction

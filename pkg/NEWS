@@ -1,4 +1,5 @@
 version 0.9-3
+- fixed bug in isTotallyUnimodular
 - old.correctSigns now removed
 - added index.html for vignettes
 

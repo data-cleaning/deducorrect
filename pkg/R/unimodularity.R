@@ -144,15 +144,17 @@ allTotallyUnimodular <- function(L){
 #' @return \code{TRUE} or \code{FALSE}
 #' @seealso \code{\link{isTotallyUnimodular}}
 raghavachari <- function(A){
-    if ( ncol(A) == 1 ){
-        return(TRUE)
-    } else {
-        L <- vector(mode="list", length=ncol(A))
-        for ( i in 1:ncol(A) ){
-            L[[i]] <- A[ ,-i, drop=FALSE]
-        }
-        return(allTotallyUnimodular(L))
-    }
+    J <- colSums(abs(A))>=2
+    j <- which.max(colSums(abs(A[ ,J,drop=FALSE])))
+    j <- which(J)[j]
+    a_j <- A[ , j, drop=FALSE]
+    i_j <- which(a_j != 0)
+    L <- lapply(seq_along(i_j), function(i, A){
+            irow <- A[i_j[i], , drop=FALSE] 
+            A[i_j[-i],] <- A[i_j[-i], , drop=FALSE] - (A[i_j[-i], j, drop=FALSE]*irow[j]) %*% irow
+            A[, -j, drop=FALSE]
+        }, A)
+    return(allTotallyUnimodular(L))
 }
     
 

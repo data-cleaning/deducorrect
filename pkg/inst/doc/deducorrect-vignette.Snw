@@ -280,24 +280,32 @@ where $A$ is a totally unimodular matrix (see Section \ref{totallyUnimodularSect
 can be tested with the function {\tt isTotallyUnimodular}.
 
 \subsection{How it works}
+The {\tt correctRounding} function uses the scapegoat algorithm described in
+\cite{scholtus:2008}. First, linear equality restrictions which are violated
+because of rounding errors are detected. If edits are violated by a small
+amount $\varepsilon$ (say, 2 units of measurement) the violations are assumed
+to be caused by rounding errors. Next, a number of randomly selected variables
+is chosen to which rounding correction will be applied. If the solution
+violates new inequality restrictions it is rejected and the process of randomly
+selecting variables and correction is repeated upto a maximum number of times. 
+
 
 \begin{algorithm}
 \caption{Scapegoat algorithm}
 \label{scapegoatAlgorithm}
 \begin{algorithmic}[1]
-\Require Record $x$, totally unimodular restriction matrix $A$, constant vector $b$, rounding tolerance $\varepsilon$
+\Require Equality restriction matrix $A$ and constant vector $b$, inequality restriction matrix $B$ and constant vector $a$. 
+Record $x$, rounding tolerance $\varepsilon$ and maximum number of trials {\tt kmax}.
 \State Remove rows from the system  $Ax=b$ not satisfying $|A_{i\cdot}x-b_i|<\varepsilon$. 
 \If{$A\not=\varnothing$ {\bf and} $||Ax-b||>0$}
+\State $k\leftarrow0$
+\While {$Bx\not \leq a$ {\bf and} k<{\tt kmax}}
 \State Randomly permute columns of $A$. Permute $x$ and $b$ accordingly.
 \State Use QR decomposition to partition $A$ columnwise in a square invertible matrix $A_1$ and remaining columns $A_2$.
 Partition $x$ in $x_1$ and $x_2$, and $b$ in $b_1$ and $b_2$ accordingly.
-%    The resulting system of equations can be written as 
-%    \[
-%    \left[A_1 A_2\right]\left[\begin{array}{c}x_1\\ x_2\end{array}\right]=
-%    \left[\begin{array}{c}b_1\\ b_2\end{array}\right].
-%\]
 \State $x_1\leftarrow A_1^{-1}(b-A_2x_2)$
 \State Unpermute $[x_1,x_2]$
+\EndWhile
 \EndIf
 \State Restore $x$ by adding the previously removed elements.
 \Ensure $x$

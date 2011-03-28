@@ -75,8 +75,8 @@ correctTypos <- function( E
    status <- status(n)
    corrections <- NULL
    
-  # only loop over complete records
-  cc <- which(complete.cases(m))
+   # only loop over complete records
+   cc <- which(complete.cases(m))
 	for (i in cc){
       chk <- getTypoCorrection(E, F, m[i,], fixate=fixate, eps=eps, maxdist=maxdist)
       

@@ -1,13 +1,22 @@
 library(testthat)
 library(editrules)
 
-R <- editmatrix("a + b == 2")
-Q <- editmatrix("b >= 0")
-
-dat <- data.frame(a=2,b=1)
 
 test_that("correctRounding works",{
-   sol <- correctRounding(R,dat,Q)
+   R <- editmatrix(c("a == 1"))
+   dat <- data.frame(a=2)
+   sol <- correctRounding(R,dat)
+   print(sol$corrected)
+   expect_equivalent(sol$corrected[1,], data.frame(a=1))
+   #print(sol)
+})
+
+
+test_that("correctRounding with fixate works",{
+   R <- editmatrix(c("a + b == 2", "b >=0"))
+   dat <- data.frame(a=2,b=1)
+   sol <- correctRounding(R,dat, fixate="b")
+   print(sol$corrected)
    expect_equivalent(sol$corrected[1,], data.frame(a=1,b=1))
    #print(sol)
 })

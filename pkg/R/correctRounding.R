@@ -7,28 +7,35 @@ resample <- function(x, ...) {
 #'
 #' @nord
 scapegoat <- function(R0, a0, x,krit=NULL) {
-	  r0 <- nrow(R0)
+	 r0 <- nrow(R0)
     v <- ncol(R0)
     
     if (v < r0){
        return(x)
     }
     
+    #corner case when there is one variable and one restriction 
+    if (v == 1 && r0 == 1){
+       return(a0/R0)
+    }
+    
     if (!is.null(krit)){
-        krit <- colnames(R0) %in% krit
+        #krit <- colnames(R0) %in% krit
+        krit <- logical(ncol(R0))
     }
     else krit <- logical(ncol(R0))
     p <- 1:v
     perm <- c(resample(p[!krit]),resample(p[krit]))
 
+    
     R0t <- R0[, perm, drop=FALSE]
     xt <- x[perm]
     
-    #TODO check if R0 is totalunimodular, if so, then QR decomposition isn't necessary
-	 ks <- qr(R0t)$pivot;
+    ks <- qr(R0t)$pivot;
     p1 <- ks[1:r0]
     p2 <- ks[(r0+1):v]
     
+    print(p2)
     R1 <- R0t[,p1, drop=FALSE]
     #x1 <- x[p1]
     R2 <- R0t[,p2, drop=FALSE]
@@ -60,9 +67,10 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
 #' inconsistencies and rounding errors in business survey data. Technical
 #' Report 08015, Statistics Netherlands.
 #'
-#' @param R editmatrix \eqn{Rx = a}
+#' @param R editmatrix \eqn{Rx = a}, matrix may contain inequalities
 #' @param dat \code{data.frame} with the data to be corrected
-#' @param Q *deprecated* Inequalities can be entered via the first argument
+#' @param Q deprecated, (add inequalities to R)
+#' @param fixate \code{character} with variable names that should not be changed.
 #' @param delta tolerance on checking for rounding error
 #' @param K number of trials per record. See details
 #' @param round should the solution be a rounded, default TRUE
@@ -70,45 +78,51 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
 #' @seealso \code{\link{deducorrect-object}} \code{\link{status}}
 #'
 #'
-correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
+correctRounding <- function(R, dat, Q = NULL, fixate=NULL, delta=2, K=10, round=TRUE){
    stopifnot(is.editmatrix(R), is.data.frame(dat))
-   #TODO add fixate
+   
    krit <- character(0)
- 
+   vars <- getVars(R)
+   fixate <- if (is.null(fixate)){FALSE}
+             else vars %in% fixate
+             
    if (!missing(Q)){
+     warning("Q parameter is deprecated, please add inequalities to R")
      stopifnot(is.editmatrix(Q))
-     krit <- colnames(Q)
+     krit <- getVars(Q)
      b <- getC(Q)
-   }
-   else {
-     q <- getOps(R) == ">=" 
-     if (any(q)){
-       Q <- as.editmatrix(R[q,,drop=FALSE])
-       krit <- colnames(Q)
-       b <- getC(Q)
-     }
-   }
-   if ( ! is.null(Q) ) v <- violatedEdits(Q,dat)
-
-   eq <- getOps(R) == "=="
-   if (!all(eq)){
-      R <- as.editmatrix(R[eq,,drop=FALSE])
+     Q <- as.matrix(Q)
    }
    
-   m <- as.matrix(dat[,getVars(R),drop=FALSE])
+   eq <- getOps(R) == "=="
+   if (!all(eq)){
+       
+       Q <- R[!eq,]
+       R <- R[eq,]
+       
+       krit <- getVars(Q)
+       b <- getC(Q)
+       Q <- as.matrix(Q)
+   }
+   a <- getC(R)
+   R <- as.matrix(R)
+   
+   if (!isTotallyUnimodular(R)){
+      stop("The equality matrix R should be totally unimodular. ", R)
+   }
+   
+   m <- as.matrix(dat[vars])
    n <- nrow(m)
    status <- status(n)
    attempts <- integer(n)
    
    corrections <- NULL
-   a <- getC(R)
    cc <- which(complete.cases(m))
    for (i in cc){
       x <- m[i,]
       E0 <- abs(a - (R %*% x)) <= delta
       R0 <- R[E0,,drop=FALSE]
       a0 <- a[E0]
-    
       
       if (all((R0 %*% x) == a0)){
          status[i] <- if (all(E0)) "valid"
@@ -118,13 +132,16 @@ correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
       k <- 0
       while (k < K){
         k <- k + 1
+        #TODO check if R0 has one variable...
         sol <- scapegoat(R0, a0, x, krit)
         if (round) 
             sol <- round(sol,0)
         #TODO make this step more generic (so Q can be any inequality matrix)
-        if ( R0 %*% sol == a0
-          && (  is.null(Q) 
-             || all(which(violatedEdits(Q,as.data.frame(t(sol)))) %in% which(v[i,]))
+        changed <- (sol-x) != 0
+        if ( all(R0 %*% sol == a0)
+          && !any(fixate & changed)
+          && ( is.null(Q)
+             || all(Q %*% sol - b <= 0)
              )
            ){
            break
@@ -133,7 +150,7 @@ correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
       
       if (k < K){
         # detect if vars are changed
-        vars <- which((sol-x) != 0)
+        vars <- which(changed)
         m[i,] <- sol
         cor <- cbind( row=i
                     , variable=colnames(R)[vars]

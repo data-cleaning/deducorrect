@@ -62,7 +62,7 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
 #'
 #' @param R editmatrix \eqn{Rx = a}
 #' @param dat \code{data.frame} with the data to be corrected
-#' @param Q optional editmatrix \eqn{Qx \ge b}
+#' @param Q *deprecated* Inequalities can be entered via the first argument
 #' @param delta tolerance on checking for rounding error
 #' @param K number of trials per record. See details
 #' @param round should the solution be a rounded, default TRUE
@@ -74,27 +74,28 @@ correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
    stopifnot(is.editmatrix(R), is.data.frame(dat))
    #TODO add fixate
    krit <- character(0)
-   
+ 
    if (!missing(Q)){
      stopifnot(is.editmatrix(Q))
      krit <- colnames(Q)
      b <- getC(Q)
    }
    else {
-     q <- getOps(R) == ">="
+     q <- getOps(R) == ">=" 
      if (any(q)){
        Q <- as.editmatrix(R[q,,drop=FALSE])
        krit <- colnames(Q)
        b <- getC(Q)
      }
    }
-   
+   if ( ! is.null(Q) ) v <- violatedEdits(Q,dat)
+
    eq <- getOps(R) == "=="
    if (!all(eq)){
       R <- as.editmatrix(R[eq,,drop=FALSE])
    }
    
-   m <- as.matrix(dat[getVars(R)])
+   m <- as.matrix(dat[,getVars(R),drop=FALSE])
    n <- nrow(m)
    status <- status(n)
    attempts <- integer(n)
@@ -107,6 +108,7 @@ correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
       E0 <- abs(a - (R %*% x)) <= delta
       R0 <- R[E0,,drop=FALSE]
       a0 <- a[E0]
+    
       
       if (all((R0 %*% x) == a0)){
          status[i] <- if (all(E0)) "valid"
@@ -122,7 +124,7 @@ correctRounding <- function(R, dat, Q = NULL, delta=2, K=10, round=TRUE){
         #TODO make this step more generic (so Q can be any inequality matrix)
         if ( R0 %*% sol == a0
           && (  is.null(Q) 
-             || Q %*% sol >= b
+             || all(which(violatedEdits(Q,as.data.frame(t(sol)))) %in% which(v[i,]))
              )
            ){
            break

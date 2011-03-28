@@ -1,4 +1,7 @@
 version 0.9-3
+- correctRounding does not allow generation of new inequality violations, compatible with correctTypos.
+- correctTypos now checks solution suggestions for generating new inequality violations.
+- set variable Q in correctRounding to deprecated
 - fixed bug in isTotallyUnimodular
 - old.correctSigns now removed
 - added index.html for vignettes

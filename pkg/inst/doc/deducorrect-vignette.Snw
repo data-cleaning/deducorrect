@@ -230,7 +230,7 @@ are frequently encountered. In all the examples of financial balance accounts
 encountered by the authors, the matrix $A$ happened to be totally unimodular.
 A (not necessarily square) matrix is called {\em totally unimodular} when every
 square submatrix has determinant ${-1}$, $0$, or $1$. The scapegoat
-algorithm \citep{scholtus:2008}, which is used in the {\tt correctRoundings}
+algorithm \citep{scholtus:2008}, which is used in the {\tt correctRounding}
 function, requires $A$ to be totally unimodular. See appendix B of
 \cite{scholtus:2008} for a further discussion of total unimodularity.  The {\tt
 deducorrect} package offers the function {\tt isTotallyUnimodular} which
@@ -267,7 +267,7 @@ be treated with the Rachavachari method.
 
 
 
-\section{\tt correctRoundings}
+\section{\tt correctRounding}
 \label{roundingErrors}
 \subsection{Area of application}
 This function can be used to correct records which violate linear equality restrictions because of
@@ -281,40 +281,84 @@ can be tested with the function {\tt isTotallyUnimodular}.
 
 \subsection{How it works}
 The {\tt correctRounding} function uses the scapegoat algorithm described in
-\cite{scholtus:2008}. First, linear equality restrictions which are violated
-because of rounding errors are detected. If edits are violated by a small
-amount $\varepsilon$ (say, 2 units of measurement) the violations are assumed
-to be caused by rounding errors. Next, a number of randomly selected variables
-is chosen to which rounding correction will be applied. If the solution
-violates new inequality restrictions it is rejected and the process of randomly
-selecting variables and correction is repeated upto a maximum number of times. 
+\cite{scholtus:2008} to suggest corrections for linear equality violations.
+Linear inequalities are ignored, except that corrections which cause new
+inequality violations are not accepted. The algorithms selects
+editrules violated by rounding errors. Rounding errors cause small deviations
+from equality and therefore deviations smaller than some $\varepsilon$ (say,
+$\varepsilon=2)$ are assumed to stem from rounding errors. Next, a number
+of variables --called scapegoat variables-- is selected randomly in such a way that rounding errors
+can be solved exactly and uniquely. If the chosen solution happens to 
+cause new inequality violations, the solution is rejected and a new
+set of scapegoat variables is drawn. This is repeated at most $k$ times.
+See Algorithm \ref{scapegoatAlgorithm} for a consice description of
+the basic procedure (without checking for inequalities).
 
-
-\begin{algorithm}
+%
+%
+\begin{algorithm}[t]
 \caption{Scapegoat algorithm}
 \label{scapegoatAlgorithm}
 \begin{algorithmic}[1]
-\Require Equality restriction matrix $A$ and constant vector $b$, inequality restriction matrix $B$ and constant vector $a$. 
-Record $x$, rounding tolerance $\varepsilon$ and maximum number of trials {\tt kmax}.
+\Require Equality restriction matrix $A$ and constant vector $b$, record $x$, rounding tolerance $\varepsilon$. 
 \State Remove rows from the system  $Ax=b$ not satisfying $|A_{i\cdot}x-b_i|<\varepsilon$. 
 \If{$A\not=\varnothing$ {\bf and} $||Ax-b||>0$}
-\State $k\leftarrow0$
-\While {$Bx\not \leq a$ {\bf and} k<{\tt kmax}}
 \State Randomly permute columns of $A$. Permute $x$ and $b$ accordingly.
 \State Use QR decomposition to partition $A$ columnwise in a square invertible matrix $A_1$ and remaining columns $A_2$.
 Partition $x$ in $x_1$ and $x_2$, and $b$ in $b_1$ and $b_2$ accordingly.
 \State $x_1\leftarrow A_1^{-1}(b-A_2x_2)$
 \State Unpermute $[x_1,x_2]$
-\EndWhile
 \EndIf
 \State Restore $x$ by adding the previously removed elements.
 \Ensure $x$
 \end{algorithmic}
 \end{algorithm}
-\subsection{Examples}
+%
+%
 
+%
+%
+\subsection{Examples}
+Here, we will reproduce the example of \cite{scholtus:2009}, Section 5.3.2. Consider an integer-valued
+record with 11 variables, subject to the rules:
+<<keep.source=true>>=
+E <- editmatrix( c("X1 + X2 == X3"
+                  ,"X2 == X4"
+                  ,"X5 + X6 + X7 == X8"
+                  ,"X3 + X8 == X9"
+                  ,"X9 - X10 == X11"))
+@
+Consider also the following inconsistent record:
+<<>>=
+(dat <- data.frame(t(c(12, 4, 15, 4, 3, 1, 8, 11, 27, 41, -13))))
+violatedEdits(E,dat)
+@
+As reported by the {\tt violatedEdits} function, this record violates editrules 1, 3, 4, and 5.
+Using R's built-in matrix operations, we may check which edits might be violated because
+of rounding errors:
+<<>>=
+E %*% t(as.matrix(dat))
+@
+which, in this case is the same since all violations fall within the limit we expect rounding errors.
+Repairing the record can be done with
+<<>>=
+set.seed(1)
+sol <- correctRounding(E,dat)
+cbind(sol$corrected, sol$status)
+sol$corrections
+@
+Here, we used {\tt set.seed} to make results reproducible. The result is not
+exactly the same as the solution found in the reference. Here, variables $x_3$,
+$x_8$ and $x_9$ have been adapted, while in the reference $x_3$, $x_8$ and
+$x_9$ were adapted.  Since corrections are very small, smearing out the
+effect of adaptations over a number of variables is a reasonable option.
+
+%
+%
+%
 \section{\tt correctTypos}
 \label{typingErrors}
+%
 \subsection{Area of application}
 This function can be used to correct typographical errors in an integer record
 violating linear equality constraints as in Eq.\ \eqref{integerRestrictions}:
@@ -498,17 +542,9 @@ Our implementation finds the exact same solutions as in the original paper of
 \cite{scholtus:2009}.  Also see this reference for a through analysis of the
 outcomes.
 
-
-
-
-%The difference $315-252=63$ is divisable by nine, which suggests the transposition
-%of adjecent digits in one of the terms\footnote{
-%In the decimal positional number system any integer $n=\pm\sum_{j=0}^k \xi_j\cdot10^j$ 
-%is denoted as $\pm\xi_k\xi_{k-1}\ldots\xi_0$. If $n'$ has the same positional representation
-%as $n$, except that the digits $\xi_{j}$ and $\xi_{j+1}$ are interchanged, the difference 
-%$n-n'=(\xi_{j+1}-\xi_{j})(10^{j+1}-10^j)$, which obviously is dividable by 9.
-%}. 
-
+%
+%
+%
 \section{\tt correctSigns}
 \label{signErrors}
 \subsection{Area of application}
@@ -800,6 +836,20 @@ cor$status
 cor$corrected
 @
 The latter table corresponds exactly to Table $2$ of \cite{scholtus:2008}.
+
+\section{Final remarks}
+This paper demonstrates our implementation of three data correction methods,
+initially devised by one of us (\cite{scholtus:2008, scholtus:2009}).
+With the {\tt deducorrect} R package, users can correct numerical data records
+which violate linear equality restrictions for rounding errors, typographical
+errors and sign errors and/or value transpositions. Since both the algorithms
+correcting for typographical and sign errors can take rounding errors into
+account. A logical data-cleaning sequence would be to start with correcting
+for sign- and typographical errors, ignoring rounding errors and subsequently
+treating the rounding errors.
+
+
+
 
 
 \bibliographystyle{chicago}

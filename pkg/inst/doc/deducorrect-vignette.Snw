@@ -236,7 +236,7 @@ function, requires $A$ to be totally unimodular. See appendix B of
 deducorrect} package offers the function {\tt isTotallyUnimodular} which
 checks if a matrix is totally unimodular. The algorithm follows  a recursive
 procedure given below.
-\begin{algorithmic}
+\begin{algorithmic}[1]
 \Procedure{isTotallyUnimodular}{$A$}
 \State $A\leftarrow${\sc reduceMatrix}$(A)$
 \If {$A=\varnothing$}
@@ -280,6 +280,29 @@ where $A$ is a totally unimodular matrix (see Section \ref{totallyUnimodularSect
 can be tested with the function {\tt isTotallyUnimodular}.
 
 \subsection{How it works}
+
+\begin{algorithm}
+\caption{Scapegoat algorithm}
+\label{scapegoatAlgorithm}
+\begin{algorithmic}[1]
+\Require Record $x$, totally unimodular restriction matrix $A$, constant vector $b$, rounding tolerance $\varepsilon$
+\State Remove rows from the system  $Ax=b$ not satisfying $|A_{i\cdot}x-b_i|<\varepsilon$. 
+\If{$A\not=\varnothing$ {\bf and} $||Ax-b||>0$}
+\State Randomly permute columns of $A$. Permute $x$ and $b$ accordingly.
+\State Use QR decomposition to partition $A$ columnwise in a square invertible matrix $A_1$ and remaining columns $A_2$.
+Partition $x$ in $x_1$ and $x_2$, and $b$ in $b_1$ and $b_2$ accordingly.
+%    The resulting system of equations can be written as 
+%    \[
+%    \left[A_1 A_2\right]\left[\begin{array}{c}x_1\\ x_2\end{array}\right]=
+%    \left[\begin{array}{c}b_1\\ b_2\end{array}\right].
+%\]
+\State $x_1\leftarrow A_1^{-1}(b-A_2x_2)$
+\State Unpermute $[x_1,x_2]$
+\EndIf
+\State Restore $x$ by adding the previously removed elements.
+\Ensure $x$
+\end{algorithmic}
+\end{algorithm}
 \subsection{Examples}
 
 \section{\tt correctTypos}

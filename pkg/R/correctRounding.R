@@ -18,7 +18,6 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
     if (v == 1 && r0 == 1){
        return(a0/R0)
     }
-    
     if (!is.null(krit)){
         #krit <- colnames(R0) %in% krit
         krit <- logical(ncol(R0))
@@ -35,18 +34,17 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
     p1 <- ks[1:r0]
     p2 <- ks[(r0+1):v]
     
-    print(p2)
     R1 <- R0t[,p1, drop=FALSE]
     #x1 <- x[p1]
     R2 <- R0t[,p2, drop=FALSE]
     x2 <- xt[p2]
     
 	 c <- a0 - (R2 %*% x2)
-   x1 <- solve(R1, c)[,1]
+    x1 <- solve(R1, c)[,1]
 	 sol <- c(x1, x2)
-   #restore original order
-   m <- match(names(x), names(sol))
-   sol[m]
+    #restore original order
+    m <- match(names(x), names(sol))
+    sol[m]
 }
 
 #' Correct records under linear restrictions for rounding errors
@@ -100,9 +98,9 @@ correctRounding <- function(R, dat, Q = NULL, fixate=NULL, delta=2, K=10, round=
        Q <- R[!eq,]
        R <- R[eq,]
        
+       #use reduced Q
        krit <- getVars(Q)
        b <- getC(Q)
-       Q <- as.matrix(Q)
    }
    a <- getC(R)
    R <- as.matrix(R)
@@ -130,10 +128,15 @@ correctRounding <- function(R, dat, Q = NULL, fixate=NULL, delta=2, K=10, round=
          next
       }
       k <- 0
+      
+      if (!is.null(Q)){
+         #violatedIneq <- which(violatedEdits(Q, x) , latest version of editrules
+         violatedIneq <- which(violatedEdits(Q, data.frame(t(x))))
+      }
       while (k < K){
         k <- k + 1
         #TODO check if R0 has one variable...
-        sol <- scapegoat(R0, a0, x, krit)
+        sol <- scapegoat(R0, a0, x, krit=krit)
         if (round) 
             sol <- round(sol,0)
         #TODO make this step more generic (so Q can be any inequality matrix)
@@ -141,7 +144,8 @@ correctRounding <- function(R, dat, Q = NULL, fixate=NULL, delta=2, K=10, round=
         if ( all(R0 %*% sol == a0)
           && !any(fixate & changed)
           && ( is.null(Q)
-             || all(Q %*% sol - b <= 0)
+             #|| all(which(violatedEdits(Q, sol) %in%  violatedIneq))
+             || all(which(violatedEdits(Q, data.frame(t(sol))) %in%  violatedIneq))
              )
            ){
            break

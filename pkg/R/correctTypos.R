@@ -78,7 +78,8 @@ correctTypos <- function( E
    # only loop over complete records
    cc <- which(complete.cases(m))
 	for (i in cc){
-      chk <- getTypoCorrection(E, F, m[i,], fixate=fixate, eps=eps, maxdist=maxdist)
+      x <- m[i,]
+      chk <- getTypoCorrection(E, x, fixate=fixate, eps=eps, maxdist=maxdist)
       
       status[i] <- chk$status
       
@@ -104,12 +105,21 @@ correctTypos <- function( E
       }
       cor <- cor[sol[1,],,drop=FALSE]
       
-      #m[i, cor[,"var"]]  <- cor[,"new"]      
-      m[i, cor[,1]]  <- cor[,3]
+      #m[i, cor[,"var"]]  <- cor[,"new"]
+      x[cor[,1]] <- cor[,3]
       
       # check if record is now valid with the corrections applied
       status[i] <- if (sum(abs(a-E%*%m[i,]) > eps) == 0) "corrected"
                    else "partial"
+                   
+      #TODO if any violatedEdits then solution is always partial
+      if (all(which(violatedEdits(F, x)) %in% which(violatedEdits(F,m[i,])))){
+         m[i,] <- x
+      }
+      else {
+         status[i] <- "invalid"
+         next
+      }
       cor <- cbind(row=rep(i, nrow(cor)), cor)
       corrections <- rbind(corrections, cor)      
 	}
@@ -155,7 +165,7 @@ correctTypos <- function( E
 #' cor    \tab suggested corrections \cr
 #' B      \tab reduced binary editmatrix with violated edits, needed for choosing the suggested corrections\cr
 #'}
-getTypoCorrection <- function( E, F, x, fixate=FALSE, eps=sqrt(.Machine$double.eps), maxdist=1){
+getTypoCorrection <- function( E, x, fixate=FALSE, eps=sqrt(.Machine$double.eps), maxdist=1){
    ret <- list(status=NA)
    
    a <- getC(E)
@@ -200,7 +210,6 @@ getTypoCorrection <- function( E, F, x, fixate=FALSE, eps=sqrt(.Machine$double.e
                 , function(i){
                      # edits valid for current variable v_i
                      eqs <- E1 & (B[,i])
-                     ineqs <- F[,i] != 0 
                      # correction candidates
                      #TODO check if solution has to be rounded!!!)
                      x_i_c <- ( (a[eqs]-(M[eqs,-i, drop=FALSE] %*% x[-i])) / (M[eqs,i]))
@@ -225,17 +234,7 @@ getTypoCorrection <- function( E, F, x, fixate=FALSE, eps=sqrt(.Machine$double.e
    
    # filter out the corrections that have dist > maxdist
    valid <- cor[,4] <= maxdist
-  
-   # violated inequalities
-   v <- which(violatedEdits(F, x_F))
-   # filter out the corrections that cause new inequality violations.                 
-   valid <- valid & apply(cor, 1, 
-       function(cr,x_F, v){
-          x_F[1,cr[1]] <- cr[3]
-          return( all(which(violatedEdits(F,x_F) %in% v)) ) 
-       }, x_F, v)                 
-
- 
+   
    if (sum(valid) == 0){
       # cannot correct this error
       ret$status <- "invalid"

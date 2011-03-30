@@ -13,7 +13,7 @@ test_that("correctRounding works",{
 
 
 test_that("correctRounding with fixate works",{
-   R <- editmatrix(c("a + b == 2", "b >=0"))
+   R <- editmatrix(c("a + b == 2"))
    dat <- data.frame(a=2,b=1)
    sol <- correctRounding(R,dat, fixate="b")
    print(sol$corrected)
@@ -21,6 +21,15 @@ test_that("correctRounding with fixate works",{
    #print(sol)
 })
 
+test_that("correctRounding with Q works",{
+   set.seed(1)
+   R <- editmatrix(c("a + b == 2", "b>0"))
+   dat <- data.frame(a=2,b=1)
+   sol <- correctRounding(R,dat)
+   print(sol$corrected)
+   expect_equivalent(sol$corrected[1,], data.frame(a=1,b=1))
+   #print(sol)
+})
 
 test_that("correctRounding works with Scholtus 2008 example",{
    E <- editmatrix(c( "x1 + x2 == x3"

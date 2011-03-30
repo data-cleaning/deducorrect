@@ -58,6 +58,21 @@ test_that("correctTypos fixation works",{
    expect_equal(nrow(cor$corrections), 0)
 })
 
+test_that("correctTypos with inequality contraint record fails",{   
+      # overconstraint editmatrix (only works for x1=0, and x2=0)
+      E <- editmatrix( c( "x1 == x2"
+                        , "x2 < 10"
+                        )
+                     )
+      data <- data.frame(
+       x1 = c(10,29),
+       x2 = c(1,92))
+
+      cor <- correctTypos(E,data)
+      expect_equal(as.character(cor$status$status), c("invalid", "invalid"))
+})
+
+
 test_that("correctTypos with noncorrectable record works",{   
       # overconstraint editmatrix (only works for x1=0, and x2=0)
       E <- editmatrix( c( "x1 == x2"

@@ -49,7 +49,7 @@ status <- function(n, ini=NA){
 getUsername <- function(){
     
     # the *nix case
-    name <- tryCatch(system("whoami", intern=TRUE),warning=function(w) NA )
+    name <- tryCatch(system("whoami", intern=TRUE), warning=function(w) NA, error=function(NA) )
     # the other case(s)
     if ( is.na(name)) {
         v <- Sys.getenv()

@@ -1,9 +1,10 @@
 # load sources
+library(editrules)
+
 src <- sapply(list.files("../pkg/R", full.names=TRUE), source)
 
 # load demos
 #examples <- sapply(list.files("../examples", full.names=TRUE), source)
-
 
 E <- editmatrix( c( "x1 == x2"
                      , "9*x1 == x2"

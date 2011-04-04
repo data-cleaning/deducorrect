@@ -27,7 +27,7 @@ damerauLevenshteinDistance <- function(sa,sb, w=c(1,1,1,1)){
       
       la <- length(a)
       lb <- length(b)
-      d <- matrix(nrow = la, ncol = lb)
+      d <- matrix(0, nrow = la, ncol = lb)
     
       
       d[,1] <- 0:(la-1)
@@ -46,11 +46,13 @@ damerauLevenshteinDistance <- function(sa,sb, w=c(1,1,1,1)){
             cost <- c( d[i-1, j  ]      # deletion
                      , d[i  , j-1]      # insert
                      , d[i-1, j-1]      # substitution
-                     , d[i-2,j-2]       # transposition
-                     ) + w
-            if (!(eq[i-1,j] && eq[i,j-1]))
-               cost <- cost[-4]
- 
+                     ) + w[-4]
+                     
+            if ( (eq[i-1,j] && eq[i,j-1])
+               && i > 2
+               ){
+               cost <- c(cost, d[i-2,j-2] + w[4]) # transposition
+            }
             d[i,j] <- min(cost) 
          }
       }

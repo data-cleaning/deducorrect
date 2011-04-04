@@ -1,3 +1,6 @@
+version 0.9-4
+- Fixed a bug in damerauLevenschtein distance
+
 version 0.9-3
 - vignette virtually complete
 - made detection of username more robust

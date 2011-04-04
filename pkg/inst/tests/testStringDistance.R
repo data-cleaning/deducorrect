@@ -1,5 +1,10 @@
 library(testthat)
 
+
+test_that("Comparing a small string works",{
+   expect_equal(damerauLevenshteinDistance(24, 42), 1)
+})
+
 test_that("Comparing equal strings works",{
    expect_equal(damerauLevenshteinDistance(1340, 1340), 0)
 })

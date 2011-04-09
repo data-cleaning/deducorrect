@@ -1,7 +1,8 @@
 version 0.9-5
-- Fixed a bug in correctTypos: all solutions were flagged as partial.
+- Changed getUsername so it uses Sys.info
 
 version 0.9-4
+- Fixed a bug in correctTypos: all solutions were flagged as partial.
 - Fixed a bug in damerauLevenschtein distance
 
 version 0.9-3

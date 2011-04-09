@@ -35,32 +35,16 @@ status <- function(n, ini=NA){
 
 #' Get name of R user.
 #'
-#' This function tries to get the name of the user from the system on which R is running.
-#' It first tries the \code{whoami} command, which will work on a \code{*nix} like system, and probably on OSX as well (not tested).
-#' If this fails, it looks for the \code{USER} (first) and \code{USERNAME} environment variables. Please note that this may
-#' or may not work as expected when running R on a server, or as webservice.
+#' This function returns the username.
 #' 
 #' This function is not exported.
 #' 
 #' @title Get name of R user. 
 #' 
-#' @return The username or \code{NA}
+#' @return The username
 #' @nord
 getUsername <- function(){
-    
-    # the *nix case
-    name <- tryCatch(system("whoami", intern=TRUE), warning=function(w) NA, error=function() NA )
-    # the other case(s)
-    if ( is.na(name)) {
-        v <- Sys.getenv()
-        names(v) <- toupper(names(v))
-        if ( "USER" %in% names(v) ){
-            name <- v["USER"]
-        } else if ( "USERNAME" %in% names(v) ){
-            name <- v["USERNAME"]
-        } 
-        names(name) <- NULL
-    }
+    name <- Sys.info()[["user"]]
     return(name)
 }
 

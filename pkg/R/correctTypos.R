@@ -89,7 +89,7 @@ correctTypos <- function( E
       }
 
       cor <- chk$cor
-      #sol <- tree(chk$B, cor[,"kappa"])
+      
       sol <- tree(chk$B, cor[,5])
       if (nrow(sol) > 1){
          # if a correction is valid for all found solutions, then it can be applied

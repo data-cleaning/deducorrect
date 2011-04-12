@@ -46,13 +46,11 @@ damerauLevenshteinDistance <- function(sa,sb, w=c(1,1,1,1)){
             cost <- c( d[i-1, j  ]      # deletion
                      , d[i  , j-1]      # insert
                      , d[i-1, j-1]      # substitution
-                     ) + w[-4]
-                     
-            if ( (eq[i-1,j] && eq[i,j-1])
-               && i > 2
-               ){
-               cost <- c(cost, d[i-2,j-2] + w[4]) # transposition
-            }
+                     ) + w[1:3]
+
+            if (i>2 & j>2 & eq[i-1, j] & eq[i, j-1])
+                cost <- c(cost, d[i-2,j-2] + w[4]) 
+
             d[i,j] <- min(cost) 
          }
       }

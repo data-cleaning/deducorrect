@@ -27,8 +27,6 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-{\em This vignette is unfinished. Version 1.0 of the package will contain a
-full vignette.} 
 
 Since raw (survey) data usually has to be edited before statistical analysis
 can take place, the availability of data cleaning algorithms is important to
@@ -38,8 +36,8 @@ numerical data under linear restrictions for typing errors, rounding errors,
 sign errors and value interchanges. The algorithms, based on earlier work of
 Scholtus, are described as well as implementation details and coded examples.
 Although the algorithms have originally been developed with financial balance
-accounts in mind the algorithms are formulated generically and should find a
-wider range of application.
+accounts in mind the algorithms are formulated generically and can be applied
+in a wider range of applications.
 
 
 \end{abstract}
@@ -150,7 +148,7 @@ overview of the contents of a {\tt deducorrect} object.
 %
 \begin{table}
 \begin{threeparttable}
-\caption{Contents of the {\tt deducorrect} object. All slots can be accessed or reassigned through the {\tt \$} operator.}
+\caption{Contents of the {\tt deducorrect} object. All slots can be accessed through the {\tt \$} operator.}
 \label{deducorrectObject}
 \begin{tabular}{lp{0.7\textwidth}}
 \hline
@@ -385,16 +383,19 @@ violating linear equality constraints as in Eq.\ \eqref{integerRestrictions}:
 \begin{displaymath}
 Ax = b \textrm{ with } A\in \{-1,0,1\}^{m\times n}\textrm{, } x\in \mathbb{Z}^{n},\textrm{ and } b\in\mathbb{Z}^m.
 \end{displaymath}
-The algorithm was developed with sets of financial balance equations in mind,
-where these type of problems are very common. As far as inequalities are
-concerned, they are currently ignored by the algorithm, in the sense that no
-attempt is made to repair inequality violations. However, the algorithm does
-not allow solutions causing extra inequality violations.
+In fact, the algorithm will also run when $A\in \mathbb{R}^{m\times n}$.
+However, the nature of the algorithm is such that it is unlikely that typing
+errors will be found for such systems.  The algorithm was developed with sets
+of financial balance equations in mind, where these type of problems are very
+common. As far as inequalities are concerned, they are currently ignored by the
+algorithm, in the sense that no attempt is made to repair inequality
+violations. However, the algorithm does not allow solutions causing extra
+inequality violations.
 
 Records for which $|Ax-b|>{\tt eps}$, will be treated with the algorithm.  The
 input parameter {\tt eps} allows for a tolerance so that rounding errors can be
 ignored. This way, records containing only rounding errors can be ignored but
-do note that they will retrieve the status {\tt valid}.
+do note that they will receive the status {\tt valid}.
  
 
 \subsection{How it works}

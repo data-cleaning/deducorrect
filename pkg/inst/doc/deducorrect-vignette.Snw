@@ -425,7 +425,8 @@ edit $i$ and multiple suggestions for each variable $x_j$. Using a tree search
 algorithm, a subset of $\{x^{(i)}_j\}$ is selected which maximizes the number
 of resolved edits. The tree search is sped up considerably by pruning branches
 which resolve the same edit multiple times or use multiple suggestions for the
-same variable.
+same variable. When multiple solutions are found, only the variables which
+obtain the same correction suggestion in each solution are adapted.
 
 This algorithm generalizes the algorithms of \cite{scholtus:2009} in the
 following two ways: first, the imposed linear restrictions are generalised from

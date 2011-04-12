@@ -20,7 +20,7 @@
 \renewcommand{\floatpagefraction}{.9}
 \renewcommand{\dblfloatpagefraction}{.9}
 \renewcommand{\dbltopfraction}{.9}
-
+\hyphenation{time-stamp}
 
 \title{Correction of rounding, typing, and sign errors with the {\tt deducorrect} package}
 \author{Mark van der Loo, Edwin de Jonge and Sander Scholtus}
@@ -33,13 +33,13 @@ full vignette.}
 Since raw (survey) data usually has to be edited before statistical analysis
 can take place, the availability of data cleaning algorithms is important to
 many statisticians.  In this paper the implementation of three data correction
-methods in R. The methods of this package can be used to correct numerical data
-under linear restrictions for typing errors, rounding errors, sign errors and
-value interchanges. The algorithms, based on earlier work of Scholtus, are
-described as well as implementation details and coded examples. Although the
-algorithms have originally been developed with financial balance accounts in
-mind the algorithms are formulated genericly and should find a wider range of
-application.
+methods in R are described. The methods of this package can be used to correct
+numerical data under linear restrictions for typing errors, rounding errors,
+sign errors and value interchanges. The algorithms, based on earlier work of
+Scholtus, are described as well as implementation details and coded examples.
+Although the algorithms have originally been developed with financial balance
+accounts in mind the algorithms are formulated generically and should find a
+wider range of application.
 
 
 \end{abstract}
@@ -121,7 +121,7 @@ the variables $\{x_j\}$. Conversely, when $x_j$ is part of a relationship
 defined by an edit we say that $x_j$ {\em occurs} in the edit. 
 
 In this paper, we describe the {\tt deducorrect} package for R
-\citep{R-core:2011}, which implements (slight) generalisations of the
+\citep{R-core:2011}, which implements (slight) generalizations of the
 algorithms proposed by \cite{scholtus:2008, scholtus:2009}. The purpose of this
 paper is to provide details on the algorithms and to familiarize users with the
 syntax of the package. The correction algorithms in the package report the
@@ -236,7 +236,7 @@ solutions. These are described in the following sections.
 Most algorithms described here have been designed with financial balance
 accounts in mind. The balance accounts encountered in establishment surveys
 mostly involve integer records since financial amounts are usually reported in
-currency (kilo-)units. Therefore, linear editrules of the form
+currency (kilo-)units. Therefore, linear edit rules of the form
 %
 \begin{equation}
 \label{integerRestrictions}
@@ -260,7 +260,7 @@ totally unimodular. The algorithm follows  a recursive procedure given below.
 \State\Return {\sc hellerTompkins}$(A)$
 \Else
 \State $\mathcal{B} \leftarrow${\sc raghavachari}$(A)$
-\If { Every $B\in\mathcal{B}$ {\sc isTotallyUnimodoular}($B$) }
+\If { Every $B\in\mathcal{B}$ {\sc isTotallyUnimodular}($B$) }
 \State \Return {\sc TRUE}
 \Else
 \State \Return{\sc FALSE}
@@ -269,16 +269,19 @@ totally unimodular. The algorithm follows  a recursive procedure given below.
 \EndProcedure
 \end{algorithmic}
 Here, {\sc reduceMatrix} iteratively removes all rows and columns of $A$ which
-have a single nonzero element (an operation of $\mathcal{O}(n)$ in the number
-of columns and rows).  When possible, the criterium of \cite{heller:1956},
-which is $\mathcal{O}(2^n)$ in the number of columns is used to determine
-unimodularity.  If this is not possible, a series of smaller matrices
-$\mathcal{B}$ is derived with the method of \cite{raghavachari:1976}. Every
-matrix in $\mathcal{B}$ is subsequently checked for total unimodularity by
-calling {\sc isTotallyUnimodular}. In the worst case, Rachavachari's method
+have at most one nonzero element (an operation of $\mathcal{O}(n)$ in the
+number of columns and rows).  When possible, the criterium of
+\cite{heller:1956}, which is $\mathcal{O}(2^n)$ in the number of columns is
+used to determine unimodularity.  If this is not possible, a set of smaller
+matrices $\mathcal{B}$ is derived with the method of \cite{raghavachari:1976}.
+Every matrix in $\mathcal{B}$ is subsequently checked for total unimodularity
+by calling {\sc isTotallyUnimodular}. In the worst case, Raghavachari's method
 must be called recursively and checking for unimodularity is $\mathcal{O}(n!)$
-in the number of columns. In practical applications $A$ is often fairly sparse
-and only a small portion of $A$ has to be treated with the Rachavachari method.
+in the number of columns. For this reason, our implementation is set up so that
+Raghavachari's method is used only after the reduction method and the
+Heller-Tompkins method have been tried. In practical applications $A$ is often
+fairly sparse and only a small portion of $A$ has to be treated with the
+Raghavachari method.
 
 
 
@@ -299,15 +302,15 @@ isTotallyUnimodular}.
 The {\tt correctRounding} function uses the scapegoat algorithm described in
 \cite{scholtus:2008} to suggest corrections for linear equality violations.
 Linear inequalities are ignored, except that corrections which cause new
-inequality violations are not accepted. The algorithms selects editrules
+inequality violations are not accepted.  The algorithms selects edit rules
 violated by rounding errors. Rounding errors cause small deviations from
 equality and therefore deviations smaller than some $\varepsilon$ (say,
-$\varepsilon=2)$ are assumed to stem from rounding errors. Next, a number of
-variables --called scapegoat variables-- is selected randomly in such a way
+$\varepsilon=2)$ are assumed to stem from rounding errors.  Next, a number of
+variables --called scapegoat variables-- are selected randomly in such a way
 that rounding errors can be solved exactly and uniquely. If the chosen solution
 happens to cause new inequality violations, the solution is rejected and a new
 set of scapegoat variables is drawn. This is repeated at most $k$ times.  See
-Algorithm \ref{scapegoatAlgorithm} for a consice description of the basic
+Algorithm \ref{scapegoatAlgorithm} for a concise description of the basic
 procedure (without checking for inequalities).
 
 %
@@ -320,10 +323,9 @@ procedure (without checking for inequalities).
     rounding tolerance $\varepsilon$. 
 \State Remove rows from the system  $Ax=b$ not satisfying $|A_{i\cdot}x-b_i|<\varepsilon$. 
 \If{$A\not=\varnothing$ {\bf and} $||Ax-b||>0$}
-\State Randomly permute columns of $A$. Permute $x$ and $b$ accordingly.
+\State Randomly permute columns of $A$. Permute $x$ accordingly.
 \State Use QR decomposition to partition $A$ columnwise in a square invertible
-    matrix $A_1$ and remaining columns $A_2$.  Partition $x$ in $x_1$ and $x_2$,
-    and $b$ in $b_1$ and $b_2$ accordingly.
+    matrix $A_1$ and remaining columns $A_2$.  Partition $x$ in $x_1$ and $x_2$ accordingly.
 \State $x_1\leftarrow A_1^{-1}(b-A_2x_2)$
 \State Unpermute $[x_1,x_2]$
 \EndIf
@@ -337,7 +339,7 @@ procedure (without checking for inequalities).
 %
 %
 \subsection{Examples}
-Here, we will reproduce the example of \cite{scholtus:2009}, Section 5.3.2.
+Here, we will reproduce the example of \cite{scholtus:2008}, Section 5.3.2.
 Consider an integer-valued record with 11 variables, subject to the rules:
 <<keep.source=true>>=
 E <- editmatrix( c("X1 + X2 == X3"
@@ -351,7 +353,7 @@ Consider also the following inconsistent record:
 (dat <- data.frame(t(c(12, 4, 15, 4, 3, 1, 8, 11, 27, 41, -13))))
 violatedEdits(E,dat)
 @
-As reported by the {\tt violatedEdits} function, this record violates editrules
+As reported by the {\tt violatedEdits} function, this record violates edit rules
 1, 3, 4, and 5.  Using R's built-in matrix operations, we may check which edits
 might be violated because of rounding errors:
 <<>>=
@@ -367,8 +369,8 @@ sol$corrections
 @
 Here, we used {\tt set.seed} to make results reproducible. The result is not
 exactly the same as the solution found in the reference. Here, variables $x_3$,
-$x_8$ and $x_9$ have been adapted, while in the reference $x_3$, $x_8$ and
-$x_9$ were adapted.  Since corrections are very small, smearing out the
+$x_8$ and $x_9$ have been adapted, while in the reference $x_3$, $x_4$, $x_8$, 
+$x_9$, and $x_{10}$ were adapted.  Since corrections are very small, smearing out the
 effect of adaptations over a number of variables is a reasonable option.
 
 %
@@ -389,17 +391,17 @@ concerned, they are currently ignored by the algorithm, in the sense that no
 attempt is made to repair inequality violations. However, the algorithm does
 not allow solutions causing extra inequality violations.
 
-Records which violate the equality restrictions are treated. There is an option
-{\tt eps} which allows for a tolerance in checking if records should be
-treated. This way, records containing ony rounding errors can be ignored but do
-note that they will retrieve the status {\tt valid}.
+Records for which $|Ax-b|>{\tt eps}$, will be treated with the algorithm.  The
+input parameter {\tt eps} allows for a tolerance so that rounding errors can be
+ignored. This way, records containing only rounding errors can be ignored but
+do note that they will retrieve the status {\tt valid}.
  
 
 \subsection{How it works}
 In short, the algorithm first computes a list of suggestions which correct one
 or more violated edits (Algorithm \ref{generateCandidates}). The corrections
 not corresponding to a typographical error are removed, after which  the set of
-suggestions that maximize the number of satisfied editrules is determined
+suggestions that maximize the number of satisfied edit rules is determined
 (Algorithm \ref{maximizeResolvedEdits}). 
 
 Suggestions are generated for the set of variables which {\em only} occur in
@@ -434,7 +436,7 @@ allowing for sign changing, which is forbidden if only digit changes are
 allowed. Also, by applying a standard Damerau-Levenshtein algorithm it is easy
 to allow for corrections spanning larger values $d_{\rm DL}$. That is, one
 could allow for multiple typos in a single field. Moreover, the
-Damerau-Levenstein distance as implemented in the {\tt deducorrect} package
+Damerau-Levenshtein distance as implemented in the {\tt deducorrect} package
 allows one to define different weights to the four types of operations
 involved, adding some extra flexibility to the method.
 %
@@ -451,7 +453,7 @@ Damerau-Levenshtein distance {\tt maxdist}.
 \State Determine the matrix $A^{(j)}$ of violated edits containing $x_j$ and associated constant vector $b^{(j)}$
 \For { every row $i$ of $A^{(j)}$}
 \State $\tilde{x}_j^{(i)} \leftarrow \left(b_i^{(j)}-\sum_{j'\not=j}A_{ij'}^{(j)}x_{j'}\right)/A_{ij}^{(j)} $
-\State $L\leftarrow L\cup\tilde{x}_j^{(i)}$
+\State $L\leftarrow L\cup\tilde{x}_j^{(i)}$ \Comment{Only new values are added}
 \EndFor
 \EndFor
 \State Remove $\tilde{x}^{(i)}_j$ from $L$ for which $d_{\rm DL}(\tilde{x}^{(i)}_j,x_j)>{\tt maxdist}$ 
@@ -471,7 +473,7 @@ $L = \{L_\ell=\tilde{x}^{(i_\ell)}_{j_\ell}:\ell=1,2,\ldots, m\}$
 \If{$L\not=\varnothing$}
 \State {\sc tree}$(x,L\backslash L_1)$\Comment{Left branche: don't use suggestion}
 \State $x_{j_1}\leftarrow L_1$ \Comment{Right branche: use suggestion}
-\State $L\leftarrow L\backslash \{x^{(i_\ell)}_{j_\ell}\in L: j_\ell=j_1 \textrm{ \bf  or } x^{(i_\ell)}_{j_\ell}\textrm{ resolves the same edit as } L_1\}$
+\State $L\leftarrow L\backslash \{x^{(i_\ell)}_{j_\ell}\in L: j_\ell=j_1 \textrm{ \bf  or } x^{(i_\ell)}_{j_\ell}\textrm{ occurs in same edit as } L_1\}$
 \State {\sc tree}$(x,L)$
 \Else
 \If{Number of edits $n$ resolved by $x$ larger then $k$}
@@ -545,9 +547,9 @@ dat
 @
 This {\tt data.frame} can be read into R by copying the code from the {\tt
 correctTypos} help page. As can be seen, example 4.1 has a single digit
-transposition in $x_4$, example 4.2 has the same error, and an extra 1 prefixed
-to $x_9$, example 4.3 contains multiple extra errors (in $x_5$, $x_6$ and $x_7$
-which cannot be explained bby simple typing errors.  Finally, example 4.4 also
+transposition in $x_4$, example 4.2 has the same error, and an extra 1 inserted
+in $x_9$, example 4.3 contains multiple extra errors (in $x_5$, $x_6$ and $x_7$
+which cannot be explained by simple typing errors.  Finally, example 4.4 also
 has multiple errors which cannot all be explained by simple typing errors. This
 example has multiple solutions which solve an equal amount of errors.
 
@@ -561,8 +563,8 @@ sol <- correctTypos(E, dat)
 cbind(sol$corrected, sol$status)
 @
 Our implementation finds the exact same solutions as in the original paper of
-\cite{scholtus:2009}.  Also see this reference for a through analysis of the
-outcomes.
+\cite{scholtus:2009}.  Also see this reference for a thorough analysis of the
+results.
 
 %
 %
@@ -629,7 +631,7 @@ integer {\tt maxCombinations} and a weight vector.
    \State $k\leftarrow k+1$ 
    \State Generate all ${n\choose k}$ combinations of $k$ actions.
    \State Loop over those combinations, applying them to $x$. Add solutions
-obeying $|Ax-b|<\varepsilon$ and $Ax-c\geq0$ to $S$.
+obeying $|Ax-b|<\varepsilon$ and $Bx-c\geq0$ to $S$.
   \EndIf
 \EndWhile
 \If {{\bf not} $S=\varnothing$ }
@@ -704,7 +706,7 @@ sol <- correctSigns(E, dat)
 cbind(sol$corrected, sol$status)
 sol$corrections
 @
-So, the first three records have been correcte by flipping the sign of $z$, $y$
+So, the first three records have been corrected by flipping the sign of $z$, $y$
 and $z$ respectively.  Since no weight parameter was given, the weight is just
 the number of variables whose have been sign-flipped.  Record 4 is not treated,
 since validity could not be established, record 5 was valid to begin with and
@@ -806,12 +808,12 @@ dat <- data.frame(
    x3  = c(  40,  10,  20,   0),
    x4  = c( 195, 610,-140, 221))
 @
-A record consists of 4 balance accounts wose results have to add up to a total.
-Each $x_{i,r}$ denotes some kind of return, $x_{ic}$ some kind of cost and
-$x_i$ the difference $x_{i,r}-x_{i,c}$. There are operating, financial,
-provisions and exeptional incomes and expenditures. The differences $x_0$,
-$x_1$, $x_2$ and $x_3$ have to add up to a given total $x_4$.  These linear
-restrictions can be defined with the use of the {\tt editrules} package.
+A record consists of 4 balance accounts of which the results have to add up to
+a total.  Each $x_{i,r}$ denotes some kind of revenue, $x_{ic}$ some kind of
+cost and $x_i$ the difference $x_{i,r}-x_{i,c}$. There are operating,
+financial, provisions and exeptional incomes and expenditures. The differences
+$x_0$, $x_1$, $x_2$ and $x_3$ have to add up to a given total $x_4$.  These
+linear restrictions can be defined with the use of the {\tt editrules} package.
 <<keep.source=TRUE>>=
 require(editrules)
 E <-editmatrix(c(
@@ -828,7 +830,7 @@ violatedEdits} function of {\tt editrules}.
 violatedEdits(E,dat)
 @
 So record 1 (case a) for example, violates the restrictions $e_1$:
-$x_1=x_{1,r}-x_{1,c}$ and $e_5$, $x_1+x_2+sx_3=x_4$.  We can try to solve the
+$x_1=x_{1,r}-x_{1,c}$ and $e_5$, $x_0+x_1+x_2+x_3=x_4$.  We can try to solve the
 inconsistencies by allowing the following flips and swaps:
 <<keep.source=TRUE>>= 
 swap <- list(
@@ -895,20 +897,20 @@ The {\tt editrules} package \citep{jonge:2011} is a package for reading, parsing
 manipulating numerical and categorical editrules. It offers functionality to
 conveniently construct edit matrices from verbose edit rules, stated as 
 R statements. As an example consider the following set of edits on 
-records with profit $p$, loss $l$, and turnover $t$.
+records with profit $p$, cost $c$, and turnover $t$.
 \begin{equation}
 \left\{\begin{array}{lcl}
-t &\geq& 0\\
-l &\geq& 0\\
+t &\geq& 1\\
+c &\geq& 0\\
 t &=& p + l \\
 p &<& 0.6t.  
 \end{array}\right.
 \end{equation}
-The first two rules indicate that turnover and loss must be positive numbers,
-the third that the profit-loss account must balance, and the last rule indicates
-that profit cannot be more thatn 60\% of the turnover. Denoting a record as
-a vector $(p,l,t)$,  these rules can be
-denoted as matrix equations:
+The first two rules indicate that cost must be nonnegative, and turnover must
+larger than or equal to 1. The third rule indicates that the profit-loss
+account must balance, and the last rule indicates that profit cannot be more
+thatn 60\% of the turnover. Denoting a record as a vector $(p,l,t)$,  these
+rules can be denoted as matrix equations:
 \begin{eqnarray}
 \left[\begin{array}{ccc}
 0 & 0 & 1\\
@@ -942,7 +944,7 @@ comparison operators for every row. For example:
 <<keep.source=true>>=
 E[getOps(E)==">=", ]
 @
-Alternatively, an the comparison operators of an editmatrix may be normalized:
+Alternatively, the comparison operators of an edit matrix may be normalized:
 <<>>=
 editmatrix(editrules(E),normalize=TRUE)
 @

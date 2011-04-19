@@ -98,20 +98,20 @@ which can be written in any (combination of) the forms
 %
 \begin{eqnarray}
 \label{edits1}
-Ax &=& b\\
+Ex &=& b\\
 \label{edits2}
-Ax &<& b \\
+Ex &<& b \\
 \label{edits3}
-Ax &\leq& b \\
+Ex &\leq& b \\
 \label{edits4}
-Ax &>& b \\
+Ex &>& b \\
 \label{edits5}
-Ax &\geq& b 
+Ex &\geq& b 
 \label{edits6}
 \end{eqnarray}
 %
-Here, every $A$ is a matrix, $x$ a numerical data record and $b$ a constant
-vector. Every row of the combined matrix $[A,b]$ represents one linear
+Here, every $E$ is a matrix, $x$ a numerical data record and $b$ a constant
+vector. Every row of the augmented matrix $[E,b]$ represents one linear
 restriction. In data-editing literature the restrictions imposed on records are
 often called edit rules, or edits in short. If an edit describes a relationship
 between a number of variables $\{x_j\}$, we say that the edit {\em contains}
@@ -132,9 +132,11 @@ of the algorithms used and coded examples with analysis of the results. It is
 also shown how the examples from \cite{scholtus:2008} and \cite{scholtus:2009}
 can be treated with this software. The package requires that linear
 relationships are defined with the {\tt editrules} package \citep{jonge:2011}.
-Unless noted otherwise, all R-code examples in this paper can be executed from
-the R commandline after loading the {\tt deducorrect} and {\tt editrules}
-package. 
+The {\tt editrules} package offers functionality to conveniently define and manipulate
+sets of equality and inequality restrictions. A short introduction to the {\tt
+editrules} package is given in the appendix of this paper.  Unless noted
+otherwise, all R-code examples in this paper can be executed from the R
+commandline after loading the {\tt deducorrect} and {\tt editrules} package. 
 
 
 \subsection{The {\tt deducorrect} object and {\tt status} values}
@@ -144,7 +146,7 @@ deducorrect} package returns some logging information on the applied
 corrections. Information on applied corrections, a status indicator per record,
 a timestamp and user information are included and stored uniformily in a
 {\tt deducorrect} object. See Table \ref{deducorrectObject} for an
-overview of the contents of a {\tt deducorrect} object.
+overview of the contents of this object.
 %
 \begin{table}
 \begin{threeparttable}
@@ -166,9 +168,9 @@ row in the input data, a variable name of the input data, the old value and the 
 \end{table}
 %
 Because of the large amount of information in a {\tt deducorrect} object, the
-contents are summarized for printing to screen. In the example below, we define
-one record of data, a linear restriction in the form of an {\tt editmatrix},
-and apply the {\tt correctSigns} correction method\footnote{sometimes extra
+contents are summarized for printing to screen. In the example below, we define one
+record of data, a linear restriction in the form of an {\tt editmatrix}, and
+apply the {\tt correctSigns} correction method\footnote{sometimes extra
 brackets are included to force R to print the result}.
 <<>>=
 (d <- data.frame(x=1,y=0,z=1))
@@ -178,7 +180,7 @@ sol <- correctSigns(E,d)
 sol
 @
 %
-
+%
 \begin{table}
 \begin{threeparttable}
 \caption{The number of equalities $n$ and inequalities $m$ violated by an edit,
@@ -204,7 +206,7 @@ $n$  &  $m$     &  $0$    &$0$      &corrected      &corrected        &corrected
 \end{tabular}
 \end{threeparttable}
 \end{table}
-
+%
 The individual components of {\tt sol} can be retrieved with the
 dollar-operator. The slot {\tt corrected} is the same as the input data, but
 with corrected records, where possible:
@@ -223,10 +225,18 @@ sol$status
 @
 The first column is an indicator which can take five different values,
 indicating whether validity could be established, and/or if the record could be
-(partially) corrected by the method which created the deducorrect object. See
-Table \ref{statusvalues} for details. The rest of the columns depend on the
-function which created the object and can provide more details on the chosen
-solutions. These are described in the following sections.
+(partially) corrected by the method which created the deducorrect object.  The
+rest of the columns depend on the function which created the object and can
+provide more details on the chosen solutions. These are described in the coming
+sections.
+
+Table \ref{statusvalues} gives an overview of status values and their meaning
+for every {\tt correct-} function of the package. For example, the fourth row
+of Table \ref{statusvalues} shows how status values are set if a record
+violates $n$ equality restrictions on entry and a number of them (but not all)
+can be solved. For {\tt correctRoundings}, this situation cannot occur. Both
+{\tt correctRounding} and {\tt correctTypos} allow for partially repairing a
+record, so in their case, the status is labeled  ``partial''.
 
 
 \subsection{Balance accounts and totally unimodular matrices}
@@ -238,27 +248,27 @@ currency (kilo-)units. Therefore, linear edit rules of the form
 %
 \begin{equation}
 \label{integerRestrictions}
-Ax = b \textrm{ with } A\in \{-1,0,1\}^{m\times n}\textrm{, } x\in \mathbb{Z}^{n},\textrm{ and } b\in\mathbb{Z}^m.
+Ex = b \textrm{ with } E\in \{-1,0,1\}^{m\times n}\textrm{, } x\in \mathbb{Z}^{n},\textrm{ and } b\in\mathbb{Z}^m.
 \end{equation}
 are frequently encountered. In all the examples of financial balance accounts
-encountered by the authors, the matrix $A$ happened to be totally unimodular.
+encountered by the authors, the matrix $E$ happened to be totally unimodular.
 A (not necessarily square) matrix is called {\em totally unimodular} when every
 square submatrix has determinant ${-1}$, $0$, or $1$. The scapegoat algorithm
 \citep{scholtus:2008}, which is used in the {\tt correctRounding} function,
-requires $A$ to be totally unimodular. See appendix B of \cite{scholtus:2008}
+requires $E$ to be totally unimodular. See appendix B of \cite{scholtus:2008}
 for a further discussion of total unimodularity.  The {\tt deducorrect} package
 offers the function {\tt isTotallyUnimodular} which checks if a matrix is
 totally unimodular. The algorithm follows  a recursive procedure given below.
 \begin{algorithmic}[1]
-\Procedure{isTotallyUnimodular}{$A$}
-\State $A\leftarrow${\sc reduceMatrix}$(A)$
-\If {$A=\varnothing$}
+\Procedure{isTotallyUnimodular}{$E$}
+\State $E\leftarrow${\sc reduceMatrix}$(E)$
+\If {$E=\varnothing$}
 \State\Return {\sc TRUE}
-\ElsIf {Each column of $A$ has exactly 2 nonzero elements}
-\State\Return {\sc hellerTompkins}$(A)$
+\ElsIf {Each column of $E$ has exactly 2 nonzero elements}
+\State\Return {\sc hellerTompkins}$(E)$
 \Else
-\State $\mathcal{B} \leftarrow${\sc raghavachari}$(A)$
-\If { Every $B\in\mathcal{B}$ {\sc isTotallyUnimodular}($B$) }
+\State $\mathcal{E} \leftarrow${\sc raghavachari}$(E)$
+\If { Every $E\in\mathcal{E}$ {\sc isTotallyUnimodular}($E$) }
 \State \Return {\sc TRUE}
 \Else
 \State \Return{\sc FALSE}
@@ -266,7 +276,7 @@ totally unimodular. The algorithm follows  a recursive procedure given below.
 \EndIf
 \EndProcedure
 \end{algorithmic}
-Here, {\sc reduceMatrix} iteratively removes all rows and columns of $A$ which
+Here, {\sc reduceMatrix} iteratively removes all rows and columns of $E$ which
 have at most one nonzero element (an operation of $\mathcal{O}(n)$ in the
 number of columns and rows).  When possible, the criterium of
 \cite{heller:1956}, which is $\mathcal{O}(2^n)$ in the number of columns is
@@ -277,8 +287,9 @@ by calling {\sc isTotallyUnimodular}. In the worst case, Raghavachari's method
 must be called recursively and checking for unimodularity is $\mathcal{O}(n!)$
 in the number of columns. For this reason, our implementation is set up so that
 Raghavachari's method is used only after the reduction method and the
-Heller-Tompkins method have been tried. In practical applications $A$ is often
-fairly sparse and only a small portion of $A$ has to be treated with the
+Heller-Tompkins method have been tried. Also, matrices are transposed to make
+sure that $n$ is minimized $n$ in every step. In practical applications $E$ is
+often fairly sparse and only a small portion of $E$ has to be treated with the
 Raghavachari method.
 
 
@@ -290,9 +301,9 @@ This function can be used to correct records which violate linear equality
 restrictions because of rounding errors in one or more variables. The linear
 equality restrictions must be of the form
 \begin{displaymath}
-Ax = b \textrm{ with } A\in \{-1,0,1\}^{m\times n}\textrm{, } x\in \mathbb{Z}^{n},\textrm{ and } b\in\mathbb{Z}^m.
+Ex = b \textrm{ with } E\in \{-1,0,1\}^{m\times n}\textrm{, } x\in \mathbb{Z}^{n},\textrm{ and } b\in\mathbb{Z}^m.
 \end{displaymath}
-where $A$ is a totally unimodular matrix (see Section
+where $E$ is a totally unimodular matrix (see Section
 \ref{totallyUnimodularSection}), which can be tested with the function {\tt
 isTotallyUnimodular}.
 
@@ -305,26 +316,27 @@ violated by rounding errors. Rounding errors cause small deviations from
 equality and therefore deviations smaller than some $\varepsilon$ (say,
 $\varepsilon=2)$ are assumed to stem from rounding errors.  Next, a number of
 variables --called scapegoat variables-- are selected randomly in such a way
-that rounding errors can be solved exactly and uniquely. If the chosen solution
-happens to cause new inequality violations, the solution is rejected and a new
-set of scapegoat variables is drawn. This is repeated at most $k$ times.  See
-Algorithm \ref{scapegoatAlgorithm} for a concise description of the basic
-procedure (without checking for inequalities).
-
+that rounding errors can be solved exactly and uniquely by altering the
+scapegoat variables. Note that the number of scapegoat variables is not fixed
+an may vary over drawings. If the chosen solution happens to cause new
+inequality violations, the solution is rejected and a new set of scapegoat
+variables is drawn. This is repeated at most $k$ times.  See Algorithm
+\ref{scapegoatAlgorithm} for a concise description of the basic procedure
+(without checking for inequalities).
 %
 %
 \begin{algorithm}[t]
 \caption{Scapegoat algorithm}
 \label{scapegoatAlgorithm}
 \begin{algorithmic}[1]
-\Require Equality restriction matrix $A$ and constant vector $b$, record $x$,
+\Require Equality restriction matrix $E$ and constant vector $b$, record $x$,
     rounding tolerance $\varepsilon$. 
-\State Remove rows from the system  $Ax=b$ not satisfying $|A_{i\cdot}x-b_i|<\varepsilon$. 
-\If{$A\not=\varnothing$ {\bf and} $||Ax-b||>0$}
-\State Randomly permute columns of $A$. Permute $x$ accordingly.
-\State Use QR decomposition to partition $A$ columnwise in a square invertible
-    matrix $A_1$ and remaining columns $A_2$.  Partition $x$ in $x_1$ and $x_2$ accordingly.
-\State $x_1\leftarrow A_1^{-1}(b-A_2x_2)$
+\State Remove rows from the system  $Ex=b$ not satisfying $|E_{i\cdot}x-b_i|<\varepsilon$. 
+\If{$E\not=\varnothing$ {\bf and} $||Ex-b||>0$}
+\State Randomly permute columns of $E$. Permute $x$ accordingly.
+\State Use QR decomposition to partition $E$ columnwise in a square invertible
+    matrix $A_1$ and remaining columns $E_2$.  Partition $x$ in $x_1$ and $x_2$ accordingly.
+\State $x_1\leftarrow E_1^{-1}(b-E_2x_2)$
 \State Unpermute $[x_1,x_2]$
 \EndIf
 \State Restore $x$ by adding the previously removed elements.
@@ -346,6 +358,7 @@ E <- editmatrix( c("X1 + X2 == X3"
                   ,"X3 + X8 == X9"
                   ,"X9 - X10 == X11"))
 @
+which can be written as $Ex=0$.
 Consider also the following inconsistent record:
 <<>>=
 (dat <- data.frame(t(c(12, 4, 15, 4, 3, 1, 8, 11, 27, 41, -13))))
@@ -353,12 +366,13 @@ violatedEdits(E,dat)
 @
 As reported by the {\tt violatedEdits} function, this record violates edit rules
 1, 3, 4, and 5.  Using R's built-in matrix operations, we may check which edits
-might be violated because of rounding errors:
+are violated because of rounding errors. That is, which $0<|Ex|\leq 2$:
 <<>>=
 E %*% t(as.matrix(dat))
 @
-which, in this case is the same since all violations fall within the limit we
-expect rounding errors.  Repairing the record can be done with
+which, in this case gives the same result as {\tt violatedEdits}, since all
+violations fall within the limit where we expect rounding errors.  Repairing
+the record can be done with
 <<>>=
 set.seed(1)
 sol <- correctRounding(E,dat)
@@ -394,9 +408,12 @@ inequality violations.
 
 Records for which $|Ax-b|>{\tt eps}$, will be treated with the algorithm.  The
 input parameter {\tt eps} allows for a tolerance so that rounding errors can be
-ignored. This way, records containing only rounding errors can be ignored but
-do note that they will receive the status {\tt valid}.
- 
+ignored. The default value of {\tt eps} is almost zero. It is set to the square
+root of {\tt .Machine\$double.eps} which amounts to approximately $10^{-8}$.
+The value should be increased to allow for rounding errors not caused by
+machine computation. This way, records containing only rounding errors can be
+ignored by {\tt correctTypos} but do note that in that case they will receive
+the status {\tt valid}, since no typos were found.
 
 \subsection{How it works}
 In short, the algorithm first computes a list of suggestions which correct one
@@ -593,20 +610,21 @@ changing one sign. If that doesn't yield any solution, it tries changing two,
 and so on. If the user allows value swaps as well, it starts by trying to
 correct the record with a single sign flip or variable swap. If no solution is
 found, a combination is tried, and so on. The algorithm only treats the
-variables which have nonzero coefficients in one of the violated rows of Eq.\
-\eqref{edits1}.  Since the number of combinations grows exponentially with the
-number of variables to treat, the user is given some control over the volume of
-the search space to cover in a number of ways. First of all, the variables
-which are allowed to flip signs or variable pairs which may be interchanged
-simultaneously can be determined by the user. Knowledge of the origin of the
-data will usually give a good idea on which variables are prone to sign errors.
-For example, in surveys on profit-loss accounts, respondents sometimes
-erroneously submit the cost as a negative number. Secondly, the user may limit
-the maximum number of simultaneous sign flips and or value swaps that may be
-tested. This is controled by the {\tt maxActions} parameter in Algorithm
-\ref{correctSigns}.  The third option limiting the search space is to break
-when the number of combinations, given a number of actions to try becomes too
-large. This is controlled by the {\tt maxCombinations} parameter in Algorithm
+variables which have nonzero coefficients in one of the violated equality
+constraints of Eq.\ \eqref{edits1}.  Since the number of combinations grows
+exponentially with the number of variables to treat, the user is given some
+control over the volume of the search space to cover in a number of ways. First
+of all, the variables which are allowed to flip signs or variable pairs which
+may be interchanged simultaneously can be determined by the user. Knowledge of
+the origin of the data will usually give a good idea on which variables are
+prone to sign errors.  For example, in surveys on profit-loss accounts,
+respondents sometimes erroneously submit the cost as a negative number.
+Secondly, the user may limit the maximum number of simultaneous sign flips and
+or value swaps that may be tested. This is controled by the {\tt maxActions}
+parameter in Algorithm \ref{correctSigns}.  The third option limiting the
+search space is to break when the number of combinations, given a number of
+actions to try becomes too large. This is controlled by the {\tt
+maxCombinations} parameter in Algorithm
 \ref{correctSigns}.
 %
 %
@@ -649,9 +667,7 @@ the set of equality constraints are checked as
 \begin{equation}
 |Ax -b| < \varepsilon,
 \end{equation}
-where $|\cdot|$ indicates the elementwise absolute value. The default value of
-$\varepsilon$ is the square root of machine accuracy which amounts to
-approximately $10^{-8}$ on a 32-bit architecture. 
+where $|\cdot|$ indicates the elementwise absolute value. 
 
 The purpose of this algorithm is to find and apply the minimal number of
 actions (sign flips and/or variable swaps) necessary to repair the record. It
@@ -709,8 +725,10 @@ cbind(sol$corrected, sol$status)
 sol$corrections
 @
 So, the first three records have been corrected by flipping the sign of $z$, $y$
-and $z$ respectively.  Since no weight parameter was given, the weight is just
-the number of variables whose have been sign-flipped.  Record 4 is not treated,
+and $z$ respectively.  Since no weight parameter was given, the {\tt weight} in the output 
+is just the number of variables whose have been sign-flipped. The {\tt degeneracy} column
+records the number of solutions with equal weight that were found for each record.
+Record 4 is not treated,
 since validity could not be established, record 5 was valid to begin with and
 record 6 could not be repaired with sign flips. However, record 6 seems to have
 a rounding error.  We can try to accomodate for that by allowing a tolerance
@@ -815,7 +833,7 @@ a total.  Each $x_{i,r}$ denotes some kind of revenue, $x_{ic}$ some kind of
 cost and $x_i$ the difference $x_{i,r}-x_{i,c}$. There are operating,
 financial, provisions and exeptional incomes and expenditures. The differences
 $x_0$, $x_1$, $x_2$ and $x_3$ have to add up to a given total $x_4$.  These
-linear restrictions can be defined with the use of the {\tt editrules} package.
+linear restrictions must be defined with the use of the {\tt editrules} package.
 <<keep.source=TRUE>>=
 require(editrules)
 E <-editmatrix(c(
@@ -881,11 +899,11 @@ correcting for typographical and sign errors can take rounding errors into
 account, a typical data-cleaning sequence would be to start with correcting for
 sign- and typographical errors, ignoring rounding errors and subsequently
 treating the rounding errors. We note that data cleaning can be sped up
-significantly if independent blocks of editrules are treated separately. Two
-sets of editrules $A$ and $B$ are independent when variables occuring
-in rules of $A$ do not occur in rules of $B$. The {\tt editrules} package
-offers functionality to split editmatrices into blocks (with the {\tt findblocks}
-function).
+significantly if independent blocks of editrules are treated separately.  If an
+editmatrix can be written as a direct sum $E=E_1\oplus E_2$, data can be
+treated for editrules in $E_1$ and $E_2$ independantly.  The {\tt editrules}
+package offers functionality to split editmatrices into blocks via the {\tt
+findblocks} function.
 
 
 

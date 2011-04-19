@@ -132,11 +132,14 @@ of the algorithms used and coded examples with analysis of the results. It is
 also shown how the examples from \cite{scholtus:2008} and \cite{scholtus:2009}
 can be treated with this software. The package requires that linear
 relationships are defined with the {\tt editrules} package \citep{jonge:2011}.
-The {\tt editrules} package offers functionality to conveniently define and manipulate
-sets of equality and inequality restrictions. A short introduction to the {\tt
-editrules} package is given in the appendix of this paper.  Unless noted
-otherwise, all R-code examples in this paper can be executed from the R
-commandline after loading the {\tt deducorrect} and {\tt editrules} package. 
+The {\tt editrules} package offers functionality to conveniently define and
+manipulate sets of equality and inequality restrictions. With the {\tt
+editrules} package, linear restrictions can be defined as R-statements (in {\tt
+character} format) or as a matrix. A short introduction to the {\tt editrules}
+package is given in the appendix of this paper, but we refer the reader to
+the package documentation for more detailed information.  Unless noted otherwise, all
+R-code examples in this paper can be executed from the R commandline after
+loading the {\tt deducorrect} and {\tt editrules} package. 
 
 
 \subsection{The {\tt deducorrect} object and {\tt status} values}
@@ -957,7 +960,28 @@ In the {\tt editrules} package, these linear rules are all stored in a single ob
     "p < 0.6*t")))
 @
 An {\tt editmatrix} object stores a stacked matrix representation of linear
-edit resrictions. There are more storage modes in {\tt editrules} which we will
+edit resrictions. Alternatively, one can define edits as a matrix and
+cast it into an {\tt editmatrix} object:
+<<keep.source=true>>=
+E <- matrix(c(
+     1,   0, 0,
+     0,   1, 0,
+     1,  -1,-1,
+    -0.6, 1, 1),
+    nrow=4,
+    byrow=TRUE,
+    dimnames=list(
+        1:4,
+        c("t","l","p")
+    )
+)
+b <- c(1,0,0,0)
+ops <- c(">=", ">=", "==", ">")
+(E <- as.editmatrix(E,b,ops))
+@
+
+
+There are more storage modes in {\tt editrules} which we will
 not detail here. Users can extract
 (in)equalities through the {\tt getOps} function which returns a vector of
 comparison operators for every row. For example:

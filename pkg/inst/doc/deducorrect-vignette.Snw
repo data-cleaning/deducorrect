@@ -93,55 +93,61 @@ can solve problems not uncommon in numerical survey data, namely
 \item Sign swaps and/or value interchanges.
 \end{itemize}
 %
-The algorithms focus on solving problems in records with linear relationships,
-which can be written in any (combination of) the forms
+The algorithms focus on solving problems in records that have to
+obey a set of linear relationships, each of which can be written as
 %
 \begin{eqnarray}
-\label{edits1}
-Ex &=& b\\
-\label{edits2}
-Ex &<& b \\
-\label{edits3}
-Ex &\leq& b \\
-\label{edits4}
-Ex &>& b \\
-\label{edits5}
-Ex &\geq& b 
-\label{edits6}
+{\bf a}\cdot{\bf x} \odot b \textrm{ where } \odot \in\{=,\leq,<\}
+\label{edit}
 \end{eqnarray}
 %
-Here, every $E$ is a matrix, $x$ a numerical data record and $b$ a constant
-vector. Every row of the augmented matrix $[E,b]$ represents one linear
-restriction. In data-editing literature the restrictions imposed on records are
+Here, every $\bf a$ is a nonzero real vector, $\bf x$ a numerical data record and $b$ 
+a constant. In data-editing literature the restrictions imposed on records are
 often called edit rules, or edits in short. If an edit describes a relationship
 between a number of variables $\{x_j\}$, we say that the edit {\em contains}
 the variables $\{x_j\}$. Conversely, when $x_j$ is part of a relationship
-defined by an edit we say that $x_j$ {\em occurs} in the edit. 
+defined by an edit we say that $x_j$ {\em occurs} in the edit. We will denote
+a generic set of edits with $E$. The matrix representation of (in)equality parts
+of $E$ will be denoted $\bf{A}$.
+
 
 In this paper, we describe the {\tt deducorrect} package for R
 \citep{R-core:2011}, which implements (slight) generalizations of the
 algorithms proposed by \cite{scholtus:2008, scholtus:2009}. The purpose of this
 paper is to provide details on the algorithms and to familiarize users with the
-syntax of the package. The correction algorithms in the package report the
-results in a uniform matter. Section \ref{deducorrectObjectSection} provides
-details on the {\tt deducorrect} output object which stores information on
-corrected records, applied corrections, and more. Sections
-\ref{roundingErrors}, \ref{typingErrors} and \ref{signErrors} provide details
-on the classes of problems that may be treated with the package, an exposition
-of the algorithms used and coded examples with analysis of the results. It is
-also shown how the examples from \cite{scholtus:2008} and \cite{scholtus:2009}
-can be treated with this software. The package requires that linear
-relationships are defined with the {\tt editrules} package \citep{jonge:2011}.
-The {\tt editrules} package offers functionality to conveniently define and
-manipulate sets of equality and inequality restrictions. With the {\tt
-editrules} package, linear restrictions can be defined as R-statements (in {\tt
-character} format) or as a matrix. A short introduction to the {\tt editrules}
-package is given in the appendix of this paper, but we refer the reader to
-the package documentation for more detailed information.  Unless noted otherwise, all
-R-code examples in this paper can be executed from the R commandline after
-loading the {\tt deducorrect} and {\tt editrules} package. Throughout, we denote
-the Euclidian vector norm with double bars $||\cdot||$ while single bars $|\cdot|$
-denote the elementwise absolute values of the argument.
+syntax of the package. For a detailed description of the available routines and
+their arguments we refer the reader to the reference manual that comes with the
+package.
+
+The correction algorithms in the package report the results in a uniform
+matter. Section \ref{deducorrectObjectSection} provides details on the {\tt
+deducorrect} output object which stores information on corrected records,
+applied corrections, and more. Sections \ref{roundingErrors},
+\ref{typingErrors} and \ref{signErrors} provide details on the classes of
+problems that may be treated with the package, an exposition of the algorithms
+used and coded examples with analysis of the results. It is also shown how the
+examples from \cite{scholtus:2008} and \cite{scholtus:2009} can be treated with
+this software. 
+
+The package requires that linear relationships are defined with the {\tt
+editrules} package \citep{jonge:2011}.  The {\tt editrules} package offers
+functionality to define and manipulate sets of equality and
+inequality restrictions. With the {\tt editrules} package, linear restrictions
+can be defined as R-statements (in {\tt character} format) or as a matrix. As
+a convenience, one can define edits in any of the forms
+\begin{equation}
+{\bf a}\cdot{\bf x} \odot b\textrm{ where } \odot \in\{=,\leq,<,\geq,>\},
+\end{equation}
+and have it automatically translated to the form in \eqref{edit}. A
+short introduction to the {\tt editrules} package is given in the appendix of
+this paper, but we refer the reader to the package documentation for more
+detailed information.  Unless noted otherwise, all R-code examples in this
+paper can be executed from the R commandline after loading the {\tt
+deducorrect} and {\tt editrules} package. 
+
+Throughout, we denote the Euclidian vector norm with double bars $||\cdot||$
+while single bars $|\cdot|$ denote the elementwise absolute values of the
+argument.
 
 
 \subsection{The {\tt deducorrect} object and {\tt status} values}
@@ -253,27 +259,27 @@ currency (kilo-)units. Therefore, linear edit rules of the form
 %
 \begin{equation}
 \label{integerRestrictions}
-Ex = b \textrm{ with } E\in \{-1,0,1\}^{m\times n}\textrm{, } x\in \mathbb{Z}^{n},\textrm{ and } b\in\mathbb{Z}^m.
+{\bf Ax} = {\bf b} \textrm{ with } {\bf A}\in \{-1,0,1\}^{m\times n}\textrm{, } {\bf x}\in \mathbb{Z}^{n},\textrm{ and } {\bf b}\in\mathbb{Z}^m,
 \end{equation}
 are frequently encountered. In all the examples of financial balance accounts
-encountered by the authors, the matrix $E$ happened to be totally unimodular.
+encountered by the authors, the matrix $\bf A$ happened to be totally unimodular.
 A (not necessarily square) matrix is called {\em totally unimodular} when every
 square submatrix has determinant ${-1}$, $0$, or $1$. The scapegoat algorithm
 \citep{scholtus:2008}, which is used in the {\tt correctRounding} function,
-requires $E$ to be totally unimodular. See appendix B of \cite{scholtus:2008}
+requires $\bf A$ to be totally unimodular. See appendix B of \cite{scholtus:2008}
 for a further discussion of total unimodularity.  The {\tt deducorrect} package
 offers the function {\tt isTotallyUnimodular} which checks if a matrix is
 totally unimodular. The algorithm follows  a recursive procedure given below.
 \begin{algorithmic}[1]
-\Procedure{isTotallyUnimodular}{$E$}
-\State $E\leftarrow${\sc reduceMatrix}$(E)$
-\If {$E=\varnothing$}
+\Procedure{isTotallyUnimodular}{${\bf A}$}
+\State ${\bf A}\leftarrow${\sc reduceMatrix}$({\bf A})$
+\If {${\bf A}=\varnothing$}
 \State\Return {\sc TRUE}
-\ElsIf {Each column of $E$ has exactly 2 nonzero elements}
-\State\Return {\sc hellerTompkins}$(E)$
+\ElsIf {Each column of $\bf A$ has exactly 2 nonzero elements}
+\State\Return {\sc hellerTompkins}$({\bf A})$
 \Else
-\State $\mathcal{E} \leftarrow${\sc raghavachari}$(E)$
-\If { Every $E\in\mathcal{E}$ {\sc isTotallyUnimodular}($E$) }
+\State $\mathcal{A} \leftarrow${\sc raghavachari}$({\bf A})$
+\If { Every ${\bf A}\in\mathcal{A}$ {\sc isTotallyUnimodular}($\bf A$) }
 \State \Return {\sc TRUE}
 \Else
 \State \Return{\sc FALSE}
@@ -281,20 +287,20 @@ totally unimodular. The algorithm follows  a recursive procedure given below.
 \EndIf
 \EndProcedure
 \end{algorithmic}
-Here, {\sc reduceMatrix} iteratively removes all rows and columns of $E$ which
+Here, {\sc reduceMatrix} iteratively removes all rows and columns of $\bf A$ which
 have at most one nonzero element (an operation of $\mathcal{O}(n)$ in the
 number of columns and rows).  When possible, the criterium of
 \cite{heller:1956}, which is $\mathcal{O}(2^n)$ in the number of columns is
 used to determine unimodularity.  If this is not possible, a set of smaller
-matrices $\mathcal{B}$ is derived with the method of \cite{raghavachari:1976}.
-Every matrix in $\mathcal{B}$ is subsequently checked for total unimodularity
+matrices $\mathcal{A}$ is derived with the method of \cite{raghavachari:1976}.
+Every matrix in $\mathcal{A}$ is subsequently checked for total unimodularity
 by calling {\sc isTotallyUnimodular}. In the worst case, Raghavachari's method
 must be called recursively and checking for unimodularity is $\mathcal{O}(n!)$
 in the number of columns. For this reason, our implementation is set up so that
 Raghavachari's method is used only after the reduction method and the
 Heller-Tompkins method have been tried. Also, matrices are transposed to make
-sure that $n$ is minimized $n$ in every step. In practical applications $E$ is
-often fairly sparse and only a small portion of $E$ has to be treated with the
+sure that $n$ is minimized in every step. In practical applications $\bf A$ is
+often fairly sparse and only a small portion of $\bf A$ has to be treated with the
 Raghavachari method.
 
 
@@ -302,26 +308,28 @@ Raghavachari method.
 \section{\tt correctRounding}
 \label{roundingErrors}
 \subsection{Area of application}
-This function can be used to correct records which violate linear equality
-restrictions because of rounding errors in one or more variables. The linear
-equality restrictions must be of the form
+This function can be used to correct violations of linear equality
+restrictions because of rounding errors in one or more variables.
+The linear equality restrictions must be of the form
 \begin{displaymath}
-Ex = b \textrm{ with } E\in \{-1,0,1\}^{m\times n}\textrm{, } x\in \mathbb{Z}^{n},\textrm{ and } b\in\mathbb{Z}^m.
+{\bf A}{\bf x} = {\bf b} \textrm{ with } {\bf A}\in \{-1,0,1\}^{m\times n}\textrm{, } {\bf x}\in \mathbb{Z}^{n},\textrm{ and } {\bf b}\in\mathbb{Z}^m,
 \end{displaymath}
-where $E$ is a totally unimodular matrix (see Section
+where $\bf A$ is a totally unimodular matrix (see Section
 \ref{totallyUnimodularSection}), which can be tested with the function {\tt
-isTotallyUnimodular}.
+isTotallyUnimodular}. Linear inequalities with real coefficients can be imposed
+as well. The {\tt correctRounding} function will only return solutions which do
+not violate any extra inequality violations.
 
 \subsection{How it works}
 The {\tt correctRounding} function uses the scapegoat algorithm described in
 \cite{scholtus:2008} to suggest corrections for linear equality violations.
 Linear inequalities are ignored, except that corrections which cause new
-inequality violations are not accepted.  The algorithms selects edit rules
-violated by rounding errors. Rounding errors cause small deviations from
+inequality violations are not accepted.  The algorithm first selects linear edit
+rules violated by rounding errors. Rounding errors cause small deviations from
 equality and therefore deviations smaller than some $\varepsilon$ (say,
 $\varepsilon=2)$ are assumed to stem from rounding errors.  Next, a number of
 variables --called scapegoat variables-- are selected randomly in such a way
-that rounding errors can be solved exactly and uniquely by altering the
+that rounding errors can be solved exactly and uniquely by altering the drawn
 scapegoat variables. Note that the number of scapegoat variables is not fixed
 an may vary over drawings. If the chosen solution happens to cause new
 inequality violations, the solution is rejected and a new set of scapegoat
@@ -334,18 +342,18 @@ variables is drawn. This is repeated at most $k$ times.  See Algorithm
 \caption{Scapegoat algorithm}
 \label{scapegoatAlgorithm}
 \begin{algorithmic}[1]
-\Require Equality restriction matrix $E$ and constant vector $b$, record $x$,
+\Require Equality restriction matrix $\bf A$ and constant vector $\bf b$, record $\bf x$,
     rounding tolerance $\varepsilon$. 
-\State Remove rows from the system  $Ex=b$ not satisfying $|E_{i\cdot}x-b_i|<\varepsilon$. 
-\If{$E\not=\varnothing$ {\bf and} $||Ex-b||>0$}
-\State Randomly permute columns of $E$. Permute $x$ accordingly.
-\State Use QR decomposition to partition $E$ columnwise in a square invertible
-    matrix $A_1$ and remaining columns $E_2$.  Partition $x$ in $x_1$ and $x_2$ accordingly.
-\State $x_1\leftarrow E_1^{-1}(b-E_2x_2)$
-\State Unpermute $[x_1,x_2]$
+\State Remove rows from the system  $\bf Ax=b$ not satisfying $|{\bf a}\cdot{\bf x}-b|<\varepsilon$. 
+\If{${\bf A}\not=\varnothing$ {\bf and} $||{\bf Ax-b}||>0$}
+\State Randomly permute columns of $\bf A$. Permute $\bf x$ accordingly.
+\State Use QR decomposition to partition $\bf A$ columnwise in a square invertible
+    matrix ${\bf A}_1$ and remaining columns ${\bf A}_2$.  Partition $\bf x$ in ${\bf x}_1$ and ${\bf x}_2$ accordingly.
+\State ${\bf x}_1\leftarrow {\bf A}_1^{-1}({\bf b}-{\bf A}_2{\bf x}_2)$
+\State Unpermute $[{\bf x}_1,{\bf x}_2]$
 \EndIf
-\State Restore $x$ by adding the previously removed elements.
-\Ensure $x$
+\State Restore $\bf x$ by adding the previously removed elements.
+\Ensure ${\bf x}$
 \end{algorithmic}
 \end{algorithm}
 %
@@ -363,7 +371,6 @@ E <- editmatrix( c("X1 + X2 == X3"
                   ,"X3 + X8 == X9"
                   ,"X9 - X10 == X11"))
 @
-which can be written as $Ex=0$.
 Consider also the following inconsistent record:
 <<>>=
 (dat <- data.frame(t(c(12, 4, 15, 4, 3, 1, 8, 11, 27, 41, -13))))
@@ -371,9 +378,12 @@ violatedEdits(E,dat)
 @
 As reported by the {\tt violatedEdits} function, this record violates edit rules
 1, 3, 4, and 5.  Using R's built-in matrix operations, we may check which edits
-are violated because of rounding errors. That is, which $0<|Ex|\leq 2$ elementwise:
+are violated because of rounding errors. That is, which $0<|{\bf Ax}|\leq 2$ elementwise:
+<<echo=false>>=
+getA <- getMatrix
+@
 <<>>=
-E %*% t(as.matrix(dat))
+getA(E) %*% t(as.matrix(dat))
 @
 which, in this case gives the same result as {\tt violatedEdits}, since all
 violations fall within the limit where we expect rounding errors.  Repairing
@@ -400,9 +410,9 @@ effect of adaptations over a number of variables is a reasonable option.
 This function can be used to correct typographical errors in an integer record
 violating linear equality constraints as in Eq.\ \eqref{integerRestrictions}:
 \begin{displaymath}
-Ax = b \textrm{ with } A\in \{-1,0,1\}^{m\times n}\textrm{, } x\in \mathbb{Z}^{n},\textrm{ and } b\in\mathbb{Z}^m.
+{\bf Ax} = {\bf b} \textrm{ with } {\bf A}\in \{-1,0,1\}^{m\times n}\textrm{, } {\bf x}\in \mathbb{Z}^{n},\textrm{ and } {\bf b}\in\mathbb{Z}^m.
 \end{displaymath}
-In fact, the algorithm will also run when $A\in \mathbb{R}^{m\times n}$.
+In fact, the algorithm will also run when ${\bf A}\in \mathbb{R}^{m\times n}$.
 However, the nature of the algorithm is such that it is unlikely that typing
 errors will be found for such systems.  The algorithm was developed with sets
 of financial balance equations in mind, where these type of problems are very
@@ -411,9 +421,9 @@ algorithm, in the sense that no attempt is made to repair inequality
 violations. However, the algorithm does not allow solutions causing extra
 inequality violations.
 
-Records for which $|Ax-b|>{\tt eps}$, will be treated with the algorithm.  The
+Records for which $|{\bf Ax-b}|>\varepsilon$, will be treated with the algorithm.  The
 input parameter {\tt eps} allows for a tolerance so that rounding errors can be
-ignored. The default value of {\tt eps} is almost zero. It is set to the square
+ignored. The default value of $\varepsilon$ is almost zero. It is set to the square
 root of {\tt .Machine\$double.eps} which amounts to approximately $10^{-8}$.
 The value should be increased to allow for rounding errors not caused by
 machine computation. This way, records containing only rounding errors can be
@@ -429,9 +439,9 @@ suggestions that maximize the number of satisfied edit rules is determined
 
 Suggestions are generated for the set of variables which {\em only} occur in
 violated edits since altering these variables will have no effect on already
-satisfied edits. For every variable $x_j$, define the matrix $A^{(j)}$ who's
-rows represent edits containing $x_j$. Suggestions $\tilde{x}^{(i)}_j$ for
-every row $i$ of $A^{(j)}$ can be generated by solving for $x_j$:
+satisfied edits. For every variable $x_j$, define the matrix ${\bf A}^{(j)}$ who's
+rows represent edits containing ${x}_j$. Suggestions $\tilde{x}^{(i)}_j$ for
+every row $i$ of ${\bf A}^{(j)}$ can be generated by solving for ${x}_j$:
 %
 \begin{equation}
 \tilde{x}_j^{(i)} = \frac{1}{A_{ij}^{(j)}} \left(b_i - \sum_{j'\not=j}A_{ij'}^{(j)}x_j\right).

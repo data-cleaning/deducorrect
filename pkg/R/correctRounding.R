@@ -88,8 +88,8 @@ correctRounding <- function(R, dat, Q = NULL, fixate=NULL, delta=2, K=10, round=
      warning("Q parameter is deprecated, please add inequalities to R")
      stopifnot(is.editmatrix(Q))
      krit <- getVars(Q)
-     b <- getC(Q)
-     Q <- as.matrix(Q)
+     b <- getb(Q)
+     Q <- getA(Q)
    }
    
    eq <- getOps(R) == "=="
@@ -100,10 +100,10 @@ correctRounding <- function(R, dat, Q = NULL, fixate=NULL, delta=2, K=10, round=
        
        #use reduced Q
        krit <- getVars(Q)
-       b <- getC(Q)
+       b <- getb(Q)
    }
-   a <- getC(R)
-   R <- as.matrix(R)
+   a <- getb(R)
+   R <- getA(R)
    
    if (!isTotallyUnimodular(R)){
       stop("The equality matrix R should be totally unimodular. ", R)

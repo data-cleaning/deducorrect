@@ -58,7 +58,7 @@ correctTypos <- function( E
    stopifnot(is.editmatrix(E), is.data.frame(dat))
    
    # separate equalities and inequalities
-   a <- getC(E)
+   a <- getb(E)
    eq <- getOps(E) == "=="
    F <- E[!eq,]
    E <- E[eq,]
@@ -168,8 +168,8 @@ correctTypos <- function( E
 getTypoCorrection <- function( E, x, fixate=FALSE, eps=sqrt(.Machine$double.eps), maxdist=1){
    ret <- list(status=NA)
    
-   a <- getC(E)
-   M <- getMatrix(E)
+   a <- getb(E)
+   M <- getA(E)
    
    # we need this later to check for inequalities   
    x_F <- as.data.frame(t(x))

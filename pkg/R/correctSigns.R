@@ -173,10 +173,10 @@ correctSigns <- function(
 
     # prepare matrices and constants
     eq <- ops == "=="
-    A1 <- as.matrix(E)[eq, ,drop=FALSE]
-    C1 <- getC(E)[eq]
-    A2 <- as.matrix(E)[!eq, ,drop=FALSE]
-    C2 <- getC(E)[!eq]
+    A1 <- getA(E)[eq, ,drop=FALSE]
+    C1 <- getb(E)[eq]
+    A2 <- getA(E)[!eq, ,drop=FALSE]
+    C2 <- getb(E)[!eq]
     epsvec <- ifelse(ops[!eq]=="<", -.Machine$double.eps, 0)
     
     D <- as.matrix(dat[, colnames(E)])

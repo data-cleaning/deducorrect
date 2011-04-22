@@ -379,9 +379,6 @@ violatedEdits(E,dat)
 As reported by the {\tt violatedEdits} function, this record violates edit rules
 1, 3, 4, and 5.  Using R's built-in matrix operations, we may check which edits
 are violated because of rounding errors. That is, which $0<|{\bf Ax}|\leq 2$ elementwise:
-<<echo=false>>=
-getA <- getMatrix
-@
 <<>>=
 getA(E) %*% t(as.matrix(dat))
 @
@@ -463,7 +460,7 @@ obtain the same correction suggestion in each solution are adapted.
 
 This algorithm generalizes the algorithms of \cite{scholtus:2009} in the
 following two ways: first, the imposed linear restrictions are generalised from
-$Ax=0$ to $Ax=b$. Secondly, the original algorithm allowed for a single {\em
+${\bf Ax=0}$ to $\bf Ax=b$. Secondly, the original algorithm allowed for a single {\em
 digit} insertion, deletion, transposition or substitution. The more general
 Damerau-Levenshtein distance used here treats the digits as characters,
 allowing for sign changing, which is forbidden if only digit changes are
@@ -479,19 +476,19 @@ involved, adding some extra flexibility to the method.
 \caption{Generate solution candidates}
 \label{generateCandidates}
 \begin{algorithmic}[1]
-\Require Record $x$, a set of linear equality restrictions and a list of variables to {\tt fixate}. A maximum
+\Require Record $\bf x$, a set of linear equality restrictions and a list of variables to {\tt fixate}. A maximum
 Damerau-Levenshtein distance {\tt maxdist}.
 \State $L\leftarrow\varnothing$
 \State Determine $J_0=\{j: x_j \textrm{ occurs {\em only} in violated edits and not in {\tt fixate}}\}$
 \For { $j\in J_0$}
-\State Determine the matrix $A^{(j)}$ of violated edits containing $x_j$ and associated constant vector $b^{(j)}$
+\State Determine the matrix ${\bf A}^{(j)}$ of violated edits containing $x_j$ and associated constant vector ${\bf b}^{(j)}$
 \For { every row $i$ of $A^{(j)}$}
 \State $\tilde{x}_j^{(i)} \leftarrow \left(b_i^{(j)}-\sum_{j'\not=j}A_{ij'}^{(j)}x_{j'}\right)/A_{ij}^{(j)} $
 \State $L\leftarrow L\cup\tilde{x}_j^{(i)}$ \Comment{Only new values are added}
 \EndFor
 \EndFor
 \State Remove $\tilde{x}^{(i)}_j$ from $L$ for which $d_{\rm DL}(\tilde{x}^{(i)}_j,x_j)>{\tt maxdist}$ 
-\Ensure List $L$ of $m$ unique solution suggestions for record $x$.
+\Ensure List $L$ of $m$ unique solution suggestions for record ${\bf x}$.
 \end{algorithmic}
 \end{algorithm}
 %
@@ -499,16 +496,16 @@ Damerau-Levenshtein distance {\tt maxdist}.
 \caption{Maximize number of resolved edits}
 \label{maximizeResolvedEdits}
 \begin{algorithmic}[1]
-\Require Record $x$, a list of linear equality restrictions and a list of solution suggestions
+\Require Record ${\bf x}$, a list of linear equality restrictions and a list of solution suggestions
 $L = \{L_\ell=\tilde{x}^{(i_\ell)}_{j_\ell}:\ell=1,2,\ldots, m\}$
 \State $k\leftarrow 0$ 
 \State $s\leftarrow {\sf NULL}$
-\Procedure{tree}{$x,L$}
+\Procedure{tree}{${\bf x},L$}
 \If{$L\not=\varnothing$}
-\State {\sc tree}$(x,L\backslash L_1)$\Comment{Left branche: don't use suggestion}
+\State {\sc tree}$({\bf x},L\backslash L_1)$\Comment{Left branche: don't use suggestion}
 \State $x_{j_1}\leftarrow L_1$ \Comment{Right branche: use suggestion}
 \State $L\leftarrow L\backslash \{x^{(i_\ell)}_{j_\ell}\in L: j_\ell=j_1 \textrm{ \bf  or } x^{(i_\ell)}_{j_\ell}\textrm{ occurs in same edit as } L_1\}$
-\State {\sc tree}$(x,L)$
+\State {\sc tree}$({\bf x},L)$
 \Else
 \If{Number of edits $n$ resolved by $x$ larger then $k$}
 \State $k \leftarrow n$
@@ -607,9 +604,9 @@ results.
 \label{signErrors}
 \subsection{Area of application}
 This function can be used to solve sign errors and value swaps which cause
-linear equalities (Eq. \ref{edits1}) to fail. Possible presence of linear
-inequalities [Eq. \eqref{edits2}-\eqref{edits6}] are taken into account
-when resolving errors, but they are not part of the error detection process.
+linear equalities to fail. Possible presence of linear inequalities are taken
+into account when resolving errors, but they are not part of the error
+detection process.
 
 
 \subsection{How it works}
@@ -626,7 +623,7 @@ and so on. If the user allows value swaps as well, it starts by trying to
 correct the record with a single sign flip or variable swap. If no solution is
 found, a combination is tried, and so on. The algorithm only treats the
 variables which have nonzero coefficients in one of the violated equality
-constraints of Eq.\ \eqref{edits1}.  Since the number of combinations grows
+constraints.  Since the number of combinations grows
 exponentially with the number of variables to treat, the user is given some
 control over the volume of the search space to cover in a number of ways. First
 of all, the variables which are allowed to flip signs or variable pairs which
@@ -647,11 +644,11 @@ maxCombinations} parameter in Algorithm
 \caption{Record correction for {\tt correctSigns}}
 \label{correctSigns}
 \begin{algorithmic}[1]
-\Require A numeric record $x$, a tolerance $\varepsilon$. A set of equality and
+\Require A numeric record $\bf x$, a tolerance $\varepsilon$. A set of equality and
     inequality constraints of the form
 \begin{eqnarray*}
-Ax - b &=& 0\\
-Bx - c &\geq& 0,
+{\bf Ax} &=& {\bf b}\\
+{\bf Bx} &\leq& {\bf c},
 \end{eqnarray*}
 A list {\tt flip} of variables of which the signs may be flipped, a list {\tt swap} of
 variable pairs of which the values may be interchanged, an integer {\tt maxActions}, an
@@ -666,13 +663,15 @@ integer {\tt maxCombinations} and a weight vector.
    \State $k\leftarrow k+1$ 
    \State Generate all ${n\choose k}$ combinations of $k$ actions.
    \State Loop over those combinations, applying them to $x$. Add solutions
-obeying $|Ax-b|<\varepsilon$ and $Bx-c\geq0$ to $S$.
+obeying $|{\bf Ax-b}|<\varepsilon$ and ${\bf Bx}\leq{\bf c}$ to $S$.
   \EndIf
 \EndWhile
 \If {{\bf not} $S=\varnothing$ }
 \State Compute solution weights and choose solution with minimum weight. Choose
 the first solution in the case of degeneracy.
 \EndIf
+\State Apply the chosen solution, if any, to {\bf x}.
+\Ensure {\bf x}
 \end{algorithmic}
 \end{algorithm}
 
@@ -680,8 +679,9 @@ To account for sign errors and variable swap errors which are masked by
 rounding errors, the user can provide a nonegative tolerance $\varepsilon$, so
 the set of equality constraints are checked as
 \begin{equation}
-|Ax -b| < \varepsilon.
+|{\bf Ax -b}| < \varepsilon,
 \end{equation}
+elementwise.
 
 The purpose of this algorithm is to find and apply the minimal number of
 actions (sign flips and/or variable swaps) necessary to repair the record. It
@@ -914,10 +914,11 @@ account, a typical data-cleaning sequence would be to start with correcting for
 sign- and typographical errors, ignoring rounding errors and subsequently
 treating the rounding errors. We note that data cleaning can be sped up
 significantly if independent blocks of editrules are treated separately.  If an
-editmatrix can be written as a direct sum $E=E_1\oplus E_2$, data can be
-treated for editrules in $E_1$ and $E_2$ independantly.  The {\tt editrules}
-package offers functionality to split editmatrices into blocks via the {\tt
-findblocks} function.
+matrix representation of a set of edits can be written as a direct sum ${\bf
+A}={\bf A}_1\oplus {\bf A}_2$, data can be treated for editrules in ${\bf A}_1$
+and ${\bf A}_2$ independently.  The {\tt editrules} package offers
+functionality to split editmatrices into blocks via the {\tt findblocks}
+function.
 
 
 

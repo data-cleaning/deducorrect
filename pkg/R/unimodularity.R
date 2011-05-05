@@ -156,5 +156,3 @@ raghavachari <- function(A){
         }, A)
     return(allTotallyUnimodular(L))
 }
-    
-

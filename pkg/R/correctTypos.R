@@ -107,7 +107,6 @@ correctTypos <- function( E
       
       #m[i, cor[,"var"]]  <- cor[,"new"]
       x[cor[,1]] <- cor[,3]
-      
       #TODO if any violatedEdits then solution is always partial
       if (all(which(violatedEdits(F, x)) %in% which(violatedEdits(F,m[i,])))){
          m[i,] <- x
@@ -117,7 +116,7 @@ correctTypos <- function( E
          next
       }
       # check if record is now valid with the corrections applied
-      status[i] <- if (sum(abs(a-E%*%m[i,]) > eps) == 0) "corrected"
+      status[i] <- if (sum(abs(a-getA(E)%*%m[i,]) > eps) == 0) "corrected"
                    else "partial"
                    
       cor <- cbind(row=rep(i, nrow(cor)), cor)

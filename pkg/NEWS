@@ -1,4 +1,5 @@
 version 0.9-5
+- vignette nearly finished
 - Package now depends on editrules version >= 0.6
 - Changed getUsername so it uses Sys.info
 

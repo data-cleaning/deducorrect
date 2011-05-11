@@ -138,7 +138,7 @@ getSignCorrection <- function( r, A1, C1, eps, A2, C2, epsvec, flip, swap, w,
 correctSigns <- function(
     E, 
     dat,
-    flip = colnames(E),
+    flip = getVars(E),
     swap = list(),
     maxActions = length(flip)+length(swap),
     maxCombinations = 1e5,
@@ -148,7 +148,9 @@ correctSigns <- function(
 
     ops <- getOps(E)
     if ( any(ops %in% c(">", ">=")) ) E <- editmatrix(editrules(E), normalize=TRUE)
-   
+  
+    vars <- getVars(E)
+ 
     # fixation variables. 
     if ( !is.na(fixate) ){
         flip <- setdiff(flip,fixate)
@@ -158,13 +160,13 @@ correctSigns <- function(
     # determine if flipIsOneSwap=TRUE or not by length of *weight*
     if (length(weight) == length(flip) + length(swap)){
         swapIsOneFlip <- TRUE
-    } else if (length(weight) == length(colnames(E)) ){
+    } else if (length(weight) == length(vars) ){
         swapIsOneFlip <- FALSE
-        if ( all(names(weight) %in% colnames(E)) & length(names(weight))==length(colnames(E) )){
-            weight <- weight[colnames(E)]
+        if ( all(names(weight) %in% vars) & length(names(weight))==length(vars )){
+            weight <- weight[vars]
         } else {
-            names(weight) <- colnames(E)
-            warning(paste("Weight vector has no names. Assuming same order as colnames(E)"))
+            names(weight) <- vars
+            warning(paste("Weight vector has no names. Assuming same order as getVars(E)"))
             
         }
     } else {
@@ -179,14 +181,14 @@ correctSigns <- function(
     C2 <- getb(E)[!eq]
     epsvec <- ifelse(ops[!eq]=="<", -.Machine$double.eps, 0)
     
-    D <- as.matrix(dat[, colnames(E)])
+    D <- as.matrix(dat[, getVars(E)])
     # from flip and swap names to indices
-    flip <- sapply(flip, function(fl) which(colnames(E)==fl))
-    swap <- sapply(swap, function(sw) c(which(colnames(E)==sw[1]), which(colnames(E)==sw[2])))
+    flip <- sapply(flip, function(fl) which(vars==fl))
+    swap <- sapply(swap, function(sw) c(which(vars==sw[1]), which(vars==sw[2])))
     swap <- array(t(swap), dim=c(length(swap)/2, 2))
     status <- status(nrow(dat))
     wgt <- degeneracy <- nflips <- nswaps <- numeric(nrow(dat))
-    corrections <- data.frame(row=numeric(),variable=factor(levels=colnames(E)),old=numeric(),new=numeric())
+    corrections <- data.frame(row=numeric(),variable=factor(levels=vars),old=numeric(),new=numeric())
     
     for ( i in which(complete.cases(D)) ){
         r <- D[i, ]
@@ -225,14 +227,14 @@ correctSigns <- function(
             corrections <- rbind(corrections,
                 data.frame(
                     row = rep(i,sum(changed)),
-                    variable = colnames(E)[changed],
+                    variable = vars[changed],
                     old = r[changed],
                     new = D[i,changed,drop=TRUE]))
         } else {
             status[i] <- "invalid"
         }
     }
-    dat[,colnames(E)] <- D
+    dat[,vars] <- D
     rownames(corrections) <- NULL
     return(newdeducorrect(corrected=dat,
         status=data.frame(status=status,weight=wgt,degeneracy=degeneracy, nflip=nflips, nswap=nswaps),

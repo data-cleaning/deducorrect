@@ -170,8 +170,6 @@ getTypoCorrection <- function( E, x, fixate=FALSE, eps=sqrt(.Machine$double.eps)
    a <- getb(E)
    M <- getA(E)
    
-   # we need this later to check for inequalities   
-   x_F <- as.data.frame(t(x))
    #violated edits (ignoring rounding errors)
    E1 <- (abs(a-M%*%x) > eps)
    

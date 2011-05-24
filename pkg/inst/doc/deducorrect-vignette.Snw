@@ -34,15 +34,17 @@ many statisticians.  In this paper the implementation of three data correction
 methods in R are described. The methods of this package can be used to correct
 numerical data under linear restrictions for typing errors, rounding errors,
 sign errors and value interchanges. The algorithms, based on earlier work of
-Scholtus, are described as well as implementation details and coded examples.
+Scholtus, are described and implementation details with coded examples are given.
 Although the algorithms have originally been developed with financial balance
 accounts in mind the algorithms are formulated generically and can be applied
 in a wider range of applications.
 
+This vignette is a transcript of \cite{loo:2011a}.
 
 \end{abstract}
 
 <<echo=FALSE,results=hide, keep.source=FALSE>>=
+library(editrules)
 library(deducorrect)
 @
 \maketitle
@@ -79,6 +81,24 @@ that the relationship holds, while the values in the record suggest that the
 values in fields $y$ and $z$ might have been interchanged. Swapping the values
 of $z$ and $y$ therefore seems a reasonable solution although it formally means
 changing two values.
+
+This package provides three functions which do use the data in a record to 
+detect and correct errors:
+\begin{enumerate}
+\item {\tt correctRounding} corrects rounding errors in numerical records that cause 
+    violations of linear equality rules. The method works by making small changes
+    to a large enough set of randomly chosen variables.
+\item {\tt correctTypos} corrects typing erros in numerical records that cause violations
+    of linear equality rules. The method works by computing correction suggestions and
+    checking which suggestions correspond to correcting a typing error. 
+\item {\tt correctSigns} corrects sign flips and value swaps in numerical records which
+    violates linear equality rules. The method minimizes the number of value swaps and
+    sign flips via a binary programming formulation.
+\end{enumerate}
+Both {\tt correctTypos} and {\tt correctSigns} are capable of taking account of possible 
+rounding errors in the records.
+
+
 
 \subsection{Deductive correction}
 We use the term deductive correction to indicate methods wich use information
@@ -185,39 +205,10 @@ apply the {\tt correctSigns} correction method\footnote{sometimes extra
 brackets are included to force R to print the result}.
 <<>>=
 (d <- data.frame(x=1,y=0,z=1))
-require(editrules)
 E <- editmatrix("x==y-z")
 sol <- correctSigns(E,d)
 sol
 @
-%
-%
-\begin{table}
-\begin{threeparttable}
-\caption{The number of equalities $n$ and inequalities $m$ violated by an edit,
-before and after treatment with one of the correct-functions of {\tt
-deducorrect}. The label {\rm N/A} indicates that this exit status does not
-occur in the function.}
-\label{statusvalues}
-\begin{tabular}{cccclll}
-\hline
-\multicolumn{2}{c}{Before}&\multicolumn{2}{c}{After}&\multicolumn{3}{c}{status}\\
-Eqs&  Ineqs &  Eqs  &Ineqs   &{\tt correctSigns}   & {\tt correctRounding} &{\tt correctTypos}\\
-\hline
-$0$  &  $0$     &  $0$    &$0$      &valid          & valid           &valid\\
-$0$  &  $m$     &  $0$    &$m$      &invalid        & invalid         &invalid\\
-$n$  &  $0$     &  $n$    &$0$      &invalid        & invalid         &invalid\\
-$n$  &  $0$     &  $<n$   &$0$      &N/A              & partial         &partial\\
-$n$  &  $0$     &  $0$    &$0$      &corrected      & corrected       &corrected\\
-$n$  &  $m$     &  $n$    &$m$      &invalid        & invalid         &invalid\\
-$n$  &  $m$     &  $<n$   &$0$      &N/A               & partial         &partial\\
-$n$  &  $m$     &  $<n$   &$<m$     &N/A               & partial         &partial\\
-$n$  &  $m$     &  $0$    &$0$      &corrected      &corrected        &corrected\\
-\hline
-\end{tabular}
-\end{threeparttable}
-\end{table}
-%
 The individual components of {\tt sol} can be retrieved with the
 dollar-operator. The slot {\tt corrected} is the same as the input data, but
 with corrected records, where possible:
@@ -236,18 +227,57 @@ sol$status
 @
 The first column is an indicator which can take five different values,
 indicating whether validity could be established, and/or if the record could be
-(partially) corrected by the method which created the deducorrect object.  The
-rest of the columns depend on the function which created the object and can
-provide more details on the chosen solutions. These are described in the coming
-sections.
+(partially) corrected by the method which created the deducorrect object.  These
+values are (see Table \ref{statusvalues} for an overview per {\tt correct}-function):
+\begin{itemize}
+\item{\sf valid}: The record violates none of the edit rules defined by the user.
+\item{\sf corrected}: The record violated one or more edit rules but the {\tt correct-} function
+    could adapt the record so no rules are violated afterwards.
+\item{\sf partial}: The record violated one ore more edit rules. Some, but not all violations
+    could be repaired.
+\item{\sf invalid}: The records violates one or more edit rules. None of them could be repaired.
+\item{\sf NA}: The record contains missing values, therefore edit violation cannot be establised.
+\end{itemize}
+%
+%
+\begin{table}
+\begin{threeparttable}
+\caption{The number of equalities $n$ and inequalities $m$ violated by an edit,
+before and after treatment with one of the correct-functions of {\tt
+deducorrect}. The label  {\sf N/A} indicates that this status value does not
+occur for tat function. (Note that is is not the same as {\sf NA}, which occurs
+when validity could not be established because the record has missing values.)
+As an example, consider the fourth row.  In this case, a record enters a {\tt
+correct}-function with $n$ linear equality violations. After being treated by
+the function less than $n$, but more than 0 edit violations remain.  For {\tt
+correctSigns}, this situation cannot occur: the method tries to find a comlete
+solution. Both {\tt correctRounding} and {\tt correctTypos} allow for partially
+repairing a record, so in their case, the status is labeled ``partial''.}
+\label{statusvalues}
+\begin{tabular}{cccclll}
+\hline
+\multicolumn{2}{c}{Before}&\multicolumn{2}{c}{After}&\multicolumn{3}{c}{status}\\
+Eqs&  Ineqs &  Eqs  &Ineqs   &{\tt correctSigns}   & {\tt correctRounding} &{\tt correctTypos}\\
+\hline
+$0$  &  $0$     &  $0$    &$0$      &{\sf valid  }        &{\sf  valid     }      &{\sf  valid}\\
+$0$  &  $m$     &  $0$    &$m$      &{\sf invalid}        &{\sf  invalid   }      &{\sf  invalid}\\
+$n$  &  $0$     &  $n$    &$0$      &{\sf invalid}        &{\sf  invalid   }      &{\sf  invalid}\\
+$n$  &  $0$     &  $<n$   &$0$      &{\sf N/A   }         &{\sf  partial   }      &{\sf  partial}\\
+$n$  &  $0$     &  $0$    &$0$      &{\sf corrected}      &{\sf  corrected }      &{\sf  corrected}\\
+$n$  &  $m$     &  $n$    &$m$      &{\sf invalid}        &{\sf  invalid   }      &{\sf  invalid}\\
+$n$  &  $m$     &  $<n$   &$0$      &{\sf N/A     }       &{\sf  partial   }      &{\sf  partial}\\
+$n$  &  $m$     &  $<n$   &$<m$     &{\sf N/A      }      &{\sf  partial   }      &{\sf  partial}\\
+$n$  &  $m$     &  $0$    &$0$      &{\sf corrected}      &{\sf corrected  }      &{\sf corrected}\\
+\hline
+\end{tabular}
+\end{threeparttable}
+\end{table}
+%
 
-Table \ref{statusvalues} gives an overview of status values and their meaning
-for every {\tt correct-} function of the package. For example, the fourth row
-of Table \ref{statusvalues} shows how status values are set if a record
-violates $n$ equality restrictions on entry and a number of them (but not all)
-can be solved. For {\tt correctRoundings}, this situation cannot occur. Both
-{\tt correctRounding} and {\tt correctTypos} allow for partially repairing a
-record, so in their case, the status is labeled  ``partial''.
+The other columns of the {\tt status} slot depend on the function which created
+the object and can provide more details on the chosen solutions. These are
+described in the coming sections.  
+
 
 
 \subsection{Balance accounts and totally unimodular matrices}
@@ -308,9 +338,12 @@ Raghavachari method.
 \section{\tt correctRounding}
 \label{roundingErrors}
 \subsection{Area of application}
-This function can be used to correct violations of linear equality
-restrictions because of rounding errors in one or more variables.
-The linear equality restrictions must be of the form
+This function can be used to correct violations of linear equality restrictions
+because of rounding errors in one or more variables.  The rounding errors are
+assumed to be measurement errors rather than rounding errors caused by machine
+computation. Rounding errors caused at measurement are on the order of a unit
+of measurement, much larger than errors caused by machine computation. The
+linear equality restrictions must be of the form
 \begin{displaymath}
 {\bf A}{\bf x} = {\bf b} \textrm{ with } {\bf A}\in \{-1,0,1\}^{m\times n}\textrm{, } {\bf x}\in \mathbb{Z}^{n},\textrm{ and } {\bf b}\in\mathbb{Z}^m,
 \end{displaymath}
@@ -331,7 +364,7 @@ $\varepsilon=2)$ are assumed to stem from rounding errors.  Next, a number of
 variables --called scapegoat variables-- are selected randomly in such a way
 that rounding errors can be solved exactly and uniquely by altering the drawn
 scapegoat variables. Note that the number of scapegoat variables is not fixed
-an may vary over drawings. If the chosen solution happens to cause new
+and may vary over drawings. If the chosen solution happens to cause new
 inequality violations, the solution is rejected and a new set of scapegoat
 variables is drawn. This is repeated at most $k$ times.  See Algorithm
 \ref{scapegoatAlgorithm} for a concise description of the basic procedure
@@ -377,14 +410,9 @@ Consider also the following inconsistent record:
 violatedEdits(E,dat)
 @
 As reported by the {\tt violatedEdits} function, this record violates edit rules
-1, 3, 4, and 5.  Using R's built-in matrix operations, we may check which edits
-are violated because of rounding errors. That is, which $0<|{\bf Ax}|\leq 2$ elementwise:
-<<>>=
-getA(E) %*% t(as.matrix(dat))
-@
-which, in this case gives the same result as {\tt violatedEdits}, since all
-violations fall within the limit where we expect rounding errors.  Repairing
-the record can be done with
+1, 3, 4, and 5.  
+
+Repairing the record can be done with
 <<>>=
 set.seed(1)
 sol <- correctRounding(E,dat)
@@ -404,28 +432,31 @@ effect of adaptations over a number of variables is a reasonable option.
 \label{typingErrors}
 %
 \subsection{Area of application}
-This function can be used to correct typographical errors in an integer record
-violating linear equality constraints as in Eq.\ \eqref{integerRestrictions}:
+This function can be used to correct typographical errors in an integer record.
+Examples of typographical errors include extra or to few digits, digit
+permutations and/or digit substitutions.  To be precise, the method can be
+applied to integer records $\bf x$ which violate linear equality constraints as
+in Eq.\ \eqref{integerRestrictions}:
 \begin{displaymath}
 {\bf Ax} = {\bf b} \textrm{ with } {\bf A}\in \{-1,0,1\}^{m\times n}\textrm{, } {\bf x}\in \mathbb{Z}^{n},\textrm{ and } {\bf b}\in\mathbb{Z}^m.
 \end{displaymath}
-In fact, the algorithm will also run when ${\bf A}\in \mathbb{R}^{m\times n}$.
+In fact, the function will also run when ${\bf A}\in \mathbb{R}^{m\times n}$.
 However, the nature of the algorithm is such that it is unlikely that typing
 errors will be found for such systems.  The algorithm was developed with sets
 of financial balance equations in mind, where these type of problems are very
 common. As far as inequalities are concerned, they are currently ignored by the
 algorithm, in the sense that no attempt is made to repair inequality
-violations. However, the algorithm does not allow solutions causing extra
+violations. However, the algorithm does not generate solutions causing extra
 inequality violations.
 
-Records for which $|{\bf Ax-b}|>\varepsilon$, will be treated with the algorithm.  The
-input parameter {\tt eps} allows for a tolerance so that rounding errors can be
-ignored. The default value of $\varepsilon$ is almost zero. It is set to the square
-root of {\tt .Machine\$double.eps} which amounts to approximately $10^{-8}$.
-The value should be increased to allow for rounding errors not caused by
-machine computation. This way, records containing only rounding errors can be
-ignored by {\tt correctTypos} but do note that in that case they will receive
-the status {\tt valid}, since no typos were found.
+The function has a parameter $\varepsilon$ which allows for a tolerance so that
+rounding errors can be ignored. The default value of $\varepsilon$ is almost
+zero: it is set to the square root of {\tt .Machine\$double.eps} which amounts
+to approximately $10^{-8}$.  The value should be increased, to 2 units of
+measurement for example, to allow for rounding errors that are caused by
+measurement rather then machine computation. This way, records containing just
+rounding errors can be ignored by {\tt correctTypos} but do note that in that
+case they will receive the status {\tt valid}, since no typos were found.
 
 \subsection{How it works}
 In short, the algorithm first computes a list of suggestions which correct one
@@ -578,7 +609,7 @@ dat
 @
 This {\tt data.frame} can be read into R by copying the code from the {\tt
 correctTypos} help page. As can be seen, example 4.1 has a single digit
-transposition in $x_4$, example 4.2 has the same error, and an extra 1 inserted
+transposition in $x_4$, example 4.2 has the same error, and an extra 9 inserted
 in $x_9$, example 4.3 contains multiple extra errors (in $x_5$, $x_6$ and $x_7$
 which cannot be explained by simple typing errors.  Finally, example 4.4 also
 has multiple errors which cannot all be explained by simple typing errors. This
@@ -606,7 +637,11 @@ results.
 This function can be used to solve sign errors and value swaps which cause
 linear equalities to fail. Possible presence of linear inequalities are taken
 into account when resolving errors, but they are not part of the error
-detection process.
+detection process. The function has an argument $\varepsilon$ which allows one
+to ignore rounding errors that can mask sign errors and value swaps.  The
+standard value is the square root of machine accuracy ({\tt
+.Machine\$double.eps}).  It should be increased to 2 units of measurement or
+more to account for rounding errors caused by measurement.
 
 
 \subsection{How it works}
@@ -621,23 +656,35 @@ example.  Basically, {\tt correctSigns} first tries to correct a record by
 changing one sign. If that doesn't yield any solution, it tries changing two,
 and so on. If the user allows value swaps as well, it starts by trying to
 correct the record with a single sign flip or variable swap. If no solution is
-found, a combination is tried, and so on. The algorithm only treats the
-variables which have nonzero coefficients in one of the violated equality
-constraints.  Since the number of combinations grows
+found, all combinations of two such actions are tried, and so on. The algorithm
+only treats the variables which have nonzero coefficients in one of the
+violated equality constraints.  Since the number of combinations grows
 exponentially with the number of variables to treat, the user is given some
-control over the volume of the search space to cover in a number of ways. First
-of all, the variables which are allowed to flip signs or variable pairs which
+control over the volume of the search space to cover in a three different ways. 
+\begin{enumerate}
+\item The variables which are allowed to flip signs or variable pairs which
 may be interchanged simultaneously can be determined by the user. Knowledge of
 the origin of the data will usually give a good idea on which variables are
 prone to sign errors.  For example, in surveys on profit-loss accounts,
 respondents sometimes erroneously submit the cost as a negative number.
-Secondly, the user may limit the maximum number of simultaneous sign flips and
-or value swaps that may be tested. This is controled by the {\tt maxActions}
-parameter in Algorithm \ref{correctSigns}.  The third option limiting the
-search space is to break when the number of combinations, given a number of
-actions to try becomes too large. This is controlled by the {\tt
-maxCombinations} parameter in Algorithm
-\ref{correctSigns}.
+\end{enumerate}
+Once variables which may change sign, and variable pairs which may be permuted
+are determined, the number of combinations may still become large. If there are
+$n$ possible sign flips and value swaps, there are $\sum_{k}{ n \choose k}=2^n$
+possible repair actions in total. The second option allows the user to
+\begin{enumerate}
+\setcounter{enumi}{1}
+\item limit the maximum number $k$ of simultaneous sign flips and/or value swaps
+that may be tested. This is controled by the {\tt maxActions} parameter in
+Algorithm \ref{correctSigns}.  
+\end{enumerate}
+Since the function tries to repair the record with $k=1$, $k=2,\ldots$, an extra control parameter
+allows the user to
+\begin{enumerate}
+\setcounter{enumi}{2}
+\item exit the function when the number of combinations ${ n \choose k}$ becomes too large. This is controlled by the {\tt
+maxCombinations} parameter in Algorithm \ref{correctSigns}.
+\end{enumerate}
 %
 %
 \begin{algorithm}[t]
@@ -683,15 +730,15 @@ the set of equality constraints are checked as
 \end{equation}
 elementwise.
 
-The purpose of this algorithm is to find and apply the minimal number of
-actions (sign flips and/or variable swaps) necessary to repair the record. It
-is not guaranteed that a solution exists, nor that the solution is unique. If
-multiple solutions are found, the solution which minimizes a weight is chosen.
-The user has the option to assign weights to every variable, or to every
-action.  The total weight of a solution is the sum over the weights of the
-altered variables or the sum over the weight of the actions performed. Actions
-with heigher weight are therefore less likely to be performed and variables
-with higher weight are less likely to be altered.
+The function tries to find and apply the minimal number of actions (sign flips
+and/or variable swaps) necessary to repair the record. It is not guaranteed
+that a solution exists, nor that the solution is unique. If multiple solutions
+are found, the solution which minimizes a weight is chosen.  The user has the
+option to assign weights to every variable, or to every action.  The total
+weight of a solution is the sum over the weights of the altered variables or
+the sum over the weight of the actions performed. Actions with heigher weight
+are therefore less likely to be performed and variables with higher weight are
+less likely to be altered.
 
 This algorithm is a generalization of the original algorithms in
 \cite{scholtus:2008} in two ways. First, the original algorithm was designed
@@ -721,7 +768,6 @@ z = x-y.
 \end{equation}
 With the {\tt editrules} package, this rule can be parsed to an {\tt editmatrix}.
 <<keep.source=true>>=
-require(editrules)
 E <- editmatrix(c("z == x-y"))
 @
 Obviously, not all records in {\tt dat} obey this rule. This can be checked with 
@@ -799,8 +845,8 @@ This yields less corrected records. However running the data through
 <<>>==
 correctSigns(E, sol$corrected, eps=2)$status
 @
-will fix the remaining edit violations, and yields code which is a lot easyer
-to interpret.
+will fix the remaining edit violations. The last two statements are easier to
+interpret than the one before that.
 
 <<echo=false, results=hide>>=
 # make x and y swappable, swap a counts as one flip
@@ -849,7 +895,6 @@ financial, provisions and exeptional incomes and expenditures. The differences
 $x_0$, $x_1$, $x_2$ and $x_3$ have to add up to a given total $x_4$.  These
 linear restrictions must be defined with the use of the {\tt editrules} package.
 <<keep.source=TRUE>>=
-require(editrules)
 E <-editmatrix(c(
     "x0 == x0r - x0c",
     "x1 == x1r - x1c",

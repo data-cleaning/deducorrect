@@ -23,7 +23,8 @@
 \hyphenation{time-stamp}
 
 \title{Correction of rounding, typing, and sign errors with the {\tt deducorrect} package}
-\author{Mark van der Loo, Edwin de Jonge and Sander Scholtus}
+\author{Mark van der Loo, Edwin de Jonge and Sander Scholtus\\
+{\small Package version \Sexpr{packageVersion("deducorrect")}}}
 \begin{document}
 \maketitle
 \begin{abstract}
@@ -39,7 +40,9 @@ Although the algorithms have originally been developed with financial balance
 accounts in mind the algorithms are formulated generically and can be applied
 in a wider range of applications.
 
-This vignette is a transcript of \cite{loo:2011a}.
+This vignette is a near-literal transcript of \cite{loo:2011a}, which corresponds to
+package version {\sf 1.0-0}. Please refer to that paper in publications. 
+This vignette will be updated with the package when necessary.
 
 \end{abstract}
 
@@ -101,7 +104,7 @@ rounding errors in the records.
 
 
 \subsection{Deductive correction}
-We use the term deductive correction to indicate methods wich use information
+We use the term deductive correction to indicate methods which use information
 available in inconsistent records to deduce and solve the probable cause of
 error. Recently, a number of algorithms for deductive correction have
 been proposed by \cite{scholtus:2008, scholtus:2009}. These algorithms
@@ -165,7 +168,7 @@ detailed information.  Unless noted otherwise, all R-code examples in this
 paper can be executed from the R commandline after loading the {\tt
 deducorrect} and {\tt editrules} package. 
 
-Throughout, we denote the Euclidian vector norm with double bars $||\cdot||$
+Throughout, we denote the Euclidean vector norm with double bars $||\cdot||$
 while single bars $|\cdot|$ denote the elementwise absolute values of the
 argument.
 
@@ -175,7 +178,7 @@ argument.
 Apart from the corrected records, every {\tt correct-} function of the {\tt
 deducorrect} package returns some logging information on the applied
 corrections. Information on applied corrections, a status indicator per record,
-a timestamp and user information are included and stored uniformily in a
+a timestamp and user information are included and stored uniformly in a
 {\tt deducorrect} object. See Table \ref{deducorrectObject} for an
 overview of the contents of this object.
 %
@@ -219,7 +222,7 @@ The applied corrections are stored in the {\tt corrections} slot.
 <<>>=
 sol$corrections
 @
-Every row in {\tt corrections} tells wich variable in which row of the input
+Every row in {\tt corrections} tells which variable in which row of the input
 data was changed, and what the old and new values are. The {\tt status} slot
 gives details on the status of the record.
 <<>>=
@@ -490,7 +493,7 @@ same variable. When multiple solutions are found, only the variables which
 obtain the same correction suggestion in each solution are adapted.
 
 This algorithm generalizes the algorithms of \cite{scholtus:2009} in the
-following two ways: first, the imposed linear restrictions are generalised from
+following two ways: first, the imposed linear restrictions are generalized from
 ${\bf Ax=0}$ to $\bf Ax=b$. Secondly, the original algorithm allowed for a single {\em
 digit} insertion, deletion, transposition or substitution. The more general
 Damerau-Levenshtein distance used here treats the digits as characters,
@@ -533,8 +536,8 @@ $L = \{L_\ell=\tilde{x}^{(i_\ell)}_{j_\ell}:\ell=1,2,\ldots, m\}$
 \State $s\leftarrow {\sf NULL}$
 \Procedure{tree}{${\bf x},L$}
 \If{$L\not=\varnothing$}
-\State {\sc tree}$({\bf x},L\backslash L_1)$\Comment{Left branche: don't use suggestion}
-\State $x_{j_1}\leftarrow L_1$ \Comment{Right branche: use suggestion}
+\State {\sc tree}$({\bf x},L\backslash L_1)$\Comment{Left branch: don't use suggestion}
+\State $x_{j_1}\leftarrow L_1$ \Comment{Right branch: use suggestion}
 \State $L\leftarrow L\backslash \{x^{(i_\ell)}_{j_\ell}\in L: j_\ell=j_1 \textrm{ \bf  or } x^{(i_\ell)}_{j_\ell}\textrm{ occurs in same edit as } L_1\}$
 \State {\sc tree}$({\bf x},L)$
 \Else
@@ -569,9 +572,9 @@ candidates here are:
 The Damerau-Levenshtein distances between the candidates and their originals
 are given by:
 \begin{eqnarray}
-d_{\rm DL}(\tilde{x}^{(1)},x) &=& 3\textrm{ (two substitutions and an insertion)}\\
-d_{\rm DL}(\tilde{y}^{(1)},y) &=& 1\textrm{ (one transposition)}\\
-d_{\rm DL}(\tilde{z}^{(1)},z) &=& 3\textrm{ (three substitutions)}
+d_{\rm DL}(\tilde{x}^{(1)},x) = d_{\rm DL}(60,123) &=& 3\textrm{ (two substitutions and an insertion)}\\
+d_{\rm DL}(\tilde{y}^{(1)},y) = d_{ DL}(129,192)   &=& 1\textrm{ (one transposition)}\\
+d_{\rm DL}(\tilde{z}^{(1)},z) = d_{ DL}(315,252)   &=& 3\textrm{ (three substitutions)}
 \end{eqnarray}
 In this case, there is just one candidate with $d_{\rm DL}=1$, solving the 
 inconsistency with just one digit transposition. Running the record through 
@@ -675,7 +678,7 @@ possible repair actions in total. The second option allows the user to
 \begin{enumerate}
 \setcounter{enumi}{1}
 \item limit the maximum number $k$ of simultaneous sign flips and/or value swaps
-that may be tested. This is controled by the {\tt maxActions} parameter in
+that may be tested. This is controlled by the {\tt maxActions} parameter in
 Algorithm \ref{correctSigns}.  
 \end{enumerate}
 Since the function tries to repair the record with $k=1$, $k=2,\ldots$, an extra control parameter
@@ -723,7 +726,7 @@ the first solution in the case of degeneracy.
 \end{algorithm}
 
 To account for sign errors and variable swap errors which are masked by
-rounding errors, the user can provide a nonegative tolerance $\varepsilon$, so
+rounding errors, the user can provide a nonnegative tolerance $\varepsilon$, so
 the set of equality constraints are checked as
 \begin{equation}
 |{\bf Ax -b}| < \varepsilon,
@@ -736,7 +739,7 @@ that a solution exists, nor that the solution is unique. If multiple solutions
 are found, the solution which minimizes a weight is chosen.  The user has the
 option to assign weights to every variable, or to every action.  The total
 weight of a solution is the sum over the weights of the altered variables or
-the sum over the weight of the actions performed. Actions with heigher weight
+the sum over the weight of the actions performed. Actions with higher weight
 are therefore less likely to be performed and variables with higher weight are
 less likely to be altered.
 

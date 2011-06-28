@@ -10,6 +10,6 @@ Description: Deductive correction of simple rounding, typing and sign
 Version: 0.9-6
 URL: http://code.google.com/p/deducorrect/
 Date: 2011-02-22
-Depends: editrules (>= 0.7)
+Depends: editrules (>= 0.7-1)
 Collate: 'correctRounding.R' 'correctSigns.R' 'correctTypos.R' 'pkg.R'
     'S3deducorrect.R' 'stringdistance.R' 'unimodularity.R' 'util.R'

@@ -7,7 +7,7 @@ LazyLoad: yes
 Author: Mark van der Loo, Edwin de Jonge, and Sander Scholtus
 Description: Deductive correction of simple rounding, typing and sign
     errors
-Version: 0.9-6
+Version: 0.9-7
 URL: http://code.google.com/p/deducorrect/
 Date: 2011-02-22
 Depends: editrules (>= 0.7-1)

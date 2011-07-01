@@ -41,8 +41,8 @@ accounts in mind the algorithms are formulated generically and can be applied
 in a wider range of applications.
 
 This vignette is a near-literal transcript of \cite{loo:2011a}, which corresponds to
-package version {\sf 1.0-0}. Please refer to that paper in publications. 
-This vignette will be updated with the package when necessary.
+package version {\sf 1.0-0}. Please refer to that paper in publications. The paper
+is included in the package. This vignette will be updated with the package when necessary.
 
 \end{abstract}
 

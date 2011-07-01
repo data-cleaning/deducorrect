@@ -1,3 +1,6 @@
+version 1.0-0
+- discussion paper published and added to package documentation
+
 version 0.9-6
 - Shrunk included papers with tools::compactPDF()
 - Small changes to fix warnings and errors after update of editrules and R2.13-patched

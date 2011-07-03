@@ -1,3 +1,6 @@
+version 1.0-1
+- fixed bug in correctSigns causing inequality violations in certain cases.
+
 version 1.0-0
 - discussion paper published and added to package documentation
 

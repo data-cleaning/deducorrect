@@ -46,7 +46,6 @@ applyFix <- function(flips, swaps, r){
 #'
 getSignCorrection <- function( r, A1, C1, eps, A2, C2, epsvec, flip, swap, w, 
     swapIsOneFlip, maxActions, maxCombinations ){
-    
     nflip <- length(flip)
     ntot <- nflip + nrow(swap) 
      
@@ -60,7 +59,7 @@ getSignCorrection <- function( r, A1, C1, eps, A2, C2, epsvec, flip, swap, w,
             flips <- flip[I[I[ ,k] <= nflip, k]]
             swaps <- swap[I[I[ ,k] >  nflip, k]-nflip,,drop=FALSE]
             s <- applyFix(flips, swaps, r)
-            if ( all(abs(A1 %*% s - C1) < eps) & all(abs(A2 %*% s - C2) >= epsvec) ){
+            if ( all(abs(A1 %*% s - C1) < eps) & all(A2 %*% s - C2 < epsvec) ){
                 i <- i + 1
                 S <- rbind(S,s)
                 if ( swapIsOneFlip ){
@@ -147,7 +146,7 @@ correctSigns <- function(
     fixate = NA){
 
     ops <- getOps(E)
-    if ( any(ops %in% c(">", ">=")) ) E <- editmatrix(editrules(E), normalize=TRUE)
+    if ( !isNormalized(E) ) E <- normalize(E)
   
     vars <- getVars(E)
  
@@ -214,7 +213,8 @@ correctSigns <- function(
             w = weight, 
             swapIsOneFlip = swapIsOneFlip, 
             maxActions = min(maxActions,length(flipable)+nrow(swapable)), 
-            maxCombinations = maxCombinations)
+            maxCombinations = maxCombinations
+        )
         if ( nrow(corr$S) > 0 ){
             iMin <- which.min(corr$weight)
             D[i,] <- corr$S[iMin,]

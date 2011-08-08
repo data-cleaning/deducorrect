@@ -127,7 +127,7 @@ getSignCorrection <- function( r, A1, C1, eps, A2, C2, epsvec, flip, swap, w,
 #'      \code{nflip}\tab the number of applied sign flips\cr
 #'      \code{nswap}\tab the number of applied value interchanges\cr
 #'  }
-#' @example examples/correctSigns.R
+#' @example ../examples/correctSigns.R
 #' @references
 #' Scholtus S (2008). Algorithms for correcting some obvious
 #' inconsistencies and rounding errors in business survey data. Technical

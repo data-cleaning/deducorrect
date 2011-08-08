@@ -59,7 +59,7 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
 #' does not violate the inequality matrix \eqn{Q}. If it does, it will try to generate a different solution up till \code{K} times.
 #'
 #' @export
-#' @example examples/correctRounding.R
+#' @example ../examples/correctRounding.R
 #' @references 
 #' Scholtus S (2008). Algorithms for correcting some obvious
 #' inconsistencies and rounding errors in business survey data. Technical

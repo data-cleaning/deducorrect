@@ -1,15 +1,25 @@
 Package: deducorrect
 Maintainer: Mark van der Loo <mark.vanderloo@gmail.com>
 License: GPL-3
-Title: Deductive correction of simple rounding, typing and sign errors
+Title: Deductive correction of simple rounding, typing and
+    sign errors
 Type: Package
 LazyLoad: yes
-Author: Mark van der Loo, Edwin de Jonge, and Sander Scholtus
-Description: Deductive correction of simple rounding, typing and sign
-    errors
+Author: Mark van der Loo, Edwin de Jonge, and Sander
+    Scholtus
+Description: Deductive correction of simple rounding,
+    typing and sign errors
 Version: 1.0-1
 URL: http://code.google.com/p/deducorrect/
 Date: 2011-02-22
-Depends: editrules (>= 0.7-1)
-Collate: 'correctRounding.R' 'correctSigns.R' 'correctTypos.R' 'pkg.R'
-    'S3deducorrect.R' 'stringdistance.R' 'unimodularity.R' 'util.R'
+Depends:
+    editrules (>= 0.7-1)
+Collate:
+    'correctRounding.R'
+    'correctSigns.R'
+    'correctTypos.R'
+    'pkg.R'
+    'S3deducorrect.R'
+    'stringdistance.R'
+    'unimodularity.R'
+    'util.R'

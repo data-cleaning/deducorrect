@@ -24,7 +24,7 @@
 #' rounding errors.
 #'
 #' @export
-#' @example examples/correctTypos.R
+#' @example ../examples/correctTypos.R
 #' @seealso \code{\link{damerauLevenshteinDistance}}
 #'
 #' @param E \code{\link{editmatrix}} that constrains \code{x} 

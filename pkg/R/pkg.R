@@ -14,7 +14,7 @@
 #'
 #'
 #'
-#' @example examples/pkg.R
+#' @example ../examples/pkg.R
 #' @name deducorrect-package 
 #' @docType package 
 {}

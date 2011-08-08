@@ -22,7 +22,7 @@
 #' @param ini initial value, defaults to \code{NA}
 #' @return an ordered factor with levels mentioned under details
 #'
-#' @example examples/status.R
+#' @example ../examples/status.R
 #'
 status <- function(n, ini=NA){
     st <- c("invalid", "partial", "corrected", "valid")

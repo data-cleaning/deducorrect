@@ -72,11 +72,12 @@ scapegoat <- function(R0, a0, x,krit=NULL) {
 #' @param delta tolerance on checking for rounding error
 #' @param K number of trials per record. See details
 #' @param round should the solution be a rounded, default TRUE
+#' @param assumeUnimodularity If \code{FALSE}, a test is performed before corrections are computed (expensive).
 #' @return A \code{\link[=deducorrect-object]{deducorrrect}} object.
 #' @seealso \code{\link{deducorrect-object}} \code{\link{status}}
 #'
 #'
-correctRounding <- function(R, dat, Q = NULL, fixate=NULL, delta=2, K=10, round=TRUE){
+correctRounding <- function(R, dat, Q = NULL, fixate=NULL, delta=2, K=10, round=TRUE, assumeUnimodularity=FALSE){
    stopifnot(is.editmatrix(R), is.data.frame(dat))
    
    krit <- character(0)
@@ -84,13 +85,7 @@ correctRounding <- function(R, dat, Q = NULL, fixate=NULL, delta=2, K=10, round=
    fixate <- if (is.null(fixate)){FALSE}
              else vars %in% fixate
              
-   if (!missing(Q)){
-     warning("Q parameter is deprecated, please add inequalities to R")
-     stopifnot(is.editmatrix(Q))
-     krit <- getVars(Q)
-     b <- getb(Q)
-     Q <- getA(Q)
-   }
+   if (!missing(Q)) stop("Q parameter is deprecated, please add inequalities to R")
    
    eq <- getOps(R) == "=="
    if (!all(eq)){
@@ -104,9 +99,9 @@ correctRounding <- function(R, dat, Q = NULL, fixate=NULL, delta=2, K=10, round=
    }
    a <- getb(R)
    R <- getA(R)
-   
-   if (!isTotallyUnimodular(R)){
-      stop("The equality matrix R should be totally unimodular. ", R)
+  
+   if (!assumeUnimodularity){
+      if (!isTotallyUnimodular(R)) stop("The equality matrix R should be totally unimodular. ", R)
    }
    
    m <- as.matrix(dat[vars])
@@ -144,8 +139,7 @@ correctRounding <- function(R, dat, Q = NULL, fixate=NULL, delta=2, K=10, round=
         if ( all(R0 %*% sol == a0)
           && !any(fixate & changed)
           && ( is.null(Q)
-             #|| all(which(violatedEdits(Q, sol) %in%  violatedIneq))
-             || all(which(violatedEdits(Q, data.frame(t(sol))) %in%  violatedIneq))
+             || all(which(violatedEdits(Q, data.frame(t(sol)))) %in%  violatedIneq)
              )
            ){
            break

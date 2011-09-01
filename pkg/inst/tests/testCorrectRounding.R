@@ -1,6 +1,7 @@
 library(testthat)
 library(editrules)
 
+context("CorrectRounding")
 
 test_that("correctRounding works",{
    R <- editmatrix(c("a == 1"))
@@ -8,6 +9,7 @@ test_that("correctRounding works",{
    sol <- correctRounding(R,dat)
    expect_equivalent(sol$corrected[1,], data.frame(a=1))
 })
+
 
 
 test_that("correctRounding with fixate works",{
@@ -49,3 +51,33 @@ test_that("correctRounding works with Scholtus 2008 example",{
    sol <- correctRounding(E,dat)
    expect_equal(as.character(sol$status$status), "corrected")
 })
+
+
+# smoke test
+context("Smoke test of correctrounding")
+s <- sample(.Machine$integer.max,1)
+cat("Randseed is ",s,":")
+set.seed(s)
+E <- editmatrix(c("x+y==z","x>=0","y>=0"))
+for ( i in 1:10 ){
+    cat(i); flush.console()
+    x <- sample(0:2,10,replace=TRUE)
+    y <- sample(0:2,10,replace=TRUE)
+    z <- x + y + sample(c(-1,1),10,replace=TRUE) 
+    v <- correctRounding(E,data.frame(x=x,y=y,z=z))
+    test_that("No extra inequalities are generated",{
+        expect_equal(sum(violatedEdits(E,v$corrected)[,2:3]),0)
+    })
+}
+
+
+
+
+
+
+
+
+
+
+
+

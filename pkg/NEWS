@@ -1,3 +1,8 @@
+version 1.0-2
+- correctSigns has more thorough argument checking. Variables in flip or swap, not occuring in rules are removed.
+- Test for unimodularity of editmatrix in correctRounding can optionally be turned off.
+- fixed a bug in correctRounding causing inequality violations in certain cases (Thanks to Kenneth Chin-A-Fat)
+
 version 1.0-1
 - fixed bug in correctSigns causing inequality violations in certain cases.
 

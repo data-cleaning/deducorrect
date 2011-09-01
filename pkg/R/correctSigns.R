@@ -100,6 +100,8 @@ getSignCorrection <- function( r, A1, C1, eps, A2, C2, epsvec, flip, swap, w,
 #' or a named weight vector with a weight for every variable. If the weights do not single out a solution, the first one
 #' found is chosen.
 #'
+#' If arguments \code{flip} or \code{swap} contain a variable not in \code{E}, these variables will be ignored by the algorithm.
+#'
 #'
 #'
 #' @title Correct sign errors and value interchanges in data records
@@ -150,12 +152,20 @@ correctSigns <- function(
   
     vars <- getVars(E)
  
+    # remove variables in flip, not occuring in E
+    flip <- flip[flip %in% vars]
     # fixation variables. 
-    if ( !is.na(fixate) ){
-        flip <- setdiff(flip,fixate)
-        if (length(swap)>0)
-            for ( i in 1:length(swap) ) if ( any(swap[[i]] %in% fixate) ) swap[[i]] <- NULL        
-   }
+    if ( !is.na(fixate) ) flip <- setdiff(flip,fixate)
+    # remove fixated variables and pairs with a variable not in E from swaplist
+    if (length(swap)>0){
+        for ( i in 1:length(swap) ){ 
+            if (    any(swap[[i]] %in% fixate) 
+                 || any(!(swap[[i]] %in% vars) )
+               ) swap[[i]] <- NULL
+        }
+    }                   
+   
+
     # determine if flipIsOneSwap=TRUE or not by length of *weight*
     if (length(weight) == length(flip) + length(swap)){
         swapIsOneFlip <- TRUE

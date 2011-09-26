@@ -108,6 +108,7 @@ correctTypos <- function( E
       #m[i, cor[,"var"]]  <- cor[,"new"]
       x[cor[,1]] <- cor[,3]
       #TODO if any violatedEdits then solution is always partial
+#     print(violatedEdits(F,x) )
       if (all(which(violatedEdits(F, x)) %in% which(violatedEdits(F,m[i,])))){
          m[i,] <- x
       }

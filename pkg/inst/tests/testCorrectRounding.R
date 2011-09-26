@@ -64,9 +64,13 @@ for ( i in 1:10 ){
     x <- sample(0:2,10,replace=TRUE)
     y <- sample(0:2,10,replace=TRUE)
     z <- x + y + sample(c(-1,1),10,replace=TRUE) 
-    v <- correctRounding(E,data.frame(x=x,y=y,z=z))
+    dat <- data.frame(x=x,y=y,z=z)
+    v <- correctRounding(E,dat)
     test_that("No extra inequalities are generated",{
-        expect_equal(sum(violatedEdits(E,v$corrected)[,2:3]),0)
+        f1 <- violatedEdits(E,v$corrected)
+        f2 <- violatedEdits(E,dat)
+        expect_true(all(which(f1[,2]) %in% which(f1[,2])))
+        expect_true(all(which(f1[,3]) %in% which(f2[,3])))
     })
 }
 

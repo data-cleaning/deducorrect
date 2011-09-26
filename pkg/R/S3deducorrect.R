@@ -55,7 +55,7 @@ newdeducorrect <- function(corrected, corrections, status){
     )
 }
 
-#' @nord
+#' @method print deducorrect
 #' @export
 print.deducorrect <- function(x, ...){
 
@@ -68,4 +68,3 @@ print.deducorrect <- function(x, ...){
     cat("\n Variables corrected:")
     print(attr(x,"corrsummary"))
 }
-

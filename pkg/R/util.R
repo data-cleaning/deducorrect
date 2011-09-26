@@ -42,7 +42,7 @@ status <- function(n, ini=NA){
 #' @title Get name of R user. 
 #' 
 #' @return The username
-#' @nord
+#' @keywords internal
 getUsername <- function(){
     name <- Sys.info()[["user"]]
     return(name)

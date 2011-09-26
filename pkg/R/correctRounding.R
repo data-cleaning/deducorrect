@@ -5,7 +5,7 @@ resample <- function(x, ...) {
 
 #' Scapegoat algorithm
 #'
-#' @nord
+#' @keywords internal
 scapegoat <- function(R0, a0, x,krit=NULL) {
 	 r0 <- nrow(R0)
     v <- ncol(R0)

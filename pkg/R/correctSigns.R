@@ -5,7 +5,7 @@
 #' @param r numerical record.
 #' @return r, with flips and swaps applied
 #'
-#' @nord
+#' @keywords internal
 applyFix <- function(flips, swaps, r){
     if ( length(flips) > 0 )
         r[flips] <- -r[flips]
@@ -250,9 +250,3 @@ correctSigns <- function(
         status=data.frame(status=status,weight=wgt,degeneracy=degeneracy, nflip=nflips, nswap=nswaps),
         corrections=corrections))
 }
-
-
-
-
-
-

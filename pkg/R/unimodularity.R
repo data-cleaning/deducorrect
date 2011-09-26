@@ -126,7 +126,7 @@ hellerTompkins <- function(A){
 #' @param L A list of objects of class matrix.
 #' @return logical vector of length \code{length(L)}
 #' @seealso \code{\link{isTotallyUnimodular}}
-#' @nord
+#' @keywords internal
 allTotallyUnimodular <- function(L){
     for ( i in 1:length(L) ){
         if ( !isTotallyUnimodular(L[[i]]) ){

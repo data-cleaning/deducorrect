@@ -1,6 +1,4 @@
-
-
-# This example is taken from De Waal et al (2011) (Example 9.1.)
+# These examples are taken from De Waal et al (2011) (Examples 9.1-9.2)
 E <- editmatrix(c(
     "x1 + x2      == x3",
     "x2           == x4",
@@ -12,9 +10,29 @@ E <- editmatrix(c(
 ))
 
 
-# 
-x <- c(x1=145,x2=NA,x3=155,x4=NA,x5=NA,x6=NA,x7=NA,x8=86,x9=NA,x10=217,x11=NA)
+dat <- data.frame(
+    x1=c(145,145),
+    x2=c(NA,NA),
+    x3=c(155,155),
+    x4=c(NA,NA),
+    x5=c(NA, 86),
+    x6=c(NA,NA),
+    x7=c(NA,NA),
+    x8=c(86,86),
+    x9=c(NA,NA),
+    x10=c(217,217),
+    x11=c(NA,NA)
+)
 
+
+d <- deduImpute(E,dat)
+d$corrected
+d$status
+d$corrections
+
+# example with solSpace method for editmatrix
+# example 9.1 of De Waal et al (2011).
+x <-t(dat)[,1]
 s <- solSpace(E,x)
 s
 
@@ -33,7 +51,7 @@ violatedEdits(E,x,tol=1e-8)
 
 # Find out which values can be deductively imputed with 0:
 # (Example 9.2 of De Waal et al. (2011))
-x <- c(x1=145, x2=NA, x3=155, x4=NA, x5=86, x6=NA, x7=NA, x8=86, x9=NA, x10=217,x11=NA)
+x <- t(dat)[,2]
 
 I <- deductiveZeros(E,x)
 I

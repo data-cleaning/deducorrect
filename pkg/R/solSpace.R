@@ -3,8 +3,8 @@
 #' @param E and \code{editmatrix} or equality constraint matrix
 #' @param x a named numeric vector. 
 #' @param ... Extra parameters to pass to \code{solSpace.matrix}
-#' @return A \code{list} with elements \eqn{x0} and \eqn{C}
-#'
+#' @return A \code{list} with elements \eqn{x0} and \eqn{C} or \code{NULL} if the solution space is empty
+#' @example ../examples/deduImpute.R
 #' @export
 solSpace <- function(E,x,...){
     UseMethod('solSpace')
@@ -13,33 +13,30 @@ solSpace <- function(E,x,...){
 
 #' solSpace method for editmatrix
 #' 
-#' Interface to solSpace for objects of class \code{editmatrix} (of the \eqn{editrules} package).
-#' This function has a more forgiving interface: \code{x} may contain variables not contained in \code{E}
-#' for example. It does not check if vectors in the solution space violate any inequality restrictions in \code{E}.
 #'
 #' @method solSpace editmatrix
 #' @rdname solSpace
 #' @export
 solSpace.editmatrix <- function(E, x, ...){
     eq <- getOps(E) == '=='
-    
+    if ( length(eq) == 0 ) return(NULL)
     v <- match(getVars(E),names(x))
     A <- getA(E[eq,])[,v,drop=FALSE]
     b <- getb(E[eq,])
     solSpace.matrix(A, x, b, ...)
-   
 }
 
 #' Determine space of solutions for missing value problem.
 #'
-#' This function finds the space of solutions for a numerical record \eqn{x} under 
-#' linear constraints \eqn{Ax=b}. Write \eqn{x=(x_{obs},x_{miss})} and \eqn{A=[A_{obs},A_{miss}]}.
-#' Then the solution space for \eqn{x_miss} is given by \eqn{x_0 + Cz}, where \eqn{x_0} is
+#' This function finds the space of solutions for a numerical record \eqn{x} with missing values under 
+#' linear constraints \eqn{Ax=b}. Write \eqn{x=(x_{obs},x_{miss})}.
+#' Then the solution space for \eqn{x_{miss}} is given by \eqn{x_0 + Cz}, where \eqn{x_0} is
 #' a constant vector, \eqn{C} a constant matrix and \eqn{z} is any real vector of dimension
 #' \code{ncol(C)}. This function computes \eqn{x_0} and \eqn{C}.
 #'
 #' The user can specify extra fields to include in \eqn{x_{miss}} by specifying \code{adapt}.
-#'
+#' Also note that the method rests on the assumtion that all nonmissng values of \eqn{x} are
+#' correct.
 #'
 #' The most timeconsuming step involves computing the generalized inverse of \eqn{A_{miss}} 
 #' using \code{MASS::ginv} (code copied from MASS to avoid dependency). See the package
@@ -71,6 +68,7 @@ solSpace.matrix <- function(
     ...){
 
     m <- is.na(x) | adapt
+    if ( sum(m)==0 ) return(NULL)
     Amis <- E[,m,drop=FALSE]
     Aobs <- E[,!m,drop=FALSE]
     Ainv <- ginv(Amis, tol)

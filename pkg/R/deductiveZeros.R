@@ -3,7 +3,7 @@
 #' @param E \code{editmatrix} or Equality constraint matrix.
 #' @param x named numeric vector. Naming is optional if \code{E} is an equality constraint matrix.
 #' @param ... extra parameters to pass to \code{deductiveZeros,matrix}
-#'
+#' @example ../examples/deduImpute.R
 #' @export
 deductiveZeros <- function(E, x,...){
     UseMethod('deductiveZeros')
@@ -31,7 +31,7 @@ deductiveZeros.editmatrix <- function(E, x, ...){
 #' Determine which missing values can deductively be imputed with zero
 #'
 #' Suppose \eqn{x} is a record under linear constraints \eqn{Ax=b} and \eqn{x\geq0}.
-#' In certain cases, missing values can be imputed uniquely with zerosr. For example,
+#' In certain cases some missing values can be imputed uniquely with zeros. For example,
 #' in the case that \eqn{x_1+x_2=x_3}, if \eqn{x_2} is missing and \eqn{x_1=x_3\geq 0},
 #' then \eqn{x_2} is uniquely determined to be 0. This function returns a boolean 
 #' vector indicating which of the missing values are uniquely determined to be zero.
@@ -74,7 +74,7 @@ deductiveZeros.matrix <- function(
 
 # which edits are nonnegativity constraints?
 # works only on NORMALIZED editmatrix
-nonneg <- function(E){
-    rowSums(abs(getA(E)) > 1e-8) == 1 & abs(getb(E)) < 1e-8 & getOps(E) == '<='
+nonneg <- function(E,tol=sqrt(.Machine$double.eps)){
+    rowSums(abs(getA(E)) > tol) == 1 & abs(getb(E)) < 1e-8 & getOps(E) == '<='
 }
 

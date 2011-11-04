@@ -44,7 +44,7 @@ x[imiss][u] <- s$x0[u]
 
 # choose z=1 (arbitrary) to impute the other values 
 z <- rep(1,sum(!u))
-x[imiss][!u] <- s$x0[!u] +  s$C[!u,!u]%*%z
+x[imiss][!u] <- s$x0[!u] +  s$C[!u,!u]\%*\%z
 
 # did it work? (use a tolerance in checking to account for machine rounding)
 violatedEdits(E,x,tol=1e-8)

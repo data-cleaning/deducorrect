@@ -1,3 +1,8 @@
+
+#############################################
+# IMPUTATION OF NUMERIC DATA
+#############################################
+
 # These examples are taken from De Waal et al (2011) (Examples 9.1-9.2)
 E <- editmatrix(c(
     "x1 + x2      == x3",
@@ -77,6 +82,33 @@ I <- deductiveZeros(E,x)
 I
 # we may impute x deductively with
 x[I] <- 0
+
+
+#############################################
+# IMPUTATION OF CATEGORICAL DATA
+#############################################
+
+
+# a simple example. We know the subject is pregnant. What is the gender?
+E <- editarray(c(
+"gender \%in\% c('male','female')",
+"pregnant \%in\% c(TRUE,FALSE)",
+"if ( gender=='male') !pregnant"))
+
+x <- c(gender=NA,pregnant=TRUE)
+(ximp <- deductiveLevels(E,x))
+
+# imputation can be done as follows:
+x[names(ximp)] <- ximp
+
+
+
+
+# F <- dir('../pkg/R',full.names=TRUE)
+# for ( f in F ) dmp <- source(f)
+# library(editrules)
+
+
 
 
 

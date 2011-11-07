@@ -21,15 +21,22 @@ deductiveZeros.editmatrix <- function(E, x, ...){
     eq <- getOps(E) == '=='
     vars <- getVars(E)
     xvar <- names(x)
-    v <- match(xvar,vars, nomatch=NULL)
-    A <- getA(E[eq,])[,v,drop=FALSE]
+    
+    # prepare outputvector
+    ddz <- logical(length(x))
+    names(ddz) <- xvar
+    
+    # dump stuff that doesn't matter
+    x <- x[xvar %in% vars]
+    A <- getA(E[eq,])[ , match(xvar,vars, nomatch=0), drop=FALSE]
+
+    # search variables s.t. nonnegativity constraints.
     nnvars <-  getVars(reduce(E[nonneg(E),]))
     nn <- logical(length(x))
     names(nn) <- names(x)
     nn[nnvars] <- TRUE
-    ddz <- logical(length(x))
-    names(ddz) <- xvar
-    ddz[xvar[xvar %in% vars]] <- deductiveZeros.matrix(E=A,x=x, b=getb(E[eq,]), nonneg=nn, ...)
+
+    ddz[names(x)] <- deductiveZeros.matrix(E=A,x=x, b=getb(E[eq,]), nonneg=nn, ...)
     ddz
 }
 
@@ -69,12 +76,10 @@ deductiveZeros.matrix <- function(
 ){
     m <- is.na(x) | adapt
     Amis <- E[,m,drop=FALSE]
-
     if (roundNearZeros) Amis[abs(Amis) < tol] <- 0
     Aobs <- E[,!m,drop=FALSE]
     bx <- b-Aobs%*%x[!m]
     r <- abs(bx) < tol & as.vector(apply(sign(Amis), 1, function(a) all(a>=0) | all(a<=0)))
-
     m & colSums(abs(E[r,,drop=FALSE])) > 0 & nonneg    
 }
 

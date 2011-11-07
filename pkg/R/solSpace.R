@@ -18,9 +18,12 @@ solSpace <- function(E,x,...){
 #' @rdname solSpace
 #' @export
 solSpace.editmatrix <- function(E, x, ...){
+    xvar <- names(x)
+    vars <- getVars(E)
+    x <- x[xvar %in% vars]
     eq <- getOps(E) == '=='
     if ( length(eq) == 0 ) return(NULL)
-    v <- match(names(x),getVars(E),nomatch=NULL)
+    v <- match(xvar,vars,nomatch=0)
     A <- getA(E[eq,])[,v,drop=FALSE]
     b <- getb(E[eq,])
     solSpace.matrix(A, x, b, ...)
@@ -66,6 +69,7 @@ solSpace.matrix <- function(
     adapt=logical(length(x)),
     tol=sqrt(.Machine$double.eps),
     ...){
+
 
     m <- is.na(x) | adapt
     if ( sum(m)==0 ) return(NULL)

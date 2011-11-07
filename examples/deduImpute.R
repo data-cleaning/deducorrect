@@ -47,7 +47,26 @@ z <- rep(1,sum(is.na(x)))
 
 # did it work? (use a tolerance in checking to account for machine rounding)
 # (FALSE means an edit is not violated)
-violatedEdits(E,y,tol=1e-8)
+any(violatedEdits(E,y,tol=1e-8))
+
+
+# here's an example showing that solSpace only looks at missing values
+# unless told otherwise.
+Ey <- editmatrix(c(
+    "yt == y1 + y2 + y3",
+    "y4 == 0"))
+y <- c(yt=10, y1=NA, y2=3, y3=7,y4=12)
+
+# without further direction, y4 is left alone (although is is clearly wrong).
+(s <- solSpace(Ey,y))
+imputess(y, s$x0, s$C)
+
+# by setting 'adapt' we can include y4 in the imputation
+# (it does not matter how we set the value for y1, since is is empty, and
+# it occurs in E it will be imputed)
+(s <- solSpace(Ey,y,adapt=c(FALSE,FALSE,FALSE,FALSE,TRUE)))
+imputess(y,s$x0,s$C)
+
 
 
 # Find out which values can be deductively imputed with 0:
@@ -58,6 +77,8 @@ I <- deductiveZeros(E,x)
 I
 # we may impute x deductively with
 x[I] <- 0
+
+
 
 
 

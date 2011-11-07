@@ -31,7 +31,6 @@ deductiveZeros.editmatrix <- function(E, x, ...){
     names(ddz) <- xvar
     ddz[xvar[xvar %in% vars]] <- deductiveZeros.matrix(E=A,x=x, b=getb(E[eq,]), nonneg=nn, ...)
     ddz
-#deductiveZeros.matrix(E=A,x=x, b=getb(E[eq,]), nonneg=nn, ...)
 }
 
 
@@ -84,6 +83,6 @@ deductiveZeros.matrix <- function(
 # which edits are nonnegativity constraints?
 # works only on NORMALIZED editmatrix
 nonneg <- function(E,tol=sqrt(.Machine$double.eps)){
-    rowSums(abs(getA(E)) > tol) == 1 & abs(getb(E)) < 1e-8 & getOps(E) == '<='
+    rowSums(abs(getA(E)) > tol) == 1 & abs(getb(E)) < tol & getOps(E) == '<='
 }
 

@@ -997,7 +997,7 @@ deductive imputation functions of the package. After this we describe some
 underlying functions exposed to user space and give a bit of background.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Deductive imputation with {\sf deduImpute}}
+\subsection{Imputation with {\sf deduImpute}}
 The simplest way to do deductive imputations with the {\sf editrules} package
 is to use the {\sf deduImpute} function. For numerical data it uses two methods
 (described in the next subsections) to impute as many empty values as possible.
@@ -1022,8 +1022,8 @@ balance account.
 \end{equation}
 The rule $x_2=x_4$ may seem odd for readers not familiar to survey statistics.
 However, these rules correspond to cases where respondents have to copy a
-figure from one page on a paper form to another\footnote{In spite of the availability of
-web-based forms, some respondents still prefer paper forms.}.  
+figure from one page on a paper form to another\footnote{In spite of the
+availability of web-based forms, many respondents prefer paper forms.}.  
 %
 %
 \begin{Rcode}
@@ -1089,16 +1089,34 @@ or may be adapted according to {\sf adapt}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Deductive imputation with {\sf solSpace}}
-Consider a numerical record $\bf x$ with some values observed and some values missing.
-We will write ${\bf x}=({\bf x}_{\rm obs},{\bf x}_{\rm miss})$, with $x_{\rm obs}$ the observed
-values and $x_{\sf miss}$ the missing ones. Supposing further that $\bf x$ must
-obey a set of equality restrictions
+\subsection{Imputation with {\sf solSpace} and {\sf imputess}}
+
+\subsubsection{Area of application}
+The combination of functions {\sf solSpace} and {\sf imputess} can be used
+to impute numerical data under linear equality restrictions:
 \begin{equation}
-    {\bf Ax}={\bf b}, 
+{\bf Ax} = {\bf b}\textrm{, with } {\bf A}\in\mathbb{R}^{m\times n},
+\quad{\bf x}\in\mathbb{R}^n\textrm{ and }
+{\bf b}\in\mathbb{R}^m.
+\label{solspaceImputation}
 \end{equation}
-with ${\bf A}$ a constant matrix and {\bf b} a constant vector, we may write
-${\bf A}=[{\bf A}_{\rm obs},{\bf A}_{\rm miss}]$. Consequently, we have
+If {\bf x} has missing values, then {\sf solSpace} returns a representation
+of the linear space of imputations valid under Eqn.\
+\eqref{solspaceImputation}.  The function {\sf imputess} performs the actual
+imputation. It is important to note that these functions do not take into
+account the presence of any inequality restrictions.
+
+\subsubsection{How it works}
+\label{ssssolSpace}
+Consider a numerical record $\bf x$ with $n_{miss}$ values missing.  
+The values may be missing because of nonresponse, or they may be 
+deemed missing by an error localization procedure (see the next subsection).
+We will
+write ${\bf x}=({\bf x}_{\rm obs},{\bf x}_{\rm miss})$, with ${\bf x}_{\rm
+obs}$ the observed values and ${\bf x}_{\rm miss}$ the missing ones.  Supposing
+further that $\bf x$ must obey a set of equality restrictions as in Eqn.
+\eqref{solspaceImputation}, we may write
+${\bf A}=[{\bf A}_{\rm obs},{\bf A}_{\rm miss}]$. Consequently we have \citep{waal:2011}
 \begin{equation}
     {\bf A}_{\rm miss}{\bf x}_{\bf miss} = {\bf b} - {\bf A}_{\rm obs}{\bf x}_{obs}.
 \end{equation}
@@ -1106,11 +1124,11 @@ This gives
 \begin{equation}
     {\bf x}_{\rm miss} = {\bf x}_0 + {\bf C}{\bf z},
 \end{equation}
-with {\bf z} an arbitrary real vector of the right dimension and 
+with {\bf z} an arbitrary real vector of dimension $n_{\rm miss}$ and 
 ${\bf x}_0$ and {\bf C} constant.
 
 The purpose of {\sf solSpace} is to compute ${\bf x}_0$ and ${\bf C}$.
-Together, they determine the vector space of values available for ${\bf x}_{\sf
+Together they determine the vector space of values available for ${\bf x}_{\sf
 miss}$.  Deductive imputation can be realized by observing that if any rows of
 ${\bf C}$ are filled with zeros, then the sole value for the corresponding
 values of ${\bf x}_{\sf miss}$ are given the corresponding values in ${\bf
@@ -1127,6 +1145,7 @@ generalized inverse of {\bf A}, obeying
 See \citet{waal:2011} for details on the imputation method or \citet{greville:1959} for
 an excellent discussion on the pseudoinverse.
 
+\subsubsection{An example}
 The {\sf solSpace} function returns the ${\bf x}_0$ and ${\sf C}$ as in a
 list. For example consider the first record from Figure \ref{RdeduImpute}:
 <<echo=FALSE>>=
@@ -1136,12 +1155,117 @@ Using the editmatrix defined in the same figure, we get:
 <<keep.source=TRUE>>=
 (s <- solSpace(E,x))
 @
-The top two and bottom two rows of {\bf C} have zero coefficients, yielding a
-unique solution for those values of ${\bf x}_{\rm miss}$.
+{\sf solSpace} has an extra argument {\sf adapt} which allows extra fields of
+${\bf x}$ to be considered missing. An example of its use would be to determine
+erroneous fields with {\sf errorLocalizer} (of the {\sf editrules} package) and
+to determine the imputation space with {\sf solSpace}.
+
+The top two and bottom two rows of {\bf C} in the example have zero
+coefficients, yielding a unique solution for $x_2$, $x_3$, $x_9$ and $x_{11}$.
+The unique values may be imputed with {\sf imputess}:
+<<keep.source=TRUE>>=
+imputess(x, s$x0, s$C)
+@
+If a ${\bf z}$-vector is provided as well, all values may be imputed. Here, we
+choose ${\bf z}=\boldsymbol{0}$ (arbitrarily).
+<<keep.source=TRUE>>=
+( y <- imputess(x, s$x0, s$C, z=rep(0,ncol(s$C))) )
+@
+Using {\sf violatedEdits} from the editrules package, we may verify that this record satisfies every inequality
+rule as well ({\sf E} as in figure \ref{RdeduImpute}).
+<<keep.source=TRUE>>=
+any(violatedEdits(E,y,tol=1e-8))
+@
+
+To demonstrate the use of the {\sf adapt} argument, consider the following case.
+<<>>=
+Ey <- editmatrix(c(
+    "yt == y1 + y2 + y3",
+    "y4 == 0"))
+y <- c(yt=10, y1=NA, y2=3, y3=7,y4=12)
+@
+Here, $y_4$ clearly violates the second rule. (A rule like this may arise when manipulating
+edit sets or pre-substituting a number of values). Since $y_4$ is not empty, {\sf solSpace}
+ignores it unless told otherwise.
+<<>>=
+(s <- solSpace(Ey,y))
+imputess(y,s$x0,s$C)
+@
+However, using the {\sf adapt} argument, which is a logical indicator stating which
+entries may be adapted, we get the following.
+<<>>=
+(s <- solSpace(Ey, y, adapt=c(FALSE,FALSE,FALSE,FALSE,TRUE)))
+imputess(y,s$x0,s$C)
+@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Deductive imputation with {\sf deductiveZeros}}
+
+\subsubsection{Area of application}
+This method can be used to impute missing values in numerical records
+subject to
+\begin{eqnarray}
+{\bf Ax} &=& {\bf b}\textrm{, with } {\bf A}\in\mathbb{R}^{m\times n},
+\quad{\bf x}\in\mathbb{R}^n\textrm{ and }
+{\bf b}\in\mathbb{R}^m
+\\
+{x}_j &\geq& 0 \textrm{ for at least one }j\in\{1,2,\ldots,n\}.
+\label{deductiveZeroImputation}
+\end{eqnarray}
+Economical  survey data are often subject balance accounts of the form $x_t =
+x_1 + x_2+\cdots x_k$. For example $x_t$ might be the total personell cost and
+the $x_i$ are costs related to permanent staff, temporary staff, externals,
+{\em etc.}. It is not uncommon for respondents to leave open fields not
+relevant to them. For example if a company has not hired any temorary staff,
+the corresponding field might be left empty while a 0 would have been
+appropriate.  
+
+In such cases, missing values are bounded from above by the sum rules while
+they are bounded from below by the nonnegativity constraint. If the missing
+values are ignored, and the completed values add up to the required totals,
+then missing values may be uniquely imputed with 0. The function {\sf
+deductiveZeros} detects such cases.
+
+\subsubsection{How it works}
+Consider again the notation of Section \ref{ssssolSpace}. We write (following
+the \cite{waal:2011}).
+\begin{equation}
+{\bf b}^* = {\bf b} - {\bf A}_{\rm obs}{\bf x}_{obs}.
+\end{equation}
+If any $b^*_l=0$, this means that the sum rule ${\bf a}_l\cdot {\bf x}=b_l$ is
+obeyed if missing values are ignored. For those cases, the following properties are
+checked.
+\begin{itemize}
+\item Each $a_{{\rm miss},lj\not=}$ has the same sign.
+\item Each $a_{{\rm miss},lj}\not=0$ corresponds to a variable $x_j$ that is constrained to be nonnegative.
+\end{itemize}
+If these demands are obeyed, the corresponding value $x_{{\rm miss},j}$ may be imputed with 0.
+
+\subsubsection{An example}
+The function {\sf deductiveZeros} does not perform imputation itself but computes
+an indicator stating which values may be imputed. As a first example consider
+the following.
+<<keep.source=TRUE>>=
+Ey <- editmatrix(c(
+    "yt == y1 + y2 + y3",
+    "y1 >= 0", "y2 >= 0 ","y3 >= 0"))
+y <- c(yt=10, y1=NA, y2=3, y3=7)
+(I<-deductiveZeros(Ey,y))
+@
+The record {\sf y} can be imputed in one statement.
+<<keep.source=TRUE>>=
+y[I] <- 0
+y
+@
+
+
+
+
+
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FINAL REMARKS

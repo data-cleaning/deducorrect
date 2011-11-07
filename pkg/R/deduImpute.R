@@ -3,7 +3,7 @@
 #' Given (equality) rules and a number of values to impute or adapt, in some cases
 #' unique solutions can be derived. This function uses \code{\link{solSpace}} and
 #' \code{\link{deductiveZeros}} (iteratively) to determine which values can be imputed
-#' deductively. Solutions which causing new violations of inequality rules are rejected.
+#' deductively. Solutions causing new violations of inequality rules are rejected.
 #'
 #' @references 
 #' T. De Waal, J. Pannekoek and S. Scholtus (2011) Handbook of statistical data editing 
@@ -14,10 +14,12 @@
 #' @param adapt a boolean array of dim(dat), e.g. the result editrules::localizeErrors(E,dat)
 #' @param tol tolerance to use in \code{violatedEdits} (if checkConsistency=TRUE), in \code{\link{solSpace}} 
 #'      and in \code{\link{deductiveZeros}} 
-#' @param checkConsistency if the imputed values cause any new violations in inequalities? Use this 
+#' @param checkConsistency Check if the imputed values cause any new violations in inequalities. Use this 
 #'      when the assumption that all nonmissings are correct cannot be justified. Turn off when passing
 #'      an \code{adapt} vector, determined by error localization (e.g. with editrules::localizeErrors).
 #' @param ... parameters to pass to \code{\link{solSpace.matrix}}. 
+#' @value A \code{\link{deducorrect-object}}
+#' 
 #' @example ../examples/deduImpute.R
 #' 
 #' @export

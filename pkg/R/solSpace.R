@@ -88,10 +88,10 @@ solSpace.matrix <- function(
 
 #' Impute values from solution space
 #'
-#' Given a record \eqn{x} with observerd \eqn{x_{obs}} and missing values\eqn{x_{miss}} under
+#' Given a record \eqn{x} with observerd \eqn{x_{obs}} and missing values \eqn{x_{miss}} under
 #' linear equality constraints \eqn{Ax=b}. The function \code{\link{solSpace}} returns
 #' the solution space which can be written as \eqn{x_{miss} = x_0 + Cz}, where \eqn{x_0} is
-#' are a constant vector (of dimension d=\code{length}\eqn{(x_miss)}) and \eqn{C} a constant
+#' are a constant vector (of dimension d=\code{length}\eqn{(x_{miss})}) and \eqn{C} a constant
 #' matrix of dimension \eqn{d\times d}. 
 #'
 #' If \eqn{C} has rows equal to zero, then those missing values may be imputed deductively.

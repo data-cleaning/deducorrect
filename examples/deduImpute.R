@@ -36,18 +36,19 @@ x <-t(dat)[,1]
 s <- solSpace(E,x)
 s
 
-# some values are uniquely determined and may be imputed directly:
-u <- rowSums(abs(s$C)) == 0
-imiss <- is.na(x)
-# impute unique values
-x[imiss][u] <- s$x0[u]
 
-# choose z=1 (arbitrary) to impute the other values 
-z <- rep(1,sum(!u))
-x[imiss][!u] <- s$x0[!u] +  s$C[!u,!u]\%*\%z
+# some values are uniquely determined and may be imputed directly:
+imputess(x,s$x0,s$C)
+
+
+# To impute everything, we choose z=1 (arbitrary)
+z <- rep(1,sum(is.na(x)))
+(y <- imputess(x,s$x0,s$C,z))
 
 # did it work? (use a tolerance in checking to account for machine rounding)
-violatedEdits(E,x,tol=1e-8)
+# (FALSE means an edit is not violated)
+violatedEdits(E,y,tol=1e-8)
+
 
 # Find out which values can be deductively imputed with 0:
 # (Example 9.2 of De Waal et al. (2011))

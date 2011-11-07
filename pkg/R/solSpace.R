@@ -82,6 +82,46 @@ solSpace.matrix <- function(
     list(x0=x0, C=C)
 }
 
+#' Impute values from solution space
+#'
+#' Given a record \eqn{x} with observerd \eqn{x_{obs}} and missing values\eqn{x_{miss}} under
+#' linear equality constraints \eqn{Ax=b}. The function \code{\link{solSpace}} returns
+#' the solution space which can be written as \eqn{x_{miss} = x_0 + Cz}, where \eqn{x_0} is
+#' are a constant vector (of dimension d=\code{length}\eqn{(x_miss)}) and \eqn{C} a constant
+#' matrix of dimension \eqn{d\times d}. 
+#'
+#' If \eqn{C} has rows equal to zero, then those missing values may be imputed deductively.
+#' For the other missing values, some \eqn{z} must be chosen or another imputation method
+#' used.
+#'
+#' The function \code{imputess} imputes missing values in a vector \eqn{x}, based on the
+#' solution space and some chosen vector \eqn{z}. If no \eqn{z} is passed as argument, only
+#' deductive imputations are performend (i.e. some missings may be left).
+#' 
+#' If \eqn{C} is a named matrix (as returned by \code{\link{solSpace}}), rows of \eqn{x0} and \eqn{C}
+#' are matched by name to \eqn{x}. Otherwise it is assumed that the missings in \eqn{x} occur in the order
+#' of the rows in \eqn{C} (which is also the case when x0 and C are computed by \code{\link{solSpace}}).
+#'
+#' @param x (named) numerical vector to be imputed
+#' @param x0 \code{x0} outcome of \code{\link{solSpace}}
+#' @param C \code{C} outcome of \code{\link{solSpace}}
+#' @param z real vector of dimension \code{ncol(C)}.
+#' @param tol tolerance used to check which rows of \code{C} equal zero.
+#'
+#' @example ../examples/deduImpute.R
+#'
+#' @export
+imputess <- function(x, x0, C, z=NULL, tol=sqrt(.Machine$double.eps)){
+    imiss <- colnames(C)
+    if ( is.null(imiss) ) imiss <- is.na(x)
+    if (is.null(z)){ # just impute unique values
+        u <- rowSums(abs(s$C)) < tol
+        x[imiss][u] <- s$x0[u]
+    } else {
+        x[imiss] <- s$x0 +  s$C%*%z
+    }
+    x
+}
 
 
 

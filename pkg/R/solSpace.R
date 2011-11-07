@@ -20,7 +20,7 @@ solSpace <- function(E,x,...){
 solSpace.editmatrix <- function(E, x, ...){
     eq <- getOps(E) == '=='
     if ( length(eq) == 0 ) return(NULL)
-    v <- match(getVars(E),names(x))
+    v <- match(names(x),getVars(E),nomatch=NULL)
     A <- getA(E[eq,])[,v,drop=FALSE]
     b <- getb(E[eq,])
     solSpace.matrix(A, x, b, ...)
@@ -115,10 +115,10 @@ imputess <- function(x, x0, C, z=NULL, tol=sqrt(.Machine$double.eps)){
     imiss <- colnames(C)
     if ( is.null(imiss) ) imiss <- is.na(x)
     if (is.null(z)){ # just impute unique values
-        u <- rowSums(abs(s$C)) < tol
-        x[imiss][u] <- s$x0[u]
+        u <- rowSums(abs(C)) < tol
+        x[imiss][u] <- x0[u]
     } else {
-        x[imiss] <- s$x0 +  s$C%*%z
+        x[imiss] <- x0 +  C%*%z
     }
     x
 }

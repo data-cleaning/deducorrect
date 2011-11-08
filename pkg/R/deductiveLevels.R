@@ -4,8 +4,12 @@
 #' values and interatively eliminating the unknowns from the set of edits,
 #' unique imputation values are derived where possible.
 #' 
-#' Imputation values are derived for variable with NA-values occuring in
-#' one or more edits or who are indicated by 'adapt'
+#' Imputation values are derived for missing variables (NA) and for variables indicated by 'adapt'.
+#'
+#' @references 
+#' T. De Waal, J. Pannekoek and S. Scholtus (2011) Handbook of statistical data editing 
+#' Chpt 9.2.1 - 9.2.2
+#'
 #'
 #' @param E editarray
 #' @param x a named \code{character} vector 
@@ -13,7 +17,7 @@
 #'
 #' @return A named vector with imputation values for \code{x}
 #'
-#' @example ../examples/deduImpute.R
+#' @example ../examples/deductiveLevels.R
 #' @export
 deductiveLevels <- function(E, x, adapt=rep(FALSE,length(x)) ){
     if ( !is.editarray(E) ) stop('E must be object of class editarray')

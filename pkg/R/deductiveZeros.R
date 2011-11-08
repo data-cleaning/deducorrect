@@ -3,7 +3,7 @@
 #' @param E \code{editmatrix} or Equality constraint matrix.
 #' @param x named numeric vector. Naming is optional if \code{E} is an equality constraint matrix.
 #' @param ... extra parameters to pass to \code{deductiveZeros,matrix}
-#' @example ../examples/deduImpute.R
+#' @example ../examples/deductiveZeros.R
 #' @export
 deductiveZeros <- function(E, x,...){
     UseMethod('deductiveZeros')
@@ -61,6 +61,8 @@ deductiveZeros.editmatrix <- function(E, x, ...){
 #' @param nonneg logical vector of length(x). Determines which x-values have to obey nonnegativity constraints.
 #' @param roundNearZeros Round near zero values of \code{A} before determining the sign?
 #' @param tol tolerance used for zero-rounding.
+#'
+#' @seealso \code{\link{deduImpute}}, \code{\link{solSpace}}
 #'
 #' @rdname deductiveZeros
 #' @export

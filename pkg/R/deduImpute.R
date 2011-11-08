@@ -2,12 +2,19 @@
 #'
 #' Based on observed values and edit rules, impute as many variables deductively as possible.
 #'
+#' @references 
+#' T. De Waal, J. Pannekoek and S. Scholtus (2011) Handbook of statistical data editing 
+#' Chpt 9.2.1 - 9.2.2
+#'
 #' @param E An \code{editmatrix} or \code{editarray}
 #' @param dat A \code{data.frame}
 #' @param adapt (optional) A boolean array of dim(dat), e.g. the result editrules::localizeErrors(E,dat). 
 #'      Column names must match those of \code{dat}.
 #' @param ... arguments to be passed to \code{\link{solSpace}} (numerical data) or \code{\link{deductiveLevels}} (categorical data)
 #'
+#' @return A \code{\link{deducorrect-object}}
+#'
+#' @seealso \code{\link{deductiveZeros}}, \code{\link{solSpace}}, \code{\link{deductiveLevels}}
 #'
 #' @example ../examples/deduImpute.R
 #' @export
@@ -18,7 +25,9 @@ deduImpute <- function(E, dat, adapt=NULL, ...){
 
 #' Deductive imputation of categorical data
 #'
-#' \bold{For categorical data:} blabla
+#' \bold{For categorical data:} The funcion \code{\link{deductiveLevels}} is used to derive
+#' deductive imputations for as many fields as possible
+#'
 #'
 #' @method deduImpute editarray
 #' @rdname deduImpute
@@ -80,10 +89,6 @@ deduImpute.editarray <- function(E, dat, adapt=NULL, ...){
 #' \code{\link{deductiveZeros}} (iteratively) to determine which values can be imputed
 #' deductively. Solutions causing new violations of inequality rules are rejected.
 #'
-#' @references 
-#' T. De Waal, J. Pannekoek and S. Scholtus (2011) Handbook of statistical data editing 
-#' Chpt 9.2.1 - 9.2.2
-#'
 #' @method deduImpute editmatrix
 #'
 #' @param tol tolerance to use in \code{violatedEdits} (if checkConsistency=TRUE), in \code{\link{solSpace}} 
@@ -91,7 +96,6 @@ deduImpute.editarray <- function(E, dat, adapt=NULL, ...){
 #' @param checkConsistency Check if the imputed values cause any new violations in inequalities. Use this 
 #'      when the assumption that all nonmissings are correct cannot be justified. Turn off when passing
 #'      an \code{adapt} vector, determined by error localization (e.g. with editrules::localizeErrors).
-#' @return A \code{\link{deducorrect-object}}
 #'
 #' @rdname deduImpute
 #' @export 

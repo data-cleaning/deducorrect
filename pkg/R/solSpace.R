@@ -4,7 +4,9 @@
 #' @param x a named numeric vector. 
 #' @param ... Extra parameters to pass to \code{solSpace.matrix}
 #' @return A \code{list} with elements \eqn{x0} and \eqn{C} or \code{NULL} if the solution space is empty
-#' @example ../examples/deduImpute.R
+#'
+#' @seealso \code{\link{deduImpute}}, \code{\link{deductiveZeros}}
+#' @example ../examples/solSpace.R
 #' @export
 solSpace <- function(E,x,...){
     UseMethod('solSpace')

@@ -91,8 +91,8 @@ x[I] <- 0
 
 # a simple example. We know the subject is pregnant. What is the gender?
 E <- editarray(c(
-"gender \%in\% c('male','female')",
-"pregnant \%in\% c(TRUE,FALSE)",
+"gender %in% c('male','female')",
+"pregnant %in% c(TRUE,FALSE)",
 "if ( gender=='male') !pregnant"))
 
 x <- c(gender=NA,pregnant=TRUE)
@@ -103,10 +103,10 @@ x[names(ximp)] <- ximp
 
 # Here's an example from Katrika (2001) [but see De Waal et al (2011), ex. 9.3)]
 E <- editarray(c(
-    "x1 \%in\% letters[1:4]",
-    "x2 \%in\% letters[1:3]",
-    "x3 \%in\% letters[1:3]",
-    "x4 \%in\% letters[1:2]",
+    "x1 %in% letters[1:4]",
+    "x2 %in% letters[1:3]",
+    "x3 %in% letters[1:3]",
+    "x4 %in% letters[1:2]",
     "if (x2 == 'c'  & x3 != 'c' & x4 == 'a' ) FALSE",
     "if (x2 != 'a'  & x4 == 'b') FALSE",
     "if (x1 != 'c'  & x2 != 'b' & x3 != 'a') FALSE",
@@ -132,9 +132,11 @@ dat <- data.frame(
     x4 = c(NA , 'b'),
     stringsAsFactors=FALSE)
 
-#for ( f in F ) dmp <- source(f)
-deduImpute(E,dat)
 
+s <- deduImpute(E,dat)
+s$corrected
+s$status
+s$corrections
 
 
 

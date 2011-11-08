@@ -25,7 +25,7 @@ deductiveLevels <- function(E, x, adapt=rep(FALSE,length(x)) ){
     T <- c()
     nT <- 0
     nM <- length(M)
-    xi <- c()
+    xi <- character(0)
 
     while ( nT < nM  ){
         E1 <- E0

@@ -24,18 +24,48 @@ deduImpute <- function(E, dat, adapt=NULL, ...){
 #' @rdname deduImpute
 #' @export
 deduImpute.editarray <- function(E, dat, adapt=NULL, ...){
-    
-    X <- t(dat)
+   
     vars <- getVars(E)
-    if ( is.null(adapt) ) a <- logical(length(vars))
+    if ( is.null(adapt) ){
+        a <- logical(length(vars))
+        nCandidates <- rowSums(is.na(dat[,vars,drop=FALSE]))    
+    } else {
+        nCandidates <- rowSums(is.na(dat[,vars,drop=FALSE]) | adapt)
+    }
+
+    nImp <- numeric(nrow(dat))
+    X <- t(dat[,vars,drop=FALSE])
+    imp <- vector(mode='list',length=nrow(dat))
     for ( i in 1:ncol(X) ){
-        x <- X[vars,i]
+        x <- X[ ,i]
         if ( !is.null(adapt) ) a <- adapt[i,vars]
         L <- deductiveLevels(E,x,adapt=a)
         X[names(L),i] <- L
+        imp[[i]] <- L
     }
-   t(X) 
+    dat[,vars] <- t(X)
 
+    nImp <- sapply(imp,length)
+    # derive deducorrect object
+    stat <- status(nrow(dat))
+    stat[ nCandidates == 0] <- 'valid'
+    stat[ nImp > 0 & nImp < nCandidates] <- 'partial'
+    stat[ nImp == nCandidates & nCandidates > 0] <- 'corrected'
+    stat[ nImp == 0 & nCandidates > 0 ] <- 'invalid'
+    # corrections
+    
+    xi <- do.call(c,imp)
+
+    corrections <- data.frame(
+        row = rep(1:nrow(dat),times=nImp),
+        variable = names(xi),
+        old = rep(NA,length(xi)), #TODO take old value!
+        new =  xi)
+    newdeducorrect(
+        corrected = dat,
+        corrections = corrections,
+        status = data.frame(status=stat,imputations=nImp)
+    )
 }
 
 
@@ -114,7 +144,7 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
     npost <- rowSums(is.na(dd))
 
     nImp <- npre - npost
-    stat <- status(length(nImp))
+    stat <- status(nrow(dat))
     stat[npre  == 0 ]            <- 'valid'
     stat[npost == 0 & npre > 0]  <- 'corrected'
     stat[0 < nImp   & nImp < npre ] <- 'partial'

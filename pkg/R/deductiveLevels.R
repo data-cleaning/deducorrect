@@ -1,4 +1,4 @@
-#' Deductively impute categorical data.
+#' Derive imputation values for categorical data
 #'
 #' Deduce imputation values for categorical data. By substituting all known
 #' values and interatively eliminating the unknowns from the set of edits,
@@ -11,7 +11,9 @@
 #' @param x a named \code{character} vector 
 #' @param adapt boolean vector indicating which variables may be adapted.
 #'
-#' @example ../example/deduImpute.R
+#' @return A named vector with imputation values for \code{x}
+#'
+#' @example ../examples/deduImpute.R
 #' @export
 deductiveLevels <- function(E, x, adapt=rep(FALSE,length(x)) ){
     if ( !is.editarray(E) ) stop('E must be object of class editarray')
@@ -20,7 +22,6 @@ deductiveLevels <- function(E, x, adapt=rep(FALSE,length(x)) ){
     
     M  <- names(x)[iM]
     E0 <- reduce(editrules:::substValue.editarray(E,names(x)[iN],x[iN]))
-    
     T <- c()
     nT <- 0
     nM <- length(M)
@@ -29,7 +30,7 @@ deductiveLevels <- function(E, x, adapt=rep(FALSE,length(x)) ){
     while ( nT < nM  ){
         E1 <- E0
 
-        for ( m in M[-1] ) E1 <- reduce(editrules:::eliminate.editarray(E1,m))
+        for ( m in setdiff(M,T)[-1] ) E1 <- reduce(editrules:::eliminate.editarray(E1,m))
         val <- colSums(!editrules:::getArr(E1)) > 0
         if( nrow(E1) > 0 && sum(val) == 1 ){ #deductive imputation possible
             ind <- editrules:::getInd(E1)

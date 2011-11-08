@@ -1,6 +1,51 @@
+#' Deductive imputation of numerical or categorical values
+#'
+#' Based on observed values and edit rules, impute as many variables deductively as possible.
+#'
+#' @param E An \code{editmatrix} or \code{editarray}
+#' @param dat A \code{data.frame}
+#' @param adapt (optional) A boolean array of dim(dat), e.g. the result editrules::localizeErrors(E,dat). 
+#'      Column names must match those of \code{dat}.
+#' @param ... arguments to be passed to \code{\link{solSpace}} (numerical data) or \code{\link{deductiveLevels}} (categorical data)
+#'
+#'
+#' @example ../examples/deduImpute.R
+#' @export
+deduImpute <- function(E, dat, adapt=NULL, ...){
+    UseMethod('deduImpute')
+}
+
+
+#' Deductive imputation of categorical data
+#'
+#' \bold{For categorical data:} blabla
+#'
+#' @method deduImpute editarray
+#' @rdname deduImpute
+#' @export
+deduImpute.editarray <- function(E, dat, adapt=NULL, ...){
+    
+    X <- t(dat)
+    vars <- getVars(E)
+    if ( is.null(adapt) ) a <- logical(length(vars))
+    for ( i in 1:ncol(X) ){
+        x <- X[vars,i]
+        if ( !is.null(adapt) ) a <- adapt[i,vars]
+        L <- deductiveLevels(E,x,adapt=a)
+        X[names(L),i] <- L
+    }
+   t(X) 
+
+}
+
+
+
+
+
+
 #' Based only equality rules, impute as many values as possible.
 #'
-#' Given (equality) rules and a number of values to impute or adapt, in some cases
+#' \bold{For numerical data:} Given (equality) rules and a number of values to impute or adapt, in some cases
 #' unique solutions can be derived. This function uses \code{\link{solSpace}} and
 #' \code{\link{deductiveZeros}} (iteratively) to determine which values can be imputed
 #' deductively. Solutions causing new violations of inequality rules are rejected.
@@ -9,23 +54,19 @@
 #' T. De Waal, J. Pannekoek and S. Scholtus (2011) Handbook of statistical data editing 
 #' Chpt 9.2.1 - 9.2.2
 #'
-#' @param E an editmatrix
-#' @param dat a data.frame
-#' @param adapt a boolean array of dim(dat), e.g. the result editrules::localizeErrors(E,dat)
+#' @method deduImpute editmatrix
+#'
 #' @param tol tolerance to use in \code{violatedEdits} (if checkConsistency=TRUE), in \code{\link{solSpace}} 
 #'      and in \code{\link{deductiveZeros}} 
 #' @param checkConsistency Check if the imputed values cause any new violations in inequalities. Use this 
 #'      when the assumption that all nonmissings are correct cannot be justified. Turn off when passing
 #'      an \code{adapt} vector, determined by error localization (e.g. with editrules::localizeErrors).
-#' @param ... parameters to pass to \code{\link{solSpace.matrix}}. 
-#' @value A \code{\link{deducorrect-object}}
-#' 
-#' @example ../examples/deduImpute.R
-#' 
-#' @export
-deduImpute <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.eps), checkConsistency=TRUE,...){
+#' @return A \code{\link{deducorrect-object}}
+#'
+#' @rdname deduImpute
+#' @export 
+deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.eps), checkConsistency=TRUE,...){
 
-    V <- rowSums(is.na(dat))
     X <- t(dat)
     vars <- getVars(E)
     a <- logical(length(vars))
@@ -68,16 +109,16 @@ deduImpute <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.eps), checkC
 
     X[vars,] <- Xi
     dd <- as.data.frame(t(X))
-
+# TODO: keep track of 'adapt'
     npre <- rowSums(is.na(dat))
     npost <- rowSums(is.na(dd))
 
     nImp <- npre - npost
     stat <- status(length(nImp))
-    stat[npre  == 0 ]              <- 'valid'
-    stat[npost == 0 & npre > 0]    <- 'corrected'
-    stat[0 < nImp   & nImp < V ]     <- 'partial'
-    stat[npre==npost & npre > 0]       <- 'invalid'
+    stat[npre  == 0 ]            <- 'valid'
+    stat[npost == 0 & npre > 0]  <- 'corrected'
+    stat[0 < nImp   & nImp < npre ] <- 'partial'
+    stat[npre==npost & npre > 0] <- 'invalid'
 
 
 

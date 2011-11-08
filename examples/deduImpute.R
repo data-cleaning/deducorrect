@@ -91,8 +91,8 @@ x[I] <- 0
 
 # a simple example. We know the subject is pregnant. What is the gender?
 E <- editarray(c(
-"gender %in% c('male','female')",
-"pregnant %in% c(TRUE,FALSE)",
+"gender \%in\% c('male','female')",
+"pregnant \%in\% c(TRUE,FALSE)",
 "if ( gender=='male') !pregnant"))
 
 x <- c(gender=NA,pregnant=TRUE)
@@ -103,25 +103,37 @@ x[names(ximp)] <- ximp
 
 # Here's an example from Katrika (2001) [but see De Waal et al (2011), ex. 9.3)]
 E <- editarray(c(
-    "D1 %in% as.character(1:4)",
-    "D2 %in% as.character(1:3)",
-    "D3 %in% as.character(1:3)",
-    "D4 %in% as.character(1:2)",
-    "if (D2 == '3'  & D3 != '3' & D4 == '1' ) FALSE",
-    "if (D2 != '1'  & D4 == '2') FALSE",
-    "if (D1 != '3'  & D2 != '2' & D3 != '1') FALSE",
-    "if (D1 == '3'  & D3 != '1' & D4 == '1' ) FALSE"
+    "x1 \%in\% letters[1:4]",
+    "x2 \%in\% letters[1:3]",
+    "x3 \%in\% letters[1:3]",
+    "x4 \%in\% letters[1:2]",
+    "if (x2 == 'c'  & x3 != 'c' & x4 == 'a' ) FALSE",
+    "if (x2 != 'a'  & x4 == 'b') FALSE",
+    "if (x1 != 'c'  & x2 != 'b' & x3 != 'a') FALSE",
+    "if (x1 == 'c'  & x3 != 'a' & x4 == 'a' ) FALSE"
 ))
 
-#for ( f in F ) dmp <- source(f)
-x <- c(D1='3',D2='2',D3=NA,D4=NA)
+x <- c(x1='c',x2='b',x3=NA,x4=NA)
 deductiveLevels(E,x)
 
+# another example
+y <- c(x1=NA,x2=NA,x3=NA,x4='b')
+deductiveLevels(E,y)
 
+
+# library(editrules)
 # F <- dir('../pkg/R',full.names=TRUE)
 # for ( f in F ) dmp <- source(f)
-# library(editrules)
 
+dat <- data.frame(
+    x1 = c('c', NA ),
+    x2 = c('b', NA ),
+    x3 = c(NA , NA ),
+    x4 = c(NA , 'b'),
+    stringsAsFactors=FALSE)
+
+#for ( f in F ) dmp <- source(f)
+deduImpute(E,dat)
 
 
 

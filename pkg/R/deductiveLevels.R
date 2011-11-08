@@ -1,17 +1,26 @@
 #' Deductively impute categorical data.
 #'
+#' Deduce imputation values for categorical data. By substituting all known
+#' values and interatively eliminating the unknowns from the set of edits,
+#' unique imputation values are derived where possible.
+#' 
+#' Imputation values are derived for variable with NA-values occuring in
+#' one or more edits or who are indicated by 'adapt'
 #'
 #' @param E editarray
 #' @param x a named \code{character} vector 
+#' @param adapt boolean vector indicating which variables may be adapted.
+#'
+#' @example ../example/deduImpute.R
 #' @export
-deductiveLevels <- function(E,x){
-    iM <- is.na(x) & names(x) %in% getVars(E)
-    iN <- !is.na(x) & names(x) %in% getVars(E)
+deductiveLevels <- function(E, x, adapt=rep(FALSE,length(x)) ){
+    if ( !is.editarray(E) ) stop('E must be object of class editarray')
+    iM <-  (is.na(x) | adapt)  & names(x) %in% getVars(E)
+    iN <- !(is.na(x) | adapt)  & names(x) %in% getVars(E)
     
     M  <- names(x)[iM]
-    E0 <- reduce(substValue(E,names(x)[iN],x[iN]))
-    treated <- logical(length(M))
-    names(treated) <- M
+    E0 <- reduce(editrules:::substValue.editarray(E,names(x)[iN],x[iN]))
+    
     T <- c()
     nT <- 0
     nM <- length(M)
@@ -19,12 +28,15 @@ deductiveLevels <- function(E,x){
 
     while ( nT < nM  ){
         E1 <- E0
-        for ( m in setdiff(M[-1],T) ) E1 <- reduce(editrules:::eliminate.editarray(E1,m))
-        
+
+        for ( m in M[-1] ) E1 <- reduce(editrules:::eliminate.editarray(E1,m))
         val <- colSums(!editrules:::getArr(E1)) > 0
         if( nrow(E1) > 0 && sum(val) == 1 ){ #deductive imputation possible
             ind <- editrules:::getInd(E1)
-            xi[names(ind)] <- names(ind[[1]])[val]
+            variable <- names(ind)
+            level <- names(ind[[1]][val])
+            xi[variable] <- level
+            E0 <- reduce(editrules:::substValue.editarray(E0,variable,level))
             M <- M[-1]
         } else {
             T <- c(T,M[1])

@@ -50,15 +50,17 @@ Ey <- editmatrix(c(
     "yt == y1 + y2 + y3",
     "y4 == 0"))
 y <- c(yt=10, y1=NA, y2=3, y3=7,y4=12)
+# since solSpace by default checks the feasibility, we get no solution (since y4 violates the second edit)"
+solSpace(Ey,y)
 
-# without further direction, y4 is left alone (although is is clearly wrong).
-(s <- solSpace(Ey,y))
+
+# If we ask solSpace not to check for feasibility, y4 is left alone (although the imputed answer is clearly wrong).
+(s <- solSpace(Ey,y,checkFeasibility=FALSE))
 imputess(y, s$x0, s$C)
 
 # by setting 'adapt' we can include y4 in the imputation
-# (it does not matter how we set the value for y1, since is is empty, and
-# it occurs in E it will be imputed)
-(s <- solSpace(Ey,y,adapt=c(FALSE,FALSE,FALSE,FALSE,TRUE)))
+# Since we know that with this adapt vector, imputation can be done consistently, we save some time by switching the feasibility check off.
+(s <- solSpace(Ey,y,adapt=c(FALSE,FALSE,FALSE,FALSE,TRUE), checkFeasibility=FALSE))
 imputess(y,s$x0,s$C)
 
 

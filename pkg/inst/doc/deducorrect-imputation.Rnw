@@ -305,18 +305,18 @@ Ey <- editmatrix(c(
     "y4 == 0"))
 y <- c(yt=10, y1=NA, y2=3, y3=7,y4=12)
 @
-Here, $y_4$ clearly violates the second rule. (A rule like this may arise when manipulating
-edit sets or pre-substituting a number of values). Since $y_4$ is not empty, {\sf solSpace}
-ignores it unless told otherwise.
+%Here, $y_4$ clearly violates the second rule. (A rule like this may arise when manipulating
+%edit sets or pre-substituting a number of values). Since $y_4$ is not empty, {\sf solSpace}
+%ignores it unless told otherwise.
 <<>>=
 (s <- solSpace(Ey,y))
-imputess(y,s$x0,s$C)
+#imputess(y,x0=s$x0,C=s$C)
 @
 However, using the {\sf adapt} argument, which is a logical indicator stating which
 entries may be adapted, we get the following.
 <<>>=
 (s <- solSpace(Ey, y, adapt=c(FALSE,FALSE,FALSE,FALSE,TRUE)))
-imputess(y,s$x0,s$C)
+imputess(y,x0=s$x0,C=s$C)
 @
 
 

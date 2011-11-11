@@ -374,7 +374,7 @@ Ey <- editmatrix(c(
 y <- c(yt=10, y1=NA, y2=3, y3=7)
 (I<-deductiveZeros(Ey,y))
 @
-The record {\sf y} can be imputed in one statement.
+The record $y$ can be imputed in one statement.
 <<keep.source=TRUE>>=
 y[I] <- 0
 y

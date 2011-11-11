@@ -1,7 +1,7 @@
 library(testthat)
 library(editrules)
 
-context("CorrectRounding")
+context("Correction of rounding errors")
 
 test_that("correctRounding works",{
    R <- editmatrix(c("a == 1"))

@@ -1,7 +1,7 @@
 library(testthat)
 library(editrules)
 
-context("correctSigns")
+context("Correctoion of sign errors")
 
 test_that("correctSigns",{
     expect_identical(

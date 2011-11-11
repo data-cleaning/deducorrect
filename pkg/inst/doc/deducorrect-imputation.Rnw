@@ -195,7 +195,7 @@ take into account all edit rules: only nonnnegativity rules and equality rules
 are used to derive imputed values.
 
 The {\sf deduImpute} function has two mechanisms to get around this. The first
-is to set the option {\sf checkConsistency=TRUE}. This causes solutions causing
+is to set the option {\sf checkFeasibility=TRUE}. This causes solutions causing
 new inconsistencies to be rejected. The second mechanism is to provide a
 user-specified {\sf adapt} array to increase the number of variables which may
 be imputed, missing or not. The {\sf adapt} array is a boolean array, stating

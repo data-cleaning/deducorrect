@@ -87,19 +87,21 @@ deduImpute.editarray <- function(E, dat, adapt=NULL, ...){
 #' \bold{For numerical data:} Given (equality) rules and a number of values to impute or adapt, in some cases
 #' unique solutions can be derived. This function uses \code{\link{solSpace}} and
 #' \code{\link{deductiveZeros}} (iteratively) to determine which values can be imputed
-#' deductively. Solutions causing new violations of inequality rules are rejected.
+#' deductively. Solutions causing new violations of (in)equality rules are rejected by default by testing
+#' if the observed values can lead to a feasible record. This may be switched off by passing
+#' \code{checkFeasibility=FALSE}. This may be desirable for performance reasons. If \code{adapt}
+#' was computed with an error localization algorithm, such as \code{editrules::localizeErrors}, the 
+#' feasibility check is also not nessecary.
+#'
 #'
 #' @method deduImpute editmatrix
 #'
-#' @param tol tolerance to use in \code{violatedEdits} (if checkConsistency=TRUE), in \code{\link{solSpace}} 
+#' @param tol tolerance to use in \code{\link{solSpace}} 
 #'      and in \code{\link{deductiveZeros}} 
-#' @param checkConsistency Check if the imputed values cause any new violations in inequalities. Use this 
-#'      when the assumption that all nonmissings are correct cannot be justified. Turn off when passing
-#'      an \code{adapt} vector, determined by error localization (e.g. with editrules::localizeErrors).
 #'
 #' @rdname deduImpute
 #' @export 
-deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.eps), checkConsistency=TRUE,...){
+deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.eps),...){
 
     X <- t(dat)
     vars <- getVars(E)
@@ -109,7 +111,6 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
         x <- X[vars,i]
         nMiss <- sum(is.na(x)) + 1
         if ( !is.null(adapt) ) a <- adapt[i,vars]
-        if ( checkConsistency ) ve <-which(violatedEdits(E,x,tol=tol))
 
         while( sum(is.na(x)) < nMiss ){
             nMiss <- sum(is.na(x))
@@ -118,15 +119,7 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
             s <- solSpace(E, x, adapt=a, tol=tol, ...)
             if ( !is.null(s) ){
                 u <- rowSums(abs(s$C)) == 0
-                if ( checkConsistency ){
-                    xi <- x
-                    xi[rownames(s$x0)[u]] <- s$x0[u]
-                    vx <- which(violatedEdits(E, xi, tol=tol))
-                    
-                    if ( length(setdiff(vx,ve)) == 0 ) x <- xi
-                } else {
-                    x[rownames(s$x0)[u]] <- s$x0[u]
-                }
+                x[rownames(s$x0)[u]] <- s$x0[u]
             }
         }
         Xi[,i] <- x

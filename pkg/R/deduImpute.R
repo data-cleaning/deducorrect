@@ -48,7 +48,7 @@ deduImpute.editarray <- function(E, dat, adapt=NULL, ...){
     for ( i in 1:ncol(X) ){
         x <- X[ ,i]
         if ( !is.null(adapt) ) a <- adapt[i,vars]
-        L <- deductiveLevels(E,x,adapt=a)
+        L <- deductiveLevels(E,x,adapt=a, ...)
         X[names(L),i] <- L
         imp[[i]] <- L
     }

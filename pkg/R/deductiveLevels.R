@@ -14,18 +14,19 @@
 #' @param E editarray
 #' @param x a named \code{character} vector 
 #' @param adapt boolean vector indicating which variables may be adapted.
-#'
+#' @param checkFeasibility Test wether the assumed-correct values (observed and not designated by adapt) can lead to a consistent record.
 #' @return A named vector with imputation values for \code{x}
 #'
 #' @example ../examples/deductiveLevels.R
 #' @export
-deductiveLevels <- function(E, x, adapt=rep(FALSE,length(x)) ){
+deductiveLevels <- function(E, x, adapt=rep(FALSE,length(x)), checkFeasibility=TRUE ){
     if ( !is.editarray(E) ) stop('E must be object of class editarray')
     iM <-  (is.na(x) | adapt)  & names(x) %in% getVars(E)
     iN <- !(is.na(x) | adapt)  & names(x) %in% getVars(E)
     
     M  <- names(x)[iM]
     E0 <- reduce(editrules:::substValue.editarray(E,names(x)[iN],x[iN]))
+    if (checkFeasibility && !isFeasible(E0)) return(NULL)
     T <- c()
     nT <- 0
     nM <- length(M)

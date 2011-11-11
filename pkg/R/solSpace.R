@@ -15,20 +15,26 @@ solSpace <- function(E,x,...){
 
 #' solSpace method for editmatrix
 #' 
-#'
+#' @param checkFeasibility Check if the observed values can lead to a consistent record
 #' @method solSpace editmatrix
 #' @rdname solSpace
 #' @export
-solSpace.editmatrix <- function(E, x, ...){
+solSpace.editmatrix <- function(E, x, adapt=logical(length(x)), checkFeasibility=TRUE, ...){
     xvar <- names(x)
     vars <- getVars(E)
-    x <- x[xvar %in% vars]
+    ivar <- xvar %in% vars
+    if ( checkFeasibility ){
+        ii <- ivar & !(is.na(x)|adapt)
+        if ( !isFeasible(substValue(E,names(x)[ii], x[ii])) ) return(NULL)
+    }
+
+    x <- x[ivar]
     eq <- getOps(E) == '=='
     if ( length(eq) == 0 ) return(NULL)
     v <- match(xvar,vars,nomatch=0)
     A <- getA(E[eq,])[,v,drop=FALSE]
     b <- getb(E[eq,])
-    solSpace.matrix(A, x, b, ...)
+    solSpace.matrix(A, x, b, adapt[ivar], ...)
 }
 
 #' Determine space of solutions for missing value problem.

@@ -54,26 +54,26 @@ library(deducorrect)
 \section{Introduction}
 The quality of raw survey data is only rarely sufficient to allow for immediate
 statistical analysis. The presence of missing values (nonresponse) and
-inconsistencies prohibits straightforward application of most statistical
+inconsistencies impedes straightforward application of standard statistical
 estimation methods, and statisticians often have to spend considerable effort
-to counterbalance the effect of such errors.
+to counterbalance the effect of such errors. 
 
 There are basically two ways to take the effect of data quality issues into
 account.  The first is to adapt the statistical analysis such that the effects
-of these issues are somehow taken into account. One well-documented example is
-to use weighting methods which take the effect of (selective) item nonresponse
-into account {\bf ref } \citep{bethlehem:2011}.  The second way is to
-``repair'' the dataset so that all missing values are completed and
-inconsistencies have been repaired. The latter method has the advantage that
-statistical analyses of the data becomes to a degree independent of the models
-used in data cleaning.  Whichever way is chosen, in most cases additional
-assumtions are necessary to clean data or interpret the results of data
-analyses. 
-
+of these issues are taken into account. One well-documented example is to use
+weighting methods which take the effect of (selective) item nonresponse into
+account {\bf ref } \citep{bethlehem:2011}.  The second way is to clean up the
+dataset so that missing values are completed and inconsistencies have been
+repaired. The latter method has the advantage that statistical analyses of the
+data becomes to a degree independent of the models used in data cleaning.
+Whichever way is chosen, in most cases additional assumtions are necessary to
+clean data or interpret the results of data analyses. 
 
 Recently, a number of of near assumption-free data-cleaning methods have been
-reported which rely almost purely on the consistency rules imposed on the data.
-In a previous paper \citep{loo:2011a} we reported on methods which use data
+reported which rely almost purely on record consistency rules imposed {em a
+priori} the data. Examples of such rules include account balances, positivity
+demands on variables or forbidden value combinations in categorical data.  In a
+previous paper \citep{loo:2011a} we reported on methods which use data
 consistency rules and information in inconsistent records to track down and
 repair typing errors, rounding errors and sign errors. The theory behind these
 methods was first published by \citet{scholtus:2008, scholtus:2009} and were
@@ -84,23 +84,31 @@ for completing missing values.
 In this paper, we report on an extension of the {\sf deducorrect} package which
 allows for deductive imputation of missing values in either numerical or
 categorical data.  By deductive imputation we mean methods which use the
-observed values in a record and consistency rules imposed on the record to
-uniquely derive missing values where possible.  The values may be missing
+observed values in a record together with consistency rules imposed on the
+record to uniquely derive values where possible.  The values may be missing
 because of nonresponse, or they may be deemed missing by an error localization
 algorithm such as implemented in the {\sf editrules} package
 \citep{jonge:2011a, loo:2011c}. 
 
-In the following, we further introduce the concept of deductive correction and
-show the easyest way of imputing values with the deducorrect package. In
-sections \ref{sdeductivenumerical} and \ref{sdeductivecategorical} we expand a
-bit on the theory and demonstrate the use of lower-level functionality of the
-package.
+In section \ref{sdeduimpute}, we further introduce the concept of deductive
+correction and show the easyest way of imputing values with the deducorrect
+package. In sections \ref{sdeductivenumerical} and \ref{sdeductivecategorical}
+we expand a bit on the theory and demonstrate the use of lower-level
+functionality of the package. Examples in {\sf R} code are given throughout to
+help new users getting started.
 
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Deductive imputation}
+\label{sdeduimpute}
+Deductive imputation relies on in-record consistency rules to derive the value
+of variables which have not been completed from variables which have been
+completed. These methods therefore rely on the assumption that the values used
+in the derivation have been completed correctly. 
+
+
 
 Deductive imputation methods share the important
 assumption that all observed values are correct, so that imputing the missing

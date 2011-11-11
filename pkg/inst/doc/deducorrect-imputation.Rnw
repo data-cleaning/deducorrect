@@ -128,7 +128,7 @@ uses the following edits, based on a part of the Dutch Structural Business Surve
 balance account.
 \begin{equation}
 \begin{array}{rcl}
-    x_1 + x2      &=& x_3\\
+    x_1 + x_2      &=& x_3\\
     x_2           &=& x_4\\
     x_5 + x_6 + x_7 &=& x_8\\
     x_3 + x_8      &=& x_9\\
@@ -267,9 +267,9 @@ See \citet{waal:2011} for details on the imputation method or \citet{greville:19
 an excellent discussion on the pseudoinverse.
 
 \subsubsection{An example}
-The {\sf solSpace} function returns the ${\bf x}_0$ and ${\sf C}$ as in a
+The {\sf solSpace} function returns the ${\bf x}_0$ and ${\bf C}$ as a
 list. For example consider the first record from Figure \ref{RdeduImpute}:
-<<echo=FALSE>>=
+<<echo=TRUE>>=
 (x <- dat[1,])
 @
 Using the editmatrix defined in the same figure, we get:
@@ -334,11 +334,11 @@ subject to
 {x}_j &\geq& 0 \textrm{ for at least one }j\in\{1,2,\ldots,n\}.
 \label{deductiveZeroImputation}
 \end{eqnarray}
-Economical  survey data are often subject balance accounts of the form $x_t =
-x_1 + x_2+\cdots x_k$. For example $x_t$ might be the total personell cost and
-the $x_i$ are costs related to permanent staff, temporary staff, externals,
-{\em etc.}. It is not uncommon for respondents to leave open fields not
-relevant to them. For example if a company has not hired any temorary staff,
+Economic  survey data are often subject to account balances of the $x_t = x_1 +
+x_2+\cdots x_k$. For example, $x_t$ might be the total personell cost and the
+$x_i$ are costs related to permanent staff, temporary staff, externals, {\em
+etc.}. It is not uncommon for respondents to leave fields open which are not
+relevant to them. For example, if a company has not hired any temorary staff,
 the corresponding field might be left empty while a 0 would have been
 appropriate.  
 
@@ -350,9 +350,9 @@ deductiveZeros} detects such cases.
 
 \subsubsection{How it works}
 Consider again the notation of Section \ref{ssssolSpace}. We write (following
-the \cite{waal:2011}).
+notation of \cite{waal:2011}).
 \begin{equation}
-{\bf b}^* = {\bf b} - {\bf A}_{\rm obs}{\bf x}_{obs}.
+{\bf b}^* = {\bf b} - {\bf A}_{\rm obs}{\bf x}_{\rm obs}.
 \end{equation}
 If any $b^*_l=0$, this means that the sum rule ${\bf a}_l\cdot {\bf x}=b_l$ is
 obeyed if missing values are ignored. For those cases, the following properties are
@@ -382,13 +382,15 @@ y
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DEDUCTIVE IMPUTATION OF CATEGORICAL DATA
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Deductive Imputation of categorical data}
 \label{sdeductivecategorical}
 \subsection{Area of application}
 
+\section{Guidelines for combining methods}
 
-
-\section{Deductive imputation of numerical data}
+\section{Conclusions}
 
 \bibliographystyle{chicago}
 \bibliography{deducorrect}

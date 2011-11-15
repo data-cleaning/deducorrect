@@ -535,38 +535,133 @@ data, if the known values limit the number of options for the unknowns to a
 unique value, deductive imputation is possible.
 
 
-\subsection{Deductive imputation with {\sf deductiveLevels}}
-\subsection{Area of application}
+\subsection{Imputation with {\sf deductiveLevels}}
+\subsubsection{Area of application}
 The function {\sf deductiveLevels} works on purely categorical data where the
 number of categories for each variable is known and fixed, as in Eq.\
 \eqref{eqdomain}.  It determines which missing values in a record are
 determined uniquely by the known values, and these unique values are returned.
 
 \subsubsection{How it works}
-The algorithm which derives possible values for the missing variables is based
-on substitution of known values in the set of edits and elimination of 
+The algorithm behind {\sf deductiveLevels} has been described by
+\citet{waal:2011} and is reproduced here in Algorithm \ref{algDeductiveLevels}.
+The Algorithm is described in terms of the functions {\sf eliminate} and {\sf
+substValue}, both of which are implemented in the {\sf editrules} package and
+have been described extensively by \cite{loo:2011c}.  In short, {\sf
+deductiveLevels} derives deductive imputations by first substituting all
+observed values in the edit rules. Subsequently, all variables but one are
+eliminated from the remaining edits. If only one possible value remains for the
+remaining variable, it may be used as a deductive imputation and substituted in
+the set of edits. This process is repeated untill all missing values are
+treated.
 
+\begin{algorithm}[!t]
+    \caption{{\sc deductiveLevels($E$,{\bf v})}}
+    \label{algDeductiveLevels}
 \begin{algorithmic}
-\Require {An {\sf editarray} $E$, a partially complete record $({\bf v}_{\sf obs},{\bf v}_{\sf mis})$}
+\Require {An {\sf editarray} $E$, a partially complete record ${\bf v}$}
 \State Determine the index $I\subset\{1,2,\ldots n\}$ in ${\bf v}$ of observed values.
-\State $E\leftarrow${\sc substValue($E$,$I$,${\bf v}_{I}$)}
+\State $E\leftarrow\textrm{\sc substValue}(E,I,{\bf v}_{I})$
 \If {$\lnot\textrm{\sc isFeasible}(E)$}
-\State \Return {\sc null}
+\State \Return $\varnothing$
 \EndIf
-\State $M\leftarrow \{1,2,\ldots,n\}\backslash I$.
-\State $m\leftarrow |M|$
+\State $M\leftarrow \{1,2,\ldots,n\}\backslash I$ \Comment{Index of missing values in $\bf v$}
 \State $T\leftarrow \varnothing$
-\For {$i \in \{1,2,\ldots,m\}$}
-\State haha
-\EndFor
+\State $S\leftarrow \varnothing$ 
+\While {$M\backslash T\not=\varnothing$}
+    \State $m\leftarrow M_1$
+    \State $F\leftarrow E $
+    \For {$k \in M\backslash  m$} \Comment{Eliminate all but $k$ from $F$}
+        \State $F\leftarrow\textrm{\sc eliminate}(F,k)$
+        \EndFor 
+    \If {There is one possible value $\tilde{v}$ for variable $m$ in $F$}
+    \State $E\leftarrow\textrm{\sc substValue}(E,m,\tilde{v})$
+        \State $M\leftarrow M\backslash m$
+        \State $S\leftarrow S\cup(m,\tilde{v})$
+    \Else
+        \State $T\leftarrow T\cup m$
+    \EndIf
+\EndWhile
+\Ensure Unique imputations $S$.
 \end{algorithmic}
+\end{algorithm}
 
-\subsubsection{Examples}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{An example}
+Before introducing our example, we note that in general, an edit $e$ can be
+written as a subset of $D$:
+\begin{equation}
+e = A_1\times A_2\times\cdots\times A_n,
+\end{equation}
+where each $A_k\subset D_k$. The interpretation is that if a record ${\bf v}\in e$,
+then that record is invalid.
+
+Here, we reproduce example 9.3 of \cite{waal:2011} [first published by
+\citep{kartika:2001}].  Consider four categorical variables with
+domains $D_1=\{{\rm a},{\rm b},{\rm c},{\rm d}\}$, $D_2=D_3=\{{\rm a},{\rm
+b},{\rm c}\}$ and $D_4=\{{\rm a},{\rm b}\}$. We define the edit rules
+\begin{eqnarray}
+    e_1&=& D_1\times \{ {\rm c}\}\times\{{\rm a},{\rm b}\}\times\{{\rm a}\} \\
+    e_2&=& D_1\times\{{\rm b},{\rm c}\}\times D_3\times\{{\rm b}\} \\
+    e_3&=& \{{\rm a},{\rm b},{\rm d}\}\times\{{\rm a},{\rm c}\}\times\{{\rm b},{\rm c}\}\times D_4\\
+    e_4&=& \{{\rm c}\}\times D_2 \times \{{\rm b},{\rm c}\} \times \{{\rm a}\}.
+\end{eqnarray}
+Out of 72 possible records, only the following 20 are valid:
+\begin{equation*}
+    \begin{array}{cccc}
+        ({\rm a,a,a,a})&({\rm b,a,a,a})&({\rm c,a,a,a})&({\rm d,a,a,a})\\
+        ({\rm a,a,a,b})&({\rm b,a,a,b})&({\rm c,a,a,b})&({\rm d,a,a,b})\\
+        ({\rm a,b,a,a})&({\rm b,b,a,a})&({\rm c,a,b,b})&({\rm d,b,a,a})\\
+        ({\rm a,b,b,a})&({\rm b,b,b,a})&({\rm c,a,c,b})&({\rm d,b,b,a})\\
+        ({\rm a,b,c,a})&({\rm b,b,c,a})&({\rm c,b,a,a})&({\rm d,b,c,a}).
+    \end{array}
+\end{equation*}
+Figure \ref{RdeductiveLevels} shows how these rules can be defined in {\sf R}
+using the {\sf editarray} function of the editrules package. Consider the
+record ({\rm c},{\rm b},{\sf NA},{\sf NA}).  By simply considering the list of
+valid records above it is clear that if $v_1$ and $v_2$ are assumed correct,
+the only possible valid imputation is $v_3=v_4={\rm a}$.  Indeed this is
+returned by {\sf deductiveLevels} in Figure \ref{RdeductiveLevels}. The record
+$({\sf NA},{\sf NA},{\sf NA},{\rm b})$ cannot be imputed completely, since
+there are six possible records with $v_4={\rm b}$. However, all of them have
+$v_2={\rm a}$, so this may be imputed with certaintly. Finally, the record
+$({\rm b},{\rm c},{\rm a},{\sf NA})$ cannot be imputed since there is no valid
+record with these values for $v_1$, $v_2$ and $v_3$. In such cases case {\sf
+deductiveLevels} returns {\sf NULL} by default, since it is detected that no
+feasible records exist. If the feasibility check is turned off by passing {\sf
+checkFeasibility=FALSE}, the fact that there are multiple solutions
+($v_4\in\{{\rm a,b}\}$) yields a zero-length character vector.
+
+\begin{Rcode}
+<<keep.source=TRUE>>=
+E <- editarray(c(
+"v1 %in% letters[1:4]",
+"v2 %in% letters[1:3]",
+"v3 %in% letters[1:3]",
+"v4 %in% letters[1:2]",
+"if (v2 == 'c'  & v3 != 'c' & v4 == 'a' ) FALSE",
+"if (v2 != 'a'  & v4 == 'b') FALSE",
+"if (v1 != 'c'  & v2 != 'b' & v3 != 'a') FALSE",
+"if (v1 == 'c'  & v3 != 'a' & v4 == 'a' ) FALSE"
+))
+v <- c(v1='c',v2='b',v3=NA,v4=NA)
+deductiveLevels(E,v)
+v <- c(v1=NA,v2=NA,v3=NA,v4='b')
+deductiveLevels(E,v)
+v <- c(v1='b',v2='c',v3='a',v4=NA)
+deductiveLevels(E,v)
+deductiveLevels(E,v,checkFeasibility=FALSE)
+@
+\caption{Deriving deductive imputations using {\sf deductiveLevels}.}
+\label{RdeductiveLevels}
+\end{Rcode}
 
 
 
 \section{Conclusions}
 
+
+\clearpage
 \bibliographystyle{chicago}
 \bibliography{deducorrect}
 \end{document}

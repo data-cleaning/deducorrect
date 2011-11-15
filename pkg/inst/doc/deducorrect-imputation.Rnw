@@ -1,6 +1,9 @@
 %\VignetteIndexEntry{deducorrect-imputation}
 \documentclass[11pt, fleqn, a4paper]{article}
 \usepackage[english]{babel}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,decorations,calc}
+\usetikzlibrary{decorations.pathreplacing}
 \usepackage{amsmath, amssymb}
 \usepackage{natbib}
 \usepackage{algpseudocode}
@@ -103,29 +106,140 @@ help new users getting started.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Deductive imputation}
 \label{sdeduimpute}
+
+\subsection{Overview}
 Deductive imputation relies on in-record consistency rules to derive the value
 of variables which have not been completed from variables which have been
 completed. These methods therefore rely on the assumption that the values used
 in the derivation have been completed correctly. 
+For example, suppose we have a numerical record ${\bf x}=(x_1,x_2,x_3)$, subject to the
+rules
+\begin{eqnarray}
+\label{rule1}
+x_1 + x_2 &=& x_3\\
+\label{rule2}
+{\bf x} &\geq& \boldsymbol{0}. 
+\end{eqnarray}
+Suppose we are given two values of ${\bf x}$, for example $({\sf NA},x_2,x_3)$,
+where {\sf NA} stands for Not Available. In principle, the third value is
+easily derived from rule \eqref{rule1}. However, if either for example $x_2<0$,
+the derived value for $x_1$ is most likely not the true value, since at least
+one of the values used to derive $x_1$ is invalid. Moreover, if $x_2>x_3$, the
+derived value for $x_1$ will be negative, and therefore violate rule
+\eqref{rule2}. For categorical data, analogous situations may arise.
+
+The deductive imputation routines of the {\sf deducorrect} package offer two
+mechanisms to avoid inconsitencies. The first is to explicitly check if
+consistent deductive imputation is possible based on the observed values.  This
+is turned on by default for the functions {\sf deduImpute}, {\sf
+deductiveZeros}, the {\sf editmatrix} method of {\sf solSpace} and {\sf
+deductiveLevels}. All these functions which will be discussed in the coming
+sections. The second mechanism is the ability to point out variables besides
+the missing ones, which should be considered as if they are missing. A typical
+example would be to use the result of an error localization algorithm which
+points out erroneous fields in a record.
 
 
+\begin{figure}[!t]
+% tikz style definitions
+    \tikzstyle{decision} = [diamond, draw, fill=blue!20, 
+        text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+    \tikzstyle{block} = [rectangle, draw, fill=blue!20, 
+        text width=5em, text centered, rounded corners, minimum height=3em]
+    \tikzstyle{line} = [draw, -latex']
+    \tikzstyle{cloud} = [draw, ellipse,fill=red!20, node distance=3cm,
+        text width=9em, minimum height=2em, align=center]
+\begin{tikzpicture}[node distance = 2cm, auto, decoration={brace,amplitude=10pt}]
+    % Flow diagram blocks
+    \node [block] (init0) {read data};
+    \node [block, below of=init0]                       (init1)     {read rules};
+    \node [block, below of=init1]                       (deduimp1)  {deductive imputation};
+    \node [block, below of=deduimp1]                    (deducorr)  {deductive correction};
+    \node [decision, below of=deducorr]                 (decide)    {data has changed};
+    \node [block, below of=decide, node distance=3cm]   (errloc)    {error localization};
+    \node [block, below of=errloc]                      (deduimp2)  {deductive imputation};
+    \node [block, below of=deduimp2]                    (end)       {other imputation methods};
+    % draw lines
+    \path [line] (init0)   -- (init1);
+    \path [line] (init1)   -- (deduimp1);
+    \path [line] (deduimp1)-- (deducorr);
+    \path [line] (deducorr)-- (decide);
+    \path [line] (decide)  -- node {no} (errloc);
+    \path [line] (errloc)  -- (deduimp2);
+    \path [line] (deduimp2)  -- (end);
+    % looping path
+    \path [line] (decide.west) 
+    % go left
+        -- ++(-.7,0) node[below] {yes}  
+    % up, and to deduimp.west.
+        |- (deduimp1.west);
+    
+    % functionality blocks
+    \node [cloud, right of=init1, node distance=4cm] (editrules) {{\sf editarray}, {\sf editmatrix}};
+    \node [cloud, right of=deduimp1, node distance=4cm] (ddimp1) {{\sf deduImpute}};
+    \node [cloud, right of=deducorr, node distance=4cm] (ddcor1) {{\sf correctTypos} {\sf correctSigns} {\sf correctRounding}};
+    \node [cloud, right of=errloc, node distance=4cm] (ddcor2) {{\sf localizeErrors}};
+    \node [cloud, right of=deduimp2, node distance=4cm] (ddimp2) {{\sf deduImpute}};
+    % package annotation
+    \draw [decorate, line width=1pt] ($(init1.north) + (7,0)$) -- ($(init1.south) + (7,0)$)
+       node [midway, anchor=west, outer sep=3ex]{{\sf editrules}};
+    \draw [decorate, line width=1pt] ($(deduimp1.north) + (7,0)$) -- ($(deducorr.south) + (7,0)$)
+       node [midway, anchor=west, outer sep=3ex]{{\sf deducorrect}};
+    \draw [decorate, line width=1pt] ($(errloc.north) + (7,0)$) -- ($(errloc.south) + (7,0)$)
+       node [midway, anchor=west, outer sep=3ex]{{\sf editrules}};
+    \draw [decorate, line width=1pt] ($(deduimp2.north) + (7,0)$) -- ($(deduimp2.south) + (7,0)$)
+       node [midway, anchor=west, outer sep=3ex]{{\sf deducorrect}};
+    \end{tikzpicture}
 
-Deductive imputation methods share the important
-assumption that all observed values are correct, so that imputing the missing
-data can be done consistently without violating any consistency rules.
+\caption{Flow diagram showing how functionality of the {\sf deducorrect} and
+    {\sf editrules} can be combined to perform the deductive corrections, deductive
+    imputations and error localization. All steps except deductive correction are
+    available for numerical as well as categorical data. The ellipses indicate some
+    of the {\sf R} functions from the packages noted on the right. }
+\label{flowchart}
+\end{figure}
 
+In the context of a complete automated data editing system, there are a number
+of places where deductive imputation can be applied. Typically, one will apply
+such methods before the data is treated with more complicated imputation
+models. Figure \ref{flowchart} shows a general flowchart for the first step in
+automated data cleaning. After these steps are performed, all (near)
+assumption-free corrections offered by {\sf deducorrect} have been performed.
+For further imputations and corrections one has to resort to other methods,
+making new model assumptions. It should be noted that a common step such as
+detecting and repairing unit measure errors is not included here. However, such
+methods are easily implemented in {\sf R}, and we refer to \cite{waal:2011} for
+an overview. 
 
+Deductive imputation appears twice in the the process flow chart of Figure
+\ref{flowchart}.  The reason is that in the presence of missing data, it is
+possible that not all rules can be checked. For this reason the process stats
+with deductively imputing as many values as possible.  After this deductive
+corrections, can be applied which in turn can yield a higher data quality,
+opening up the possibility for more deductive imputations. This process can be
+iterated untill no data quality is gained anymore. After this, the smallest
+(weighted) number of variables to adapt or impute can be determined using error
+localization functionality of the {\sf editrules} package. The resulting error
+locations can serve as extra input to another run of the {\sf deduImpute}
+function. After these steps have been performed, no imputations based on the
+rules and observed values can be derived anymore.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Imputation with {\sf deduImpute}}
-The simplest way to do deductive imputations with the {\sf editrules} package
-is to use the {\sf deduImpute} function. For numerical data it uses two methods
-(described in the next subsections) to impute as many empty values as possible.
-It uses the functions {\sf solSpace} and {\sf deductiveZeros} iteratively for
-each record untill no deductive improvements can be made. The return value
-is an object of class {\sf deducorrect}.
+The simplest way to do deductive imputations with the {\sf deducorrect} package
+is to use the {\sf deduImpute} function. It can be used for both numerical and
+categorical data. The function accepts an {\sf editmatrix} or {\sf editarray}
+containing the editrules and a {\sf data.frame} containing the records. The
+return value is an object of class {\sf deducorrect}, similar to the values
+returned by the {\sf correct-} functions of deducorrect [see
+\citet{loo:2011a}].
 
-Here, we will use the example from \citet{waal:2011}, Chapter 9.2. This example
-uses the following edits, based on a part of the Dutch Structural Business Survey
-balance account.
+For numerical data it uses two methods (described sections \ref{sssolspace} and
+\ref{ssdeductivezeros}) to impute as many empty values as possible.  It uses
+the functions {\sf solSpace} and {\sf deductiveZeros} iteratively for each
+record untill no deductive improvements can be made. Here, we will use the
+example from \citet{waal:2011}, Chapter 9.2. This example uses the following
+edits, based on a part of the Dutch Structural Business Survey balance account.
 \begin{equation}
 \begin{array}{rcl}
     x_1 + x_2      &=& x_3\\
@@ -205,13 +319,29 @@ the {\sf editrules} package. By specifying an {\sf adapt} array, {\sf
 deduImpute} will try to fix records by imputing values which are either missing
 or may be adapted according to {\sf adapt}.
 
+
+For categorical data, {\sf deduImpute} uses the {\sf deductiveLevels} function,
+discussed in section \ref{sdeductivecategorical}.
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DEDUCTIVE IMPUTATION OF NUMERICAL DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Deductive imputation of numerical data}
 \label{sdeductivenumerical}
 
+The valid value combinations of numerical data records with $n$ variables are
+usually limited to some subset of $\mathbb{R}^n$. Common cases include balance
+accounts (linear restrictions) combined with linear inequality rules
+(positivity rules for example). In such cases the set of valid records is a
+convex polytope or polyhedral cone. In certain cases, when the values for a
+number of variables have been fixed, the set of possible values for a number of
+the remaining variables reduces to a point. In such cases deductive imputation
+is posible.
+
 \subsection{Imputation with {\sf solSpace} and {\sf imputess}}
+\label{sssolspace}
 \subsubsection{Area of application}
 The combination of functions {\sf solSpace} and {\sf imputess} can be used
 to impute numerical data under linear equality restrictions:
@@ -322,7 +452,7 @@ imputess(y,x0=s$x0,C=s$C)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Imputation with {\sf deductiveZeros}}
-
+\label{ssdeductivezeros}
 \subsubsection{Area of application}
 This method can be used to impute missing values in numerical records
 subject to
@@ -386,9 +516,54 @@ y
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Deductive Imputation of categorical data}
 \label{sdeductivecategorical}
-\subsection{Area of application}
 
-\section{Guidelines for combining methods}
+A categorical data records is a member of the cartesian product
+\begin{equation}
+D = D_1\times D_2\times\cdots\times D_n,
+\label{eqdomain}
+\end{equation}
+where each $D_k$ is the set of categories for a variable. In practice
+not every record in $D$ may be acceptable. For example if 
+\begin{equation}
+D = \{\textrm{child},{\rm adult}\}\times \{{\rm married},{\rm unmarried}\},
+\end{equation}
+then the record $(\textrm{child},{\rm married})$ may be excluded from the set
+of valid records. Therefore, if we have a record with $({\sf NA},{\rm
+married})$, and assume that the marital status is correct, there is only one
+possible value for the age class, namely ``adult''. So just like for numerical
+data, if the known values limit the number of options for the unknowns to a
+unique value, deductive imputation is possible.
+
+
+\subsection{Deductive imputation with {\sf deductiveLevels}}
+\subsection{Area of application}
+The function {\sf deductiveLevels} works on purely categorical data where the
+number of categories for each variable is known and fixed, as in Eq.\
+\eqref{eqdomain}.  It determines which missing values in a record are
+determined uniquely by the known values, and these unique values are returned.
+
+\subsubsection{How it works}
+The algorithm which derives possible values for the missing variables is based
+on substitution of known values in the set of edits and elimination of 
+
+\begin{algorithmic}
+\Require {An {\sf editarray} $E$, a partially complete record $({\bf v}_{\sf obs},{\bf v}_{\sf mis})$}
+\State Determine the index $I\subset\{1,2,\ldots n\}$ in ${\bf v}$ of observed values.
+\State $E\leftarrow${\sc substValue($E$,$I$,${\bf v}_{I}$)}
+\If {$\lnot\textrm{\sc isFeasible}(E)$}
+\State \Return {\sc null}
+\EndIf
+\State $M\leftarrow \{1,2,\ldots,n\}\backslash I$.
+\State $m\leftarrow |M|$
+\State $T\leftarrow \varnothing$
+\For {$i \in \{1,2,\ldots,m\}$}
+\State haha
+\EndFor
+\end{algorithmic}
+
+\subsubsection{Examples}
+
+
 
 \section{Conclusions}
 

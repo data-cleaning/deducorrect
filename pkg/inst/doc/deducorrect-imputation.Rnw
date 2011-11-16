@@ -25,6 +25,9 @@
 \renewcommand{\dbltopfraction}{.9}
 \hyphenation{time-stamp}
 
+\newcommand{\true}{\textrm{\sc true} }
+\newcommand{\false}{\textrm{\sc false} }
+
 \usepackage{float}
  
 \floatstyle{boxed}
@@ -38,7 +41,16 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-
+Numerical and categorical data used for statistical analyses is often
+plagued with missing values and inconsistencies. In many cases, a number
+of missing values may be derived, based on the consistency rules imposed
+on the data and the observed values in a record. The methods used for
+such derivations are called {\em deductive imputation}. In this paper,
+we describe the newly developed deductive imputation functionality of
+{\sf R} package {\sf deducorrect}. The package gained methods to deductively
+impute numerical as well as categorical data and integrates closely with
+the {\sf editrules} package. Methods on setting up a partial data editing
+system are discussed as well.
 
 
 \end{abstract}
@@ -65,7 +77,7 @@ There are basically two ways to take the effect of data quality issues into
 account.  The first is to adapt the statistical analysis such that the effects
 of these issues are taken into account. One well-documented example is to use
 weighting methods which take the effect of (selective) item nonresponse into
-account {\bf ref } \citep{bethlehem:2011}.  The second way is to clean up the
+account \citep{kalton:1986,bethlehem:2011}.  The second way is to clean up the
 dataset so that missing values are completed and inconsistencies have been
 repaired. The latter method has the advantage that statistical analyses of the
 data becomes to a degree independent of the models used in data cleaning.
@@ -321,7 +333,77 @@ or may be adapted according to {\sf adapt}.
 
 
 For categorical data, {\sf deduImpute} uses the {\sf deductiveLevels} function,
-discussed in section \ref{sdeductivecategorical}.
+discussed in section \ref{sdeductivecategorical}. The function accepts an 
+{\sf editarray} holding the categorical edits and a {\sf data.frame} holding
+records to be imputed.
+
+Before introducing our example, we note that in general, an edit $e$ can be
+written as a subset of $D$:
+\begin{equation}
+e = A_1\times A_2\times\cdots\times A_n,
+\end{equation}
+where each $A_k\subset D_k$. The interpretation is that if a record ${\bf v}\in e$,
+then that record is invalid.
+
+Here, we reproduce example 9.3 of \cite{waal:2011} [first published by
+\citep{kartika:2001}].  Consider four categorical variables with
+domains $D_1=\{{\rm a},{\rm b},{\rm c},{\rm d}\}$, $D_2=D_3=\{{\rm a},{\rm
+b},{\rm c}\}$ and $D_4=\{{\rm a},{\rm b}\}$. We define the edit rules
+\begin{eqnarray}
+    e_1&=& D_1\times \{ {\rm c}\}\times\{{\rm a},{\rm b}\}\times\{{\rm a}\} \\
+    e_2&=& D_1\times\{{\rm b},{\rm c}\}\times D_3\times\{{\rm b}\} \\
+    e_3&=& \{{\rm a},{\rm b},{\rm d}\}\times\{{\rm a},{\rm c}\}\times\{{\rm b},{\rm c}\}\times D_4\\
+    e_4&=& \{{\rm c}\}\times D_2 \times \{{\rm b},{\rm c}\} \times \{{\rm a}\}.
+\end{eqnarray}
+Out of 72 possible records, only the following 20 are valid:
+\begin{equation*}
+    \begin{array}{cccc}
+        ({\rm a,a,a,a})&({\rm b,a,a,a})&({\rm c,a,a,a})&({\rm d,a,a,a})\\
+        ({\rm a,a,a,b})&({\rm b,a,a,b})&({\rm c,a,a,b})&({\rm d,a,a,b})\\
+        ({\rm a,b,a,a})&({\rm b,b,a,a})&({\rm c,a,b,b})&({\rm d,b,a,a})\\
+        ({\rm a,b,b,a})&({\rm b,b,b,a})&({\rm c,a,c,b})&({\rm d,b,b,a})\\
+        ({\rm a,b,c,a})&({\rm b,b,c,a})&({\rm c,b,a,a})&({\rm d,b,c,a}).
+    \end{array}
+\end{equation*}
+Figure \ref{RdeductiveLevels} shows how these rules can be defined in {\sf R}
+using the {\sf editarray} function of the editrules package. Consider the
+record ({\rm c},{\rm b},{\sf NA},{\sf NA}).  By simply considering the list of
+valid records above it is clear that if $v_1$ and $v_2$ are assumed correct,
+the only possible valid imputation is $v_3=v_4={\rm a}$.  Indeed this is
+returned by {\sf deduImpute} in Figure \ref{RdeductiveLevels}. The record
+$({\sf NA},{\sf NA},{\sf NA},{\rm b})$ cannot be imputed completely, since
+there are six possible records with $v_4={\rm b}$. However, all of them have
+$v_2={\rm a}$, so this may be imputed with certaintly. Finally, the record
+$({\rm b},{\rm c},{\rm a},{\sf NA})$ cannot be imputed since there is no valid
+record with these values for $v_1$, $v_2$ and $v_3$. 
+
+\begin{Rcode}
+<<keep.source=TRUE>>=
+M <- editarray(c(
+"v1 %in% letters[1:4]",
+"v2 %in% letters[1:3]",
+"v3 %in% letters[1:3]",
+"v4 %in% letters[1:2]",
+"if (v2 == 'c'  & v3 != 'c' & v4 == 'a' ) FALSE",
+"if (v2 != 'a'  & v4 == 'b') FALSE",
+"if (v1 != 'c'  & v2 != 'b' & v3 != 'a') FALSE",
+"if (v1 == 'c'  & v3 != 'a' & v4 == 'a' ) FALSE"
+))
+Mdat <- data.frame(
+    v1 = c('c', NA,'b'),
+    v2 = c('b', NA,'c'),
+    v3 = c( NA, NA,'a'),
+    v4 = c( NA,'b', NA),
+    stringsAsFactors=FALSE
+)
+s <- deduImpute(M, Mdat)
+s$corrected
+s$status
+s$corrections
+@
+\caption{Deductive imputations for categorical data using {\sf deduImpute}.}
+\label{RdeductiveLevels}
+\end{Rcode}
 
 
 
@@ -588,80 +670,94 @@ treated.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{An example}
-Before introducing our example, we note that in general, an edit $e$ can be
-written as a subset of $D$:
-\begin{equation}
-e = A_1\times A_2\times\cdots\times A_n,
-\end{equation}
-where each $A_k\subset D_k$. The interpretation is that if a record ${\bf v}\in e$,
-then that record is invalid.
-
-Here, we reproduce example 9.3 of \cite{waal:2011} [first published by
-\citep{kartika:2001}].  Consider four categorical variables with
-domains $D_1=\{{\rm a},{\rm b},{\rm c},{\rm d}\}$, $D_2=D_3=\{{\rm a},{\rm
-b},{\rm c}\}$ and $D_4=\{{\rm a},{\rm b}\}$. We define the edit rules
+Consider the variables $v_1=${\em gender}, $v_2=${\em pregnant} and $v_3=${\em chromosome}.
+The value domain and edit rules are given by
 \begin{eqnarray}
-    e_1&=& D_1\times \{ {\rm c}\}\times\{{\rm a},{\rm b}\}\times\{{\rm a}\} \\
-    e_2&=& D_1\times\{{\rm b},{\rm c}\}\times D_3\times\{{\rm b}\} \\
-    e_3&=& \{{\rm a},{\rm b},{\rm d}\}\times\{{\rm a},{\rm c}\}\times\{{\rm b},{\rm c}\}\times D_4\\
-    e_4&=& \{{\rm c}\}\times D_2 \times \{{\rm b},{\rm c}\} \times \{{\rm a}\}.
+D_1 &=& \{ \textrm{male, female} \}\\
+D_2 &=& \{\true ,\false \}\\
+D_3 &=& \{ \textrm{xx, xy} \}\\
+e_1 &=& \{ {\rm male} \}\times\{ \true \}\times D_3\\
+e_2 &=& \{ {\rm male} \}\times D_2 \times \{ {\rm xx} \}.
 \end{eqnarray}
-Out of 72 possible records, only the following 20 are valid:
-\begin{equation*}
-    \begin{array}{cccc}
-        ({\rm a,a,a,a})&({\rm b,a,a,a})&({\rm c,a,a,a})&({\rm d,a,a,a})\\
-        ({\rm a,a,a,b})&({\rm b,a,a,b})&({\rm c,a,a,b})&({\rm d,a,a,b})\\
-        ({\rm a,b,a,a})&({\rm b,b,a,a})&({\rm c,a,b,b})&({\rm d,b,a,a})\\
-        ({\rm a,b,b,a})&({\rm b,b,b,a})&({\rm c,a,c,b})&({\rm d,b,b,a})\\
-        ({\rm a,b,c,a})&({\rm b,b,c,a})&({\rm c,b,a,a})&({\rm d,b,c,a}).
-    \end{array}
-\end{equation*}
-Figure \ref{RdeductiveLevels} shows how these rules can be defined in {\sf R}
-using the {\sf editarray} function of the editrules package. Consider the
-record ({\rm c},{\rm b},{\sf NA},{\sf NA}).  By simply considering the list of
-valid records above it is clear that if $v_1$ and $v_2$ are assumed correct,
-the only possible valid imputation is $v_3=v_4={\rm a}$.  Indeed this is
-returned by {\sf deductiveLevels} in Figure \ref{RdeductiveLevels}. The record
-$({\sf NA},{\sf NA},{\sf NA},{\rm b})$ cannot be imputed completely, since
-there are six possible records with $v_4={\rm b}$. However, all of them have
-$v_2={\rm a}$, so this may be imputed with certaintly. Finally, the record
-$({\rm b},{\rm c},{\rm a},{\sf NA})$ cannot be imputed since there is no valid
-record with these values for $v_1$, $v_2$ and $v_3$. In such cases case {\sf
-deductiveLevels} returns {\sf NULL} by default, since it is detected that no
-feasible records exist. If the feasibility check is turned off by passing {\sf
-checkFeasibility=FALSE}, the fact that there are multiple solutions
-($v_4\in\{{\rm a,b}\}$) yields a zero-length character vector.
-
-\begin{Rcode}
-<<keep.source=TRUE>>=
+The corresponding {\sf editarray} can be defined as follows.
+<<keep.source=true>>=
 E <- editarray(c(
-"v1 %in% letters[1:4]",
-"v2 %in% letters[1:3]",
-"v3 %in% letters[1:3]",
-"v4 %in% letters[1:2]",
-"if (v2 == 'c'  & v3 != 'c' & v4 == 'a' ) FALSE",
-"if (v2 != 'a'  & v4 == 'b') FALSE",
-"if (v1 != 'c'  & v2 != 'b' & v3 != 'a') FALSE",
-"if (v1 == 'c'  & v3 != 'a' & v4 == 'a' ) FALSE"
-))
-v <- c(v1='c',v2='b',v3=NA,v4=NA)
+    "gender     %in% c('male','female')",
+    "pregnant   %in% c(TRUE,FALSE)",
+    "chromosome %in% c('XX','XY')",
+    "if (gender == 'male') !pregnant",
+    "if (gender == 'male') chromosome == 'XY'"))
+@
+Now, consider the record $({\rm male},\false,{\sf NA})$. Using {\sf deductiveLevels} we find:
+<<keep.source=true>>=
+v <- c(gender='male',pregnant=FALSE,chromosome=NA)
+(s <- deductiveLevels(E,v))
+@
+And imputation can be performed as follows:
+<<keep.source=true>>=
+v[names(s)] <- s
+v
+@
+The {\sf deductiveLevels} function has an optional argument, allowing to switch
+off the feasibility check. To illustrate this, consider the record $({\rm
+male},\true,{\sf NA})$.  Clearly, there is no way to impute this record
+consistently by just imuting the {\em chromosome} variable. If we choose
+$v_3={\rm XX}$, this conflicts with the gender (male) if we choose ${\rm XY}$
+this conflicts with the gender implied by $v_2$ (pregnant). In this case
+{\sf deductiveLevels} returns {\sf NULL}.
+<<keep.source=true>>=
+v <- c(gender='male',pregnant=TRUE,chromosome=NA)
 deductiveLevels(E,v)
-v <- c(v1=NA,v2=NA,v3=NA,v4='b')
-deductiveLevels(E,v)
-v <- c(v1='b',v2='c',v3='a',v4=NA)
-deductiveLevels(E,v)
+@
+The reason is that {\sf deductiveLevels} checks if feasible imputations are
+possible after substituting all observed values into the edits. This
+check can be time-consuming since it potentially involves many variable
+elimination steps. It may be turned off by passing {\sf checkFeasibility=FALSE}:
+<<keep.source=true>>=
 deductiveLevels(E,v,checkFeasibility=FALSE)
 @
-\caption{Deriving deductive imputations using {\sf deductiveLevels}.}
-\label{RdeductiveLevels}
-\end{Rcode}
-
-
+However, one must be carefull since, as shown above, the result may be an
+inconsistent imputation. The reason to include this option is that users
+may provide an additional parameter, called {\sf adapt} allowing {\sf deductiveLevels}
+to impute more variables. If the {\sf adapt} parameter is chosen such that 
+missing values plus adaptable values can lead to consistent imputation, the 
+consistency check may be turned off. For example, we may choose to adapt 
+the pregancy status.
+<<keep.source=true>>=
+adapt <- c(gender=FALSE,pregnant=TRUE,chromosome=TRUE)
+(s <- deductiveLevels(E,v,adapt=adapt,checkFeasibility=FALSE))
+@
+So that the imputed value becomes
+<<keep.source=true>>=
+v[names(s)] <- s
+v
+@
+which is indeed a valid record. In general, the {\sf adapt} parameter should be
+derived via a consistent error localization mechanism, such as implemented in
+the {\sf editrules} package. Only those cases it is safe to gain some performance
+by switching the feasibility check off.
 
 \section{Conclusions}
+In this paper we demonstrated the newly developed deductive imputation
+facilities offered by the deducorrect package. From version 1.1, {\sf
+deducorrect} offers a toolbox for automated deductive correction of numerical
+data and deductive imputation of numerical and categorical data, integrating
+closely with the {\sf editrules} package of the same authors.
+
+
+
+
+
+
+
+
+
+
+
 
 
 \clearpage
 \bibliographystyle{chicago}
+\addcontentsline{toc}{section}{References}
 \bibliography{deducorrect}
 \end{document}

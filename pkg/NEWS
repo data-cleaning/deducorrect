@@ -1,6 +1,7 @@
 version 1.1-0
 - Deductive imputation methods for categorical data: deduImpute, deductiveLevels
 - Deductive imputation methods for numerical records: deduImpute, solSpace/imputess, deductiveZeros
+- Solved corner case: constructing deducorrect object when nothing was corrected failed.
 
 version 1.0-2
 - correctSigns has more thorough argument checking. Variables in flip or swap, not occuring in rules are removed.

@@ -39,7 +39,9 @@
 #' @return an S3 object of class \code{deducorrect}
 #' 
 #' @seealso \code{\link{deducorrect-object}}
-newdeducorrect <- function(corrected, corrections, status){  
+newdeducorrect <- function(corrected, corrections, status){ 
+    corrsummary <- array(0,dim=c(1,ncol(corrected)+1),dimnames=list(NULL,c(colnames(corrected),'sum'))) 
+    if (nrow(corrections) > 0) corrsummary <- addmargins(table(corrections$variable, useNA="no"))
     structure(
         list(
             corrected   = corrected, 
@@ -51,7 +53,7 @@ newdeducorrect <- function(corrected, corrections, status){
         ),
         class = c("deducorrect","list"),
         statsummary = addmargins(table(status$status, useNA="ifany")),
-        corrsummary = addmargins(table(corrections$variable, useNA="no"))
+        corrsummary = corrsummary
     )
 }
 
@@ -65,6 +67,6 @@ print.deducorrect <- function(x, ...){
     
     cat("\n\n Record status:")  
     print(attr(x,"statsummary"))
-    cat("\n Variables corrected:")
+    cat("\n Variables corrected:\n")
     print(attr(x,"corrsummary"))
 }

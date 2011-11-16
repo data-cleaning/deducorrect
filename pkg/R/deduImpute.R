@@ -50,7 +50,11 @@ deduImpute.editarray <- function(E, dat, adapt=NULL, ...){
         if ( !is.null(adapt) ) a <- adapt[i,vars]
         L <- deductiveLevels(E,x,adapt=a, ...)
         X[names(L),i] <- L
-        imp[[i]] <- L
+        if ( is.null(L) ){
+            imp[[i]] <- character(0)
+        } else {
+            imp[[i]] <- L
+        }
     }
     dat[,vars] <- t(X)
 

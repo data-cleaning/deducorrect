@@ -31,7 +31,7 @@ deductiveZeros.editmatrix <- function(E, x, ...){
     A <- getA(E[eq,])[ , match(xvar,vars, nomatch=0), drop=FALSE]
 
     # search variables s.t. nonnegativity constraints.
-    nnvars <-  getVars(reduce(E[nonneg(E),]))
+    nnvars <-  getVars(editrules:::reduce.editmatrix(E[nonneg(E),]))
     nn <- logical(length(x))
     names(nn) <- names(x)
     nn[nnvars] <- TRUE

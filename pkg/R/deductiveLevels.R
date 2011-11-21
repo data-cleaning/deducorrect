@@ -25,7 +25,7 @@ deductiveLevels <- function(E, x, adapt=rep(FALSE,length(x)), checkFeasibility=T
     iN <- !(is.na(x) | adapt)  & names(x) %in% getVars(E)
     
     M  <- names(x)[iM]
-    E0 <- reduce(editrules:::substValue.editarray(E,names(x)[iN],x[iN]))
+    E0 <- editrules:::reduce.editarray(editrules:::substValue.editarray(E,names(x)[iN],x[iN]))
     if (checkFeasibility && !isFeasible(E0)) return(NULL)
     T <- c()
     nT <- 0
@@ -35,14 +35,14 @@ deductiveLevels <- function(E, x, adapt=rep(FALSE,length(x)), checkFeasibility=T
     while ( nT < nM  ){
         E1 <- E0
 
-        for ( m in setdiff(M,T)[-1] ) E1 <- reduce(editrules:::eliminate.editarray(E1,m))
+        for ( m in setdiff(M,T)[-1] ) E1 <- editrules:::reduce.editarray(editrules:::eliminate.editarray(E1,m))
         val <- colSums(!editrules:::getArr(E1)) > 0
         if( nrow(E1) > 0 && sum(val) == 1 ){ #deductive imputation possible
             ind <- editrules:::getInd(E1)
             variable <- names(ind)
             level <- names(ind[[1]][val])
             xi[variable] <- level
-            E0 <- reduce(editrules:::substValue.editarray(E0,variable,level))
+            E0 <- editrules:::reduce.editarray(editrules:::substValue.editarray(E0,variable,level))
             M <- M[-1]
         } else {
             T <- c(T,M[1])

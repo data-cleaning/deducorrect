@@ -21,7 +21,7 @@
 \usepackage{float}
  
 \floatstyle{boxed}
-\newfloat{Rcode}{t}{rco}
+\newfloat{Rcode}{t!}{rco}
 \floatname{Rcode}{Figure}
 
 
@@ -176,28 +176,28 @@ record.
     \node [block] (init0) {read data};
     \node [block, below of=init0]                       (init1)     {read rules};
     \node [block, below of=init1]                    (deducorr)  {deductive correction};
-    \node [block, below of=deducorr]                       (deduimp1)  {deductive imputation};
-    \node [block, below of=deduimp1]   (errloc)    {error localization};
+    \node [block, below of=deducorr]   (errloc)    {error localization};
+ %   \node [block, below of=deducorr]                       (deduimp1)  {deductive imputation};
     \node [block, below of=errloc]                      (deduimp2)  {deductive imputation};
     \node [block, below of=deduimp2]                    (end)       {other imputation methods};
     % draw lines
     \path [line] (init0)   -- (init1);
     \path [line] (init1)   -- (deducorr);
-    \path [line] (deducorr)-- (deduimp1);
-    \path [line] (deduimp1)-- (errloc);
+    \path [line] (deducorr)-- (errloc);
+%    \path [line] (deduimp1)-- (errloc);
     \path [line] (errloc)  -- (deduimp2);
     \path [line] (deduimp2)  -- (end);
     
     % functionality blocks
     \node [cloud, right of=init1, node distance=4cm] (editrules) {{\sf editarray}, {\sf editmatrix}};
-    \node [cloud, right of=deduimp1, node distance=4cm] (ddimp1) {{\sf deduImpute}};
+%    \node [cloud, right of=deduimp1, node distance=4cm] (ddimp1) {{\sf deduImpute}};
     \node [cloud, right of=deducorr, node distance=4cm] (ddcor1) {{\sf correctTypos} {\sf correctSigns} {\sf correctRounding}};
     \node [cloud, right of=errloc, node distance=4cm] (ddcor2) {{\sf localizeErrors}};
     \node [cloud, right of=deduimp2, node distance=4cm] (ddimp2) {{\sf deduImpute}};
     % package annotation
     \draw [decorate, line width=1pt] ($(init1.north) + (7,0)$) -- ($(init1.south) + (7,0)$)
        node [midway, anchor=west, outer sep=3ex]{{\sf editrules}};
-    \draw [decorate, line width=1pt] ($(deducorr.north) + (7,0)$) -- ($(deduimp1.south) + (7,0)$)
+    \draw [decorate, line width=1pt] ($(deducorr.north) + (7,0)$) -- ($(deducorr.south) + (7,0)$)
        node [midway, anchor=west, outer sep=3ex]{{\sf deducorrect}};
     \draw [decorate, line width=1pt] ($(errloc.north) + (7,0)$) -- ($(errloc.south) + (7,0)$)
        node [midway, anchor=west, outer sep=3ex]{{\sf editrules}};
@@ -209,7 +209,9 @@ record.
     {\sf editrules} can be combined to perform the deductive corrections, deductive
     imputations and error localization. All steps except deductive correction are
     available for numerical as well as categorical data. The ellipses indicate some
-    of the {\sf R} functions from the packages noted on the right. }
+    of the {\sf R} functions from the packages noted on the right. Error localization
+    is not strictly necessary to perform deductive imputation, but in this way
+    the maximum number deductively imputable values will be derived.}
 \label{flowchart}
 \end{figure}
 
@@ -225,15 +227,17 @@ repairing unit measure errors is not included here.  However, such methods are
 easily implemented in {\sf R}, and we refer to \cite{waal:2011} for an
 overview. 
 
-Deductive imputation appears twice in the process flow chart of Figure
-\ref{flowchart}. It appears right after performing deductive corrections, since
-this allows the deductive imputation routines to use better quality observed
-values to base the imputation values on.  After this, the smallest (weighted)
-number of variables to adapt or impute can be determined using error
-localization functionality of the {\sf editrules} package. The resulting error
-locations can serve as extra input to another run of the {\sf deduImpute}
-function. After these steps have been performed, no imputations based on the
-rules and observed values can be derived anymore.
+Deductive imputation appears after the error localization step in the process
+flow chart of Figure \ref{flowchart}. At that point one is certain that the
+missing variables together with the variables pointed out by the error
+localization algorithm can be imputed consistent with the edit rules. Error
+localization is not strictly necessary to perform deductive imputation with the
+{\sf deducorrect} package since by default, the imputation routines check if
+consistent imputation is possible.  However, the workflow in Figure
+\ref{flowchart} guarantees that as many deductive imputations take place as
+possible. For performance reasons, the user can choose to skip these checks
+when the workflow of Figure \ref{flowchart} is followed.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Imputation with {\sf deduImpute}}
@@ -339,6 +343,7 @@ records to be imputed.
 Before introducing our example, we note that a categorical record is a member of
 a discrete set, written as the cartesian product.
 \begin{equation}
+\label{eqdomain}
 D = D_1\times D_2\times\ldots\times D_n,
 \end{equation}
 where each $D_k$ is the set of categories for a single variable.
@@ -410,7 +415,7 @@ s$corrections
 \end{Rcode}
 
 
-
+\clearpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DEDUCTIVE IMPUTATION OF NUMERICAL DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -455,11 +460,12 @@ further that $\bf x$ must obey a set of equality restrictions as in Eqn.
 \eqref{solspaceImputation}, we may write
 ${\bf A}=[{\bf A}_{\rm obs},{\bf A}_{\rm miss}]$. Consequently we have \citep{waal:2011}
 \begin{equation}
-    {\bf A}_{\rm miss}{\bf x}_{\bf miss} = {\bf b} - {\bf A}_{\rm obs}{\bf x}_{obs}.
+    {\bf A}_{\rm miss}{\bf x}_{\rm miss} = {\bf b} - {\bf A}_{\rm obs}{\bf x}_{\rm obs}.
 \end{equation}
 This gives
 \begin{equation}
     {\bf x}_{\rm miss} = {\bf x}_0 + {\bf C}{\bf z},
+\label{eqimpnum}
 \end{equation}
 with {\bf z} an arbitrary real vector of dimension $n_{\rm miss}$ and 
 ${\bf x}_0$ and {\bf C} constant.
@@ -498,12 +504,12 @@ erroneous fields with {\sf errorLocalizer} (of the {\sf editrules} package) and
 to determine the imputation space with {\sf solSpace}.
 
 The top two and bottom two rows of {\bf C} in the example have zero
-coefficients, yielding a unique solution for $x_2$, $x_3$, $x_9$ and $x_{11}$.
+coefficients, yielding a unique solution for $x_2$, $x_4$, $x_9$ and $x_{11}$.
 The unique values may be imputed with {\sf imputess}:
 <<keep.source=TRUE>>=
 imputess(x, s$x0, s$C)
 @
-If a ${\bf z}$-vector is provided as well, all values may be imputed. Here, we
+If a ${\bf z}$-vector is provided as well [See Eq. \eqref{eqimpnum}], all values may be imputed. Here, we
 choose ${\bf z}=\boldsymbol{0}$ (arbitrarily).
 <<keep.source=TRUE>>=
 ( y <- imputess(x, s$x0, s$C, z=rep(0,ncol(s$C))) )
@@ -552,7 +558,7 @@ subject to
 Economic  survey data are often subject to account balances of the form $x_t = x_1 +
 x_2+\cdots x_k$. For example, $x_t$ might be the total personnel cost and the
 $x_i$ are costs related to permanent staff, temporary staff, externals, {\em
-etc.}. It is not uncommon for respondents to leave fields open which are not
+etc}. It is not uncommon for respondents to leave fields open which are not
 relevant to them. For example, if a company has not hired any temporary staff,
 the corresponding field might be left empty while a 0 would have been
 appropriate.  
@@ -573,7 +579,7 @@ If any $b^*_l=0$, this means that the sum rule ${\bf a}_l\cdot {\bf x}=b_l$ is
 obeyed if missing values are ignored. For those cases, the following properties are
 checked.
 \begin{itemize}
-\item Each $a_{{\rm miss},lj\not=}$ has the same sign.
+\item Each $a_{{\rm miss},lj}$ has the same sign.
 \item Each $a_{{\rm miss},lj}\not=0$ corresponds to a variable $x_j$ that is constrained to be nonnegative.
 \end{itemize}
 If these demands are obeyed, the corresponding value $x_{{\rm miss},j}$ may be imputed with 0.
@@ -602,13 +608,9 @@ y
 \section{Deductive Imputation of categorical data}
 \label{sdeductivecategorical}
 
-A categorical data records is a member of the cartesian product
-\begin{equation}
-D = D_1\times D_2\times\cdots\times D_n,
-\label{eqdomain}
-\end{equation}
-where each $D_k$ is the set of categories for a variable. In practice
-not every record in $D$ may be acceptable. For example if 
+As shown in Eq. \eqref{eqdomain}, a categorical data record is a member of a
+discrete set of value combinations $D$ (the domain). In practice, not every
+record in $D$ may be acceptable. For example if 
 \begin{equation}
 D = \{\textrm{child},{\rm adult}\}\times \{{\rm married},{\rm unmarried}\},
 \end{equation}
@@ -720,12 +722,12 @@ elimination steps. It may be turned off by passing {\sf checkFeasibility=FALSE}:
 deductiveLevels(E,v,checkFeasibility=FALSE)
 @
 However, one must be careful since, as shown above, the result may be an
-inconsistent imputation. The reason to include this option is that users
-may provide an additional parameter, called {\sf adapt}, allowing {\sf deductiveLevels}
-to impute more variables. If the {\sf adapt} parameter is chosen such that 
-missing values plus adaptable values can lead to consistent imputation, the 
-consistency check may be turned off. For example, we may choose to adapt 
-the pregnancy status.
+inconsistent imputation. The reason to include this option is that users may
+provide an additional parameter, called {\sf adapt}, allowing {\sf
+deductiveLevels} to impute more variables. If the {\sf adapt} parameter is
+chosen such that missing values plus adaptable values can lead to consistent
+imputation, the consistency check may be turned off. For example, we may choose
+to adapt the pregnancy status.
 <<keep.source=true>>=
 adapt <- c(gender=FALSE,pregnant=TRUE,chromosome=TRUE)
 (s <- deductiveLevels(E,v,adapt=adapt,checkFeasibility=FALSE))
@@ -741,11 +743,16 @@ the {\sf editrules} package. Only those cases it is safe to gain some performanc
 by switching the feasibility check off.
 
 \section{Conclusions}
-In this paper we demonstrated the newly developed deductive imputation
-facilities offered by the deducorrect package. From version 1.1, {\sf
-deducorrect} offers a toolbox for automated deductive correction of numerical
-data and deductive imputation of numerical and categorical data, integrating
-closely with the {\sf editrules} package of the same authors.
+Missing values and inconsistencies in raw often hinder statistical analyses,
+even though in many cases, correct values can be derived using available values
+and consistency rules (deductive imputation). As of version {\sf 1.1}, the
+deducorrect package includes functionality for deductive imputation of
+numerical and catogorical data. The functionality of the {\sf deducorrect}
+package can be used as-is, or may be integrated with the error localization
+functionality of the {\sf editrules} package.
+
+Future work on the package will include  several performance enhancements and
+visualisation options.
 
 
 

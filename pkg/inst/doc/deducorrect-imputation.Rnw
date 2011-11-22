@@ -23,27 +23,7 @@
 \floatstyle{boxed}
 \newfloat{Rcode}{t!}{rco}
 \floatname{Rcode}{Figure}
-
-
-\makeatletter
-\newcounter{unisequence}
-\newcommand\ucaption{%
-    \ifx\@captype\@undefined
-      \@latex@error{\noexpand\caption outside float}\@ehd
-      \expandafter\@gobble
-    \else
-      \refstepcounter{unisequence}
-      \let\@tempf\@caption
-      \expandafter\ifx\csname @float@c@\@captype\endcsname\relax
-      \else
-       \expandafter\expandafter\let
-       \expandafter\@tempf\csname @float@c@\@captype\endcsname
-      \fi
-    \fi
-    \@dblarg{\@tempf\@captype}}
-\def\theRcode{\@arabic\c@unisequence}
-\def\thefigure{\@arabic\c@unisequence}
-\makeatother
+\usepackage{ucap}
 
 
 
@@ -722,12 +702,12 @@ elimination steps. It may be turned off by passing {\sf checkFeasibility=FALSE}:
 deductiveLevels(E,v,checkFeasibility=FALSE)
 @
 However, one must be careful since, as shown above, the result may be an
-inconsistent imputation. The reason to include this option is that users may
-provide an additional parameter, called {\sf adapt}, allowing {\sf
-deductiveLevels} to impute more variables. If the {\sf adapt} parameter is
-chosen such that missing values plus adaptable values can lead to consistent
-imputation, the consistency check may be turned off. For example, we may choose
-to adapt the pregnancy status.
+inconsistent imputation. The reason to include this option is that users
+may provide an additional parameter, called {\sf adapt}, allowing {\sf deductiveLevels}
+to impute more variables. If the {\sf adapt} parameter is chosen such that 
+missing values plus adaptable values can lead to consistent imputation, the 
+consistency check may be turned off. For example, we may choose to adapt 
+the pregnancy status.
 <<keep.source=true>>=
 adapt <- c(gender=FALSE,pregnant=TRUE,chromosome=TRUE)
 (s <- deductiveLevels(E,v,adapt=adapt,checkFeasibility=FALSE))

@@ -1,0 +1,38 @@
+%% Modify caption commands of float package so RCode and Figure floats are numbered
+%% and formatted uniformly.
+%% mvdl 22.11.2011 
+%%
+
+% the "boxed" float style by has hardcoded \bfseries caption labels and numbers.
+% we change this to \rmfamily here.
+\renewcommand\fs@boxed{\def\@fs@cfont{\rmfamily}\let\@fs@capt\floatc@plain
+  \def\@fs@pre{\setbox\@currbox\vbox{\hbadness10000
+    \moveleft3.4pt\vbox{\advance\hsize by6.8pt
+      \hrule \hbox to\hsize{\vrule\kern3pt
+        \vbox{\kern3pt\box\@currbox\kern3pt}\kern3pt\vrule}\hrule}}}%
+  \def\@fs@mid{\kern2pt}%
+  \def\@fs@post{}\let\@fs@iftopcapt\iffalse}
+
+
+
+% this defines the ucaption command, replacing the caption command defined by float.
+\makeatletter
+\newcounter{unisequence}
+\newcommand\ucaption{%
+    \ifx\@captype\@undefined
+      \@latex@error{\noexpand\caption outside float}\@ehd
+      \expandafter\@gobble
+    \else
+      \refstepcounter{unisequence}
+      \let\@tempf\@caption
+      \expandafter\ifx\csname @float@c@\@captype\endcsname\relax
+      \else
+       \expandafter\expandafter\let
+       \expandafter \@tempf\csname @float@c@\@captype\endcsname
+      \fi
+    \fi
+    \@dblarg{\@tempf\@captype}}
+\def\theRcode{\@arabic\c@unisequence}
+\def\thefigure{\@arabic\c@unisequence}
+\makeatother
+

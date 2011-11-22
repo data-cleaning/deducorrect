@@ -13,16 +13,6 @@
 \usepackage{threeparttable}
 
 % stimulate latex to put multiple floats on a page.
-\setcounter{topnumber}{2}
-\setcounter{bottomnumber}{2}
-\setcounter{totalnumber}{3}
-\setcounter{dbltopnumber}{2}
-\renewcommand{\topfraction}{.9}
-\renewcommand{\textfraction}{.1}
-\renewcommand{\bottomfraction}{.75}
-\renewcommand{\floatpagefraction}{.9}
-\renewcommand{\dblfloatpagefraction}{.9}
-\renewcommand{\dbltopfraction}{.9}
 \hyphenation{time-stamp}
 
 \newcommand{\true}{\textrm{\sc true} }
@@ -35,22 +25,43 @@
 \floatname{Rcode}{Figure}
 
 
+\makeatletter
+\newcounter{unisequence}
+\newcommand\ucaption{%
+    \ifx\@captype\@undefined
+      \@latex@error{\noexpand\caption outside float}\@ehd
+      \expandafter\@gobble
+    \else
+      \refstepcounter{unisequence}
+      \let\@tempf\@caption
+      \expandafter\ifx\csname @float@c@\@captype\endcsname\relax
+      \else
+       \expandafter\expandafter\let
+       \expandafter\@tempf\csname @float@c@\@captype\endcsname
+      \fi
+    \fi
+    \@dblarg{\@tempf\@captype}}
+\def\theRcode{\@arabic\c@unisequence}
+\def\thefigure{\@arabic\c@unisequence}
+\makeatother
+
+
+
 \title{Deductive imputation with the {\sf deducorrect} package}
 \author{Mark van der Loo and Edwin de Jonge\\
 {\small Package version \Sexpr{packageVersion("deducorrect")}}}
 \begin{document}
 \maketitle
 \begin{abstract}
-Numerical and categorical data used for statistical analyses is often
-plagued with missing values and inconsistencies. In many cases, a number
-of missing values may be derived, based on the consistency rules imposed
-on the data and the observed values in a record. The methods used for
-such derivations are called {\em deductive imputation}. In this paper,
-we describe the newly developed deductive imputation functionality of
-{\sf R} package {\sf deducorrect}. The package gained methods to deductively
-impute numerical as well as categorical data and integrates closely with
-the {\sf editrules} package. Methods on setting up a partial data editing
-system are discussed as well.
+Numerical and categorical data used for statistical analyses is often plagued
+with missing values and inconsistencies. In many cases, a number of missing
+values may be derived, based on the consistency rules imposed on the data and
+the observed values in a record. The methods used for such derivations are
+called {\em deductive imputation}. In this paper, we describe the newly
+developed deductive imputation functionality of {\sf R} package {\sf
+deducorrect}. The package gained methods to deductively impute numerical as
+well as categorical data. Methods for setting up a partial data editing system
+are discussed as well.
 
 
 \end{abstract}
@@ -68,7 +79,7 @@ library(deducorrect)
 \newpage
 \section{Introduction}
 The quality of raw survey data is only rarely sufficient to allow for immediate
-statistical analysis. The presence of missing values (nonresponse) and
+statistical analysis. The presence of missing values (item nonresponse) and
 inconsistencies impedes straightforward application of standard statistical
 estimation methods, and statisticians often have to spend considerable effort
 to counterbalance the effect of such errors. 
@@ -80,18 +91,18 @@ weighting methods which take the effect of (selective) item nonresponse into
 account \citep{kalton:1986,bethlehem:2011}.  The second way is to clean up the
 dataset so that missing values are completed and inconsistencies have been
 repaired. The latter method has the advantage that statistical analyses of the
-data becomes to a degree independent of the models used in data cleaning.
+data become to a degree independent of the models used in data cleaning.
 Whichever way is chosen, in most cases additional assumptions are necessary to
 clean data or interpret the results of data analyses. 
 
 Recently, a number of near assumption-free data-cleaning methods have been
 reported which rely almost purely on record consistency rules imposed {\em a
-priori} the data. Examples of such rules include account balances, positivity
+priori} on the data. Examples of such rules include account balances, positivity
 demands on variables or forbidden value combinations in categorical data.  In a
 previous paper \citep{loo:2011a} we reported on methods which use data
 consistency rules and information in inconsistent records to track down and
 repair typing errors, rounding errors and sign errors. The theory behind these
-methods was first published by \citet{scholtus:2008, scholtus:2009} and were
+methods was first published by \citet{scholtus:2008, scholtus:2009} and the methods were
 implemented by us in {\sf R} package {\sf deducorrect}. Since these so-called
 deductive correction methods are based on adapting values, they are not suited
 for completing missing values.
@@ -107,7 +118,7 @@ algorithm such as implemented in the {\sf editrules} package
 \citep{jonge:2011a, loo:2011c}. 
 
 In section \ref{sdeduimpute}, we further introduce the concept of deductive
-correction and show the easiest way of imputing values with the deducorrect
+imputation and show the easiest way of imputing values with the deducorrect
 package. In sections \ref{sdeductivenumerical} and \ref{sdeductivecategorical}
 we expand a bit on the theory and demonstrate the use of lower-level
 functionality of the package. Examples in {\sf R} code are given throughout to
@@ -122,11 +133,10 @@ help new users getting started.
 
 \subsection{Overview}
 Deductive imputation relies on in-record consistency rules to derive the value
-of variables which have not been completed from variables which have been
-completed. These methods therefore rely on the assumption that the values used
-in the derivation have been completed correctly. 
-For example, suppose we have a numerical record ${\bf x}=(x_1,x_2,x_3)$, subject to the
-rules
+of variables which have not been completed from variables that have. These
+methods therefore rely on the assumption that the values used in the derivation
+have been completed correctly.  For example, suppose we have a numerical record
+${\bf x}=(x_1,x_2,x_3)$, subject to the rules
 \begin{eqnarray}
 \label{rule1}
 x_1 + x_2 &=& x_3\\
@@ -135,25 +145,27 @@ x_1 + x_2 &=& x_3\\
 \end{eqnarray}
 Suppose we are given two values of ${\bf x}$, for example $({\sf NA},x_2,x_3)$,
 where {\sf NA} stands for Not Available. In principle, the unknown value is
-easily derived from rule \eqref{rule1}. However, if either for example $x_2<0$,
-the derived value for $x_1$ is most likely not the true value, since at least
-one of the values used to derive $x_1$ is invalid. Moreover, if $x_2>x_3$, the
-derived value for $x_1$ will be negative, and therefore violate rule
-\eqref{rule2}. For categorical data, analogous situations may arise.
+easily derived from rule \eqref{rule1}, but one must take care not to violate
+any other rules. For example, if $x_2<0$, the derived value for $x_1$ is most
+likely not the true value, since at least one of the values used to derive
+$x_1$ is invalid. Moreover, if $x_2>x_3$, the derived value for $x_1$ will be
+negative, and therefore violate rule \eqref{rule2}. For categorical data,
+analogous situations may arise.
 
 The deductive imputation routines of the {\sf deducorrect} package offer two
 mechanisms to avoid inconsistencies. The first is to explicitly check if
 consistent deductive imputation is possible based on the observed values.  This
-is turned on by default for the functions {\sf deduImpute}, {\sf
+is switched on by default for the functions {\sf deduImpute}, {\sf
 deductiveZeros}, the {\sf editmatrix} method of {\sf solSpace} and {\sf
-deductiveLevels}. All these functions will be discussed in the coming
-sections. The second mechanism is the ability to point out variables besides
-the missing ones, which should be considered as if they are missing. A typical
-example would be to use the result of an error localization algorithm which
-points out erroneous fields in a record.
+deductiveLevels}. These functions will be discussed below. The second mechanism
+is the ability to point out variables besides the missing ones, which should be
+considered as if they were missing. A typical example would be to use the result
+of an error localization algorithm which points out erroneous fields in a
+record.
 
 
 \begin{figure}[!t]
+{
     \tikzstyle{block} = [rectangle, draw, fill=blue!20, 
         text width=5em, text centered, rounded corners, minimum height=3em]
     \tikzstyle{line} = [draw, -latex']
@@ -191,9 +203,9 @@ points out erroneous fields in a record.
        node [midway, anchor=west, outer sep=3ex]{{\sf editrules}};
     \draw [decorate, line width=1pt] ($(deduimp2.north) + (7,0)$) -- ($(deduimp2.south) + (7,0)$)
        node [midway, anchor=west, outer sep=3ex]{{\sf deducorrect}};
-    \end{tikzpicture}
-
-\caption{Flow diagram showing how functionality of the {\sf deducorrect} and
+\end{tikzpicture}
+}
+\ucaption{Flow diagram showing how functionality of the {\sf deducorrect} and
     {\sf editrules} can be combined to perform the deductive corrections, deductive
     imputations and error localization. All steps except deductive correction are
     available for numerical as well as categorical data. The ellipses indicate some
@@ -233,7 +245,7 @@ return value is an object of class {\sf deducorrect}, similar to the values
 returned by the {\sf correct-} functions of deducorrect [see
 \citet{loo:2011a}].
 
-For numerical data it uses two methods (described sections \ref{sssolspace} and
+For numerical data {\sf deduImpute} uses two methods (described in sections \ref{sssolspace} and
 \ref{ssdeductivezeros}) to impute as many empty values as possible.  It uses
 the functions {\sf solSpace} and {\sf deductiveZeros} iteratively for each
 record until no deductive improvements can be made. Here, we will use the
@@ -285,7 +297,7 @@ dat
 d <- deduImpute(E,dat)
 d$corrected
 @
-\caption{A simple example with {\sf deduImpute}. The return value is an object of class {\sf deducorrect}.}
+\ucaption{A simple example with {\sf deduImpute}. The return value is an object of class {\sf deducorrect}.}
 \label{RdeduImpute}
 \end{Rcode}
 %
@@ -393,7 +405,7 @@ s$corrected
 s$status
 s$corrections
 @
-\caption{Deductive imputations for categorical data using {\sf deduImpute}.}
+\ucaption{Deductive imputations for categorical data using {\sf deduImpute}.}
 \label{RdeductiveLevels}
 \end{Rcode}
 

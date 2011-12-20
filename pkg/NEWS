@@ -1,3 +1,6 @@
+version 1.1-2
+- Discussion paper included in 'doc' directory of package
+
 version 1.1-1
 - Updates on vignette, index.html of online manual and documentation.
 - Solved possible clash with plyr: both editrules and plyr publish a reduce function.

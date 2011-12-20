@@ -9,11 +9,15 @@
 #' \item{\code{\link{correctTypos}}}
 #' \item{\code{\link{deducorrect-object}} and \code{\link{status}} for output specification}
 #' \item{\code{\link{isTotallyUnimodular}}}
+#' \item{\code{\link{deduImpute}}}
+#' \item{\code{\link{solSpace}}, \code{\link{imputess}}}
+#' \item{\code{\link{deductiveZeros}}}
+#' \item{\code{\link{deductiveLevels}}}
 #' }
 #'
 #'
 #'
-#'
+#' @import editrules
 #' @example ../examples/pkg.R
 #' @name deducorrect-package 
 #' @docType package 

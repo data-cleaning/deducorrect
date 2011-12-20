@@ -43,6 +43,10 @@ deducorrect}. The package gained methods to deductively impute numerical as
 well as categorical data. Methods for setting up a partial data editing system
 are discussed as well.
 
+{\em This vignette (at version 1.1-1) is a literal transcript of \cite{loo:2011c}.
+Please use that paper when referencing imputation functionality of the package. This
+vignette may be updated if the package is developed further.}
+
 
 \end{abstract}
 
@@ -95,7 +99,7 @@ observed values in a record together with consistency rules imposed on the
 record to uniquely derive values where possible.  The values may be missing
 because of nonresponse, or they may be deemed missing by an error localization
 algorithm such as implemented in the {\sf editrules} package
-\citep{jonge:2011a, loo:2011c}. 
+\citep{jonge:2011a, loo:2011d}. 
 
 In section \ref{sdeduimpute}, we further introduce the concept of deductive
 imputation and show the easiest way of imputing values with the deducorrect
@@ -723,13 +727,14 @@ the {\sf editrules} package. Only those cases it is safe to gain some performanc
 by switching the feasibility check off.
 
 \section{Conclusions}
-Missing values and inconsistencies in raw often hinder statistical analyses,
-even though in many cases, correct values can be derived using available values
-and consistency rules (deductive imputation). As of version {\sf 1.1}, the
-deducorrect package includes functionality for deductive imputation of
-numerical and catogorical data. The functionality of the {\sf deducorrect}
-package can be used as-is, or may be integrated with the error localization
-functionality of the {\sf editrules} package.
+Missing values and inconsistencies in raw data often hinder statistical
+analyses.  However, in many cases, correct values can be derived using only the
+available values and consistency rules imposed on the data (deductive
+imputation).  As of version {\sf 1.1}, the deducorrect package includes
+functionality for deductive imputation of both numerical and categorical data.
+The functionality of the {\sf deducorrect} package can be used as-is, or may be
+integrated with the error localization functionality of the {\sf editrules}
+package.
 
 Future work on the package will include  several performance enhancements and
 visualisation options.

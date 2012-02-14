@@ -1,0 +1,8 @@
+inst/doc/fig
+inst/doc/tex
+.bash
+.bib
+.sty
+sweave.r
+
+

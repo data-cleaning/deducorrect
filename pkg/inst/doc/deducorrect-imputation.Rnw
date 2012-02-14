@@ -12,6 +12,7 @@
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
 \usepackage{threeparttable}
 
+\usepackage{mySweave}
 % stimulate latex to put multiple floats on a page.
 \hyphenation{time-stamp}
 

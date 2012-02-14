@@ -9,6 +9,7 @@
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
 \usepackage{threeparttable}
 
+\usepackage{mySweave}
 % stimulate latex to put multiple floats on a page.
 \setcounter{topnumber}{2}
 \setcounter{bottomnumber}{2}

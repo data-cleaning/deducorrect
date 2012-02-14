@@ -13,7 +13,7 @@ Version: 1.1-2
 URL: http://code.google.com/p/deducorrect/
 Date: 2011-02-22
 Depends:
-    editrules (>= 1.9-0)
+    editrules (>= 2.1-2)
 Collate:
     'correctRounding.R'
     'correctSigns.R'

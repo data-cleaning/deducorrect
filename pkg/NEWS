@@ -1,5 +1,6 @@
 version 1.1-2
 - Discussion paper included in 'doc' directory of package
+- Solved bug in deducorrect object: rownames of $corrections were sometimes duplicated
 
 version 1.1-1
 - Updates on vignette, index.html of online manual and documentation.

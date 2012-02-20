@@ -1084,7 +1084,7 @@ E[getOps(E)==">=", ]
 @
 Alternatively, the comparison operators of an edit matrix may be normalized:
 <<>>=
-editmatrix(editrules(E),normalize=TRUE)
+editmatrix(as.character(E),normalize=TRUE)
 @
 The {\tt editrules} package offers functionality to check data against any set
 of editrules. The function {\tt violatedEdits}, for example returns a boolean

@@ -59,7 +59,7 @@ getSignCorrection <- function( r, A1, C1, eps, A2, C2, epsvec, flip, swap, w,
             flips <- flip[I[I[ ,k] <= nflip, k]]
             swaps <- swap[I[I[ ,k] >  nflip, k]-nflip,,drop=FALSE]
             s <- applyFix(flips, swaps, r)
-            if ( all(abs(A1 %*% s - C1) < eps) & all(A2 %*% s - C2 < epsvec) ){
+            if ( all(abs(A1 %*% s - C1) < eps) && all(A2 %*% s - C2 < epsvec) ){
                 i <- i + 1
                 S <- rbind(S,s)
                 if ( swapIsOneFlip ){

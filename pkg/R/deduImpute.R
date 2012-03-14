@@ -23,6 +23,72 @@ deduImpute <- function(E, dat, adapt=NULL, ...){
 }
 
 
+deduImpute.editset <- function(E, dat, adapt=NULL,...){
+    et <- editType(E)
+    Em <- NULL
+    if ( any(et=='mix'))  Em <- E[et=='mix',]
+    NUM <- CAT <- TRUE
+
+    if ( any(et=='num') && !is.null(Em) ){ 
+        v1 <- violatedEdits(Em,dat)
+        dnum <- deduImpute.editmatrix(E$num, dat, adapt, ...)
+        v2 <- violatedEdits(Em,dat)
+        rvt <- apply(!v1 & v2,1,any)
+        dnum <- revert(dnum,rows=rvt)
+    } else if ( any(et=='num') ) {
+        dnum <- deduImpute.editmatrix(E$num,dat,adapt,...)
+    } else {
+        NUM <- FALSE
+    }
+
+    icat <- et == 'cat'
+    if ( any(icat) && !is.null(Em) ){ 
+        v1 <- violatedEdits(Em, dat)
+        dcat <- deduImpute(reduce(E$mixcat[icat,]$mixcat), dat, adapt, ...)
+        v2 <- violatedEdits(Em, dat)
+        rvt <- apply(!v1 & v2, 1, any)
+        dcat <- revert(dcat,rows,rvt)
+    } else if ( any(icat) ) {
+        dcat <- deduImpute(E$mixcat, dat, adapt, ...)
+    } else {
+        CAT <- FALSE
+    }
+        
+    if ( !NUM & !CAT) return(newdeducorrect(dat))
+    
+    if ( NUM & !CAT) return(dnum)
+
+    if ( !NUM & CAT) return(dcat)
+
+    catvar <- unique(dcat$corrections$variable)
+    dat[,catvar] <- dcat$corrected[,catvar]
+    numvar <- unique(dnum$corrections$variable)
+    dat[,numvar] <- dnum$corrected[,numvar]
+    
+    corr <- rbind(
+        transform(dnum$corrections,
+            variables = as.character(variable)
+        ),
+        transform(dnum$corrections,
+            variables = as.character(variables),
+            old=as.character(old),
+            new=as.character(new)
+        )
+    )
+    status <- data.frame(
+        status = pmin(dnum$status$status,dcat$status$status),
+        imputations = dnum$status$imputations + dcat$status$imputations
+    )
+
+    newdeducorrect(
+        corrected=dat,
+        corrections=corr,
+        status=status
+    )
+}
+
+
+
 #' Deductive imputation of categorical data
 #'
 #' \bold{For categorical data:} The funcion \code{\link{deductiveLevels}} is used to derive

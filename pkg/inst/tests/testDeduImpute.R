@@ -62,6 +62,56 @@ test_that('deductiveZeros works with variables in record not in editmatrix',{
     expect_equal(deductiveZeros(editmatrix(c("x + y == z","y>=0")),x=c(x=1,y=NA,z=1,u=1,v=NA)),c(x=FALSE,y=TRUE,z=FALSE,u=FALSE,v=FALSE))
 })
 
+context('The deduImpute method for editset')
+test_that('deduImpute.editset works for pure numeric',{
+    
+    E <- editset(expression(x + y == z))
+    x <- data.frame(
+        x = NA,
+        y = 1,
+        z = 1)
+    expect_equal(deduImpute(E,x)$corrected$x,0)
+
+})
+
+test_that('deduImpute.editset works for pure categorical',{
+    
+    E <- editset(expression(
+        A %in% c('a','b'),
+        B %in% c('c','d'),
+        if ( A == 'a' ) B == 'b')
+    )
+    x <- data.frame(
+        A = 'a',
+        B = NA)
+    expect_equal(deduImpute(E, x)$corrected$B,'b')
+
+})
+
+
+test_that('deduImpute.editset works for unconnected categorical and numerical',{
+    
+    E <- editset(expression(
+        x + y == z,
+        A %in% c('a','b'),
+        B %in% c('c','d'),
+        if ( A == 'a' ) B == 'b')
+    )
+    x <- data.frame(
+        x = NA,
+        y = 1,
+        z = 1,
+        A = 'a',
+        B = NA)
+    v <- deduImpute(E,x)
+    expect_equal(v$corrected$B,'b')
+    expect_equal(v$corrected$x, 0)
+    expect_true(v$status$status == 'corrected')
+})
+
+
+
+
 
 
 

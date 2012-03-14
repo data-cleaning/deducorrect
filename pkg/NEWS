@@ -1,4 +1,5 @@
 version 1.2
+- deduImpute now accepts data.frames with more variables than specified in editset (-matrix, -array)
 - bugfix: counting nr. of imputations in deduImpute.editmatrix in presence of 'adapt' argument
 - correctRounding, correctTypos, correctSigns now S3 generic and accept 'editset'. Corrections causing new violations are reverted afterwards.
 - Removed deprecated argument 'Q' from 'correctRounding'

@@ -25,6 +25,8 @@ revert <- function(d, rows){
     cord[vars] <- A[,vars,drop=FALSE]
 
     status[rows,'status'] <- "invalid"
+    if (!is.null(status$imputed)) status[rows,'imputed'] <- 0
+
 
     newdeducorrect(
         corrected = cord,

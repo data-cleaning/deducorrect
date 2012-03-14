@@ -32,6 +32,16 @@ status <- function(n, ini=NA){
     return(ordered(rep(ini,n), levels=st))
 }
 
+# sensibly combine two status vectors
+combineStatus <- function(x,y){
+    z <- status(length(x))
+    z[x == 'invalid'    & y == 'invalid'] <- 'invalid'
+    z[x == 'partial'    | y == 'partial'] <- 'partial'
+    z[x == 'corrected'  & y == 'corrected'] <- 'corrected'
+    z[x == 'valid'      & y == 'valid'] <- 'valid'
+    z
+}
+
 
 #' Get name of R user.
 #'

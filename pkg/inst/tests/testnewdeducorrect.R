@@ -2,8 +2,6 @@
 context("Deducorrect object")
 
 
-#D <- dir("~/Projecten/deducorrect/pkg/R",full.names=TRUE)
-#for ( d in D ) dmp <- source(d)
 
 test_that('newdeducorrect works if no corrections have been applied',{
     dd <- data.frame(x=1:3,y=rep(0,3))

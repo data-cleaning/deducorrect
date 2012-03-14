@@ -29,6 +29,10 @@ deduImpute.editset <- function(E, dat, adapt=NULL,...){
     if ( any(et=='mix'))  Em <- E[et=='mix',]
     NUM <- CAT <- TRUE
 
+    toImpute <- is.na(dat[getVars(E)])
+    if ( !is.null(adapt) ) toImpute <- toImpute | adapt
+    toImpute <- rowSums(toImpute)    
+
     if ( any(et=='num') && !is.null(Em) ){ 
         v1 <- violatedEdits(Em,dat)
         dnum <- deduImpute.editmatrix(E$num, dat, adapt, ...)
@@ -60,25 +64,32 @@ deduImpute.editset <- function(E, dat, adapt=NULL,...){
 
     if ( !NUM & CAT) return(dcat)
 
-    catvar <- unique(dcat$corrections$variable)
-    dat[,catvar] <- dcat$corrected[,catvar]
-    numvar <- unique(dnum$corrections$variable)
+    catvar <- as.character(unique(dcat$corrections$variable))
+    dat[,catvar] <- as.character(dcat$corrected[,catvar])
+    numvar <- as.character(unique(dnum$corrections$variable))
     dat[,numvar] <- dnum$corrected[,numvar]
     
     corr <- rbind(
         transform(dnum$corrections,
-            variables = as.character(variable)
+            variable = as.character(variable)
         ),
-        transform(dnum$corrections,
-            variables = as.character(variables),
+        transform(dcat$corrections,
+            variable = as.character(variable),
             old=as.character(old),
             new=as.character(new)
         )
     )
-    status <- data.frame(
-        status = pmin(dnum$status$status,dcat$status$status),
-        imputations = dnum$status$imputations + dcat$status$imputations
-    )
+
+    imputations <- dnum$status$imputations + dcat$status$imputations 
+    st <- combineStatus(dnum$status$status,dcat$status$status)
+    st[st=='partial' & imputations == toImpute & toImpute > 0] <- 'corrected'
+
+    status <- data.frame( 
+        status      = st,
+        num.status  = dnum$status$status,
+        cat.status  = dcat$status$status,
+        imputations = imputations
+    ) 
 
     newdeducorrect(
         corrected=dat,

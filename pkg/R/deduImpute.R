@@ -72,7 +72,7 @@ deduImpute.editarray <- function(E, dat, adapt=NULL, ...){
     corrections <- data.frame(
         row = rep(1:nrow(dat),times=nImp),
         variable = names(xi),
-        old = rep(NA,length(xi)), #TODO take old value!
+        old = rep(NA,length(xi)), # TODO copy actual old value in case adapt != NULL
         new =  xi)
     newdeducorrect(
         corrected = dat,
@@ -111,6 +111,14 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
     vars <- getVars(E)
     a <- logical(length(vars))
     Xi <- array(0,dim=c(length(vars),ncol(X)))
+
+    dna <- is.na(dat)
+    if ( is.null(adapt) ){
+        npre <- rowSums(dna)
+    } else {
+        npre <- rowSums(adapt|dna)
+    }
+    npost <- numeric(nrow(dat))
     for ( i in 1:ncol(X) ){
         x <- X[vars,i]
         nMiss <- sum(is.na(x)) + 1
@@ -124,6 +132,7 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
             if ( !is.null(s) ){
                 u <- rowSums(abs(s$C)) == 0
                 x[rownames(s$x0)[u]] <- s$x0[u]
+                npost[i] <- npost[i] + sum(u)
             }
         }
         Xi[,i] <- x
@@ -140,9 +149,8 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
 
     X[vars,] <- Xi
     dd <- as.data.frame(t(X))
-# TODO: keep track of 'adapt'
-    npre <- rowSums(is.na(dat))
-    npost <- rowSums(is.na(dd))
+
+#    npost <- rowSums(is.na(dd))
 
     nImp <- npre - npost
     stat <- status(nrow(dat))

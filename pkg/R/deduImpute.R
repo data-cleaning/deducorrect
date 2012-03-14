@@ -150,8 +150,6 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
     X[vars,] <- Xi
     dd <- as.data.frame(t(X))
 
-#    npost <- rowSums(is.na(dd))
-
     nImp <- npre - npost
     stat <- status(nrow(dat))
     stat[npre  == 0 ]            <- 'valid'
@@ -163,8 +161,8 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
 
     newdeducorrect(
         corrected   = dd,
-        corrections=corrections,    
-        status = data.frame(status=stat, imputations=nImp)
+        corrections = corrections,    
+        status      = data.frame(status=stat, imputations=nImp)
     )
 }
 

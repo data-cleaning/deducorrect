@@ -173,8 +173,9 @@ deduImpute.editarray <- function(E, dat, adapt=NULL, ...){
 #' @export 
 deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.eps),...){
 
-    X <- t(dat)
+
     vars <- getVars(E)
+    X <- t(dat[,vars,drop=FALSE])
     a <- logical(length(vars))
     Xi <- array(0,dim=c(length(vars),ncol(X)))
 
@@ -214,7 +215,7 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
     )
 
     X[vars,] <- Xi
-    dd <- as.data.frame(t(X))
+    dat[,vars] <- t(X[vars,,drop=FALSE])
 
     nImp <- npre - npost
     stat <- status(nrow(dat))
@@ -226,7 +227,7 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
 
 
     newdeducorrect(
-        corrected   = dd,
+        corrected   = dat,
         corrections = corrections,    
         status      = data.frame(status=stat, imputations=nImp)
     )

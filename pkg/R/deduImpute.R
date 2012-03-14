@@ -22,7 +22,13 @@ deduImpute <- function(E, dat, adapt=NULL, ...){
     UseMethod('deduImpute')
 }
 
-
+#'
+#' If \code{E} is an \code{editset}, imputation based on numerical rules (if any) is performed,
+#' and imputations violating extra edits are reverted. Next, this procedure is repeated for
+#' pure categorical rules. The results are combined and returned in a \code{deducorrect} object.
+#'
+#' @method deduImpute editset
+#' @export
 deduImpute.editset <- function(E, dat, adapt=NULL,...){
     et <- editType(E)
     Em <- NULL

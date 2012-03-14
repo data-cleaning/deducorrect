@@ -8,7 +8,6 @@ revert <- function(d, rows){
     if (missing(rows)) rows <- 1:nrow(d$corrected)
     if ( is.logical(rows) )  rows <- which(rows)
 
-
     rows <- 1:nrow(d$corrected)
     status <- d$status
     rows <- rows[status$status[rows] %in% c('corrected','partial')]

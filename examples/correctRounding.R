@@ -24,7 +24,20 @@ dat <- data.frame( x1=12
 sol <- correctRounding(E, dat)
 
 
-
-
+# example with editset
+for ( d in dir("../pkg/R/",full.names=TRUE) ) dmp <- source(d)
+E <- editmatrix(expression(
+    x + y == z,
+    x >= 0,
+    y >= 0,
+    z >= 0,
+    if ( x > 0 ) y > 0
+    ))
+dat <- data.frame(
+    x = 1,
+    y = 0,
+    z = 1)
+# solutions causing new violations of conditional rules are rejected 
+sol <- correctRounding(E,dat)
 
 

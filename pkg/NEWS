@@ -1,4 +1,5 @@
 version 1.2
+- correctRounding, correctTypos, correctSigns now S3 generic and accept 'editset'. Corrections causing new violations are reverted afterwards.
 - Removed deprecated argument 'Q' from 'correctRounding'
 - BREAKING CHANGE: Argument 'R' of correctRounding is renamed 'E' for consistency reasons 
 

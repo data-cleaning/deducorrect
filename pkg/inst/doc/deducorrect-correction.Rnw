@@ -48,10 +48,13 @@ Although the algorithms have originally been developed with financial balance
 accounts in mind the algorithms are formulated generically and can be applied
 in a wider range of applications.
 
-This vignette is a near-literal transcript of \cite{loo:2011a}, which corresponds to
-package version {\sf 1.0-0}. Please refer to that paper in publications. The paper
-is included in the package. This vignette will be updated with the package when necessary.
-
+\paragraph{Notes.} This vignette started as a near-literal transcript of \cite{loo:2011a}, which corresponds to
+package version {\sf 1.0-0}. It has been updated since then, most importantly:
+\begin{itemize}
+\item[\tt Version 1.2] Added chapter on handling conditional restrictions and mixed data.
+\item[\tt Version 1.0] Transcript of \cite{loo:2011a}.
+\end{itemize}
+Also see the package {\sf NEWS} file for a list of added features, fixes,  etc.
 \end{abstract}
 
 <<echo=FALSE,results=hide, keep.source=FALSE>>=
@@ -979,6 +982,47 @@ cor$status
 cor$corrected
 @
 The latter table corresponds exactly to Table $2$ of \cite{scholtus:2008}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MIXED DATA, CONDITIONAL EDITS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Data of mixed types and conditional edits.}
+In the previous chapters it was assumed that the treated data
+is purely numerical and all dit restrictions are linear (in)equalities.
+However, in practice one might encounter {\em conditional restrictions} 
+of the form
+\begin{quote}
+If {\em number of employees} is larger than zero, then the {\em salary paid} 
+must be larger than zero.
+\end{quote}
+This restriction connects two numerical variables ({\em number of employees}
+and {\em salary paid}) in a nonlinear relationship. Examples connecting
+numerical variables with categorical variables occur as well, for example
+\begin{quote}
+If {\em age} is under 15, {\em marital status} is  never married.
+\end{quote}
+
+As of version {\tt 2.2-1}, the {\tt editrules} package \citep{jonge:2011} allows
+for parsing and manipulation of conditional edit restrictions which may mix
+categorical with numerical variables. The object storing these restrictions
+is called an {\tt editset}, we refer the reader to \cite{loo:2012} for
+examples and instructions.
+
+The methods for correcting sign errors, rounding errors and typos described
+above cannot be applied directly to data under conditional restrictions.
+However, the {\tt correct-} functions of the {\tt deducorrect} package can
+handle objecs of class {\tt editset} by applying corrections based on the
+purely numerical set of edits in an {\tt editaset}. If in a record one of the
+applied corrections cause any new violations, all corrections for that record
+are reverted. It should be noted that the {\tt status} value, generated
+by any of {\tt deducorrect}'s functions only pertains to the linear edits.
+A record that violates no linear restrictions but does violate one or more
+conditional or categorical restriction in an {\tt editset} will therefore
+be labeled {\tt valid}. Use the function {\tt violatedEdits} of the 
+{\tt editrules} package to check all inconsistencies.
+
+
 
 
 

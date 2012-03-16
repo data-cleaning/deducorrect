@@ -110,7 +110,7 @@ test_that('deduImpute.editset works for unconnected categorical and numerical',{
 })
 
 
-test_that('deduImpute.editse works for connected numerical and categorical',{
+test_that('deduImpute.editset works for connected numerical and categorical',{
     E <- editset(expression(
         x + y == z,
         x >= 0,

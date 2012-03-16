@@ -110,7 +110,29 @@ test_that('deduImpute.editset works for unconnected categorical and numerical',{
 })
 
 
+test_that('deduImpute.editse works for connected numerical and categorical',{
+    E <- editset(expression(
+        x + y == z,
+        x >= 0,
+        A %in% c('a','b'),
+        B %in% c('c','d'),
+        if ( A == 'a' ) B == 'b',
+        if ( B == 'b' ) x > 0
+    ))
 
+    x <- data.frame(
+        x = NA,
+        y = 1,
+        z = 1,
+        A = 'a',
+        B = NA
+    )
+# this will impute x=0 and B='b',which violates the 
+# last edit. Hence, imputation should be reverted.
+    v <- deduImpute(E,x) 
+    expect_equal(nrow(v$corrections),0)
+    expect_equal(v$corrected,x)
+})
 
 
 

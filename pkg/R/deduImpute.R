@@ -54,10 +54,10 @@ deduImpute.editset <- function(E, dat, adapt=NULL,...){
     icat <- et == 'cat'
     if ( any(icat) && !is.null(Em) ){ 
         v1 <- violatedEdits(Em, dat)
-        dcat <- deduImpute(reduce(E$mixcat[icat,]$mixcat), dat, adapt, ...)
+        dcat <- deduImpute(reduce(E[icat,]$mixcat), dat, adapt, ...)
         v2 <- violatedEdits(Em, dat)
         rvt <- apply(!v1 & v2, 1, any)
-        dcat <- revert(dcat,rows,rvt)
+        dcat <- revert(dcat,rows=rvt)
     } else if ( any(icat) ) {
         dcat <- deduImpute(E$mixcat, dat, adapt, ...)
     } else {

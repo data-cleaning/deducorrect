@@ -87,12 +87,7 @@ correctRounding <- function(E, dat, ...){
 #' @rdname correctRounding
 #' @export
 correctRounding.editset <- function(E, dat, ...){
-    v1 <- violatedEdits(E,dat)
-    d1 <- correctRounding.editmatrix(E$num, dat,...)
-    v2 <- violatedEdits(E,dat)
-    k <- apply(!v1 & v2,1,any)
-    if ( any(k) ) d1 <- revert(d1,rows=k)
-    d1
+    correctAndRevert(correctRounding.editmatrix,E,dat,...)
 }   
 
 #' @method correctRounding editmatrix
@@ -203,3 +198,5 @@ correctRounding.editmatrix <- function(E, dat, fixate=NULL, delta=2, K=10, round
       )
    )
 }
+
+

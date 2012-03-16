@@ -125,3 +125,132 @@ test_that("correctTypos with missing variable works",{
    #print(cor)
    expect_equal(as.character(cor$status$status[1]), "invalid")
 })
+
+
+
+
+
+
+test_that("correctTypos.editset works with pure numerical",{
+
+    v <- correctTypos(
+        editset(expression(
+        x + y == z))$num,
+        data.frame(
+        x=1,
+        y=1,
+        z=1
+        )
+    )
+    w <- correctTypos(
+        editset(expression(
+        x + y == z)),
+        data.frame(
+        x=1,
+        y=1,
+        z=1
+        )
+    )
+    expect_equal(v$corrected,w$corrected)
+    expect_equal(v$corrections, w$corrections) 
+})
+
+
+test_that("correctTypos.editset works with pure categorical",{
+
+    v <- correctTypos(
+        editset(expression(
+            A %in% c('a','b'),
+            B %in% c('c','d'),
+            if ( A == 'a' ) B == 'b'
+        )),
+        data.frame(
+            A = 'a',
+            B = NA)
+    )
+    expect_equal( nrow(v$corrections), 0 )
+
+})
+
+test_that("correctTypos.editset works with unconnected numeric/categorical",{
+
+    E <- editset(expression(
+        x + y == z,
+        x >= 0,
+        A %in% c('a','b'),
+        B %in% c('c','d'),
+        if ( A == 'a' ) B == 'b'
+    ))
+
+    x <- data.frame(
+        x = 1,
+        y = 12,
+        z = 1,
+        A = 'a',
+        B = NA
+    )
+    v <- correctTypos(E,x)
+    w <- correctTypos(E$num,x)
+    expect_equal(v$corrected,w$corrected)
+    expect_equal(v$corrections, w$corrections)
+})
+
+
+test_that("correctTypos.editset works with unconnected numeric/categorical",{
+    
+    E <- editset(expression(
+        x + y == z,
+        x >= 0,
+        y > 0,
+        y < 2,
+        z > 1,
+        z < 3,
+        A %in% c('a','b'),
+        B %in% c('c','d'),
+        if ( A == 'a' ) B == 'b',
+        if ( B == 'b' ) x > 0
+    ))
+    
+    x <- data.frame(
+        x = 10,
+        y = 1,
+        z = 2,
+        A = 'a',
+        B = NA
+    )
+    
+    
+    v <- correctTypos(E,x)
+    w <- correctTypos(E$num,x)
+    expect_equal(v$corrected,w$corrected)
+    expect_equal(v$corrections, w$corrections)
+     
+    ## with revert
+    E <- editset(expression(
+        x + y == z,
+        x >= 0,
+        y > 0,
+        y < 2,
+        z > 1,
+        z < 3,
+        A %in% c('a','b'),
+        B %in% c('c','d'),
+        if ( A == 'a' ) B == 'b',
+        if ( B == 'b' ) x > 3
+    ))
+    
+    x <- data.frame(
+        x = 10,
+        y = 1,
+        z = 2,
+        A = 'a',
+        B = 'b'
+    )
+    
+    
+    v <- correctTypos(E,x)
+    expect_equal(nrow(v$corrections),0)
+
+})
+
+

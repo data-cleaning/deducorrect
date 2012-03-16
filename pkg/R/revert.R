@@ -8,6 +8,7 @@ revert <- function(d, rows){
     if (missing(rows)) rows <- 1:nrow(d$corrected)
     if ( is.logical(rows) )  rows <- which(rows)
 
+
     rows <- 1:nrow(d$corrected)
     status <- d$status
     rows <- rows[status$status[rows] %in% c('corrected','partial')]
@@ -33,6 +34,20 @@ revert <- function(d, rows){
         status=status
     )
 }
+
+
+
+correctAndRevert <- function(fun, E, dat, ...){
+    v1 <- violatedEdits(E, dat)
+    d1 <- fun(E$num, dat, ...)
+    v2 <- violatedEdits(E, d1$corrected)
+    k <- apply(!v1 & v2, 1, any)
+    k <- k[!is.na(k)]
+    if ( any(k) ) d1 <- revert(d1,rows=k)
+    d1
+}
+
+
 
 
 

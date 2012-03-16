@@ -146,12 +146,7 @@ correctSigns <- function(E,dat, ...){
 #' @rdname correctSigns
 #' @export
 correctSigns.editset <- function(E, dat, ...){
-    v1 <- violatedEdits(E,dat)
-    d1 <- correctSigns.editmatrix(E$num, dat,...)
-    v2 <- violatedEdits(E,dat)
-    k <- apply(!v1 & v2,1,any)
-    if ( any(k) ) d1 <- revert(d1,rows=k)
-    d1
+    correctAndRevert(correctSigns.editmatrix, E, dat, ...)
 }   
 
 

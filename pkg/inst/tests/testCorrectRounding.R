@@ -74,6 +74,121 @@ for ( i in 1:10 ){
     })
 }
 
+test_that("correctRounding.editset works with pure numerical",{
+    v <- correctRounding(
+        editset("x + y == z"),
+        data.frame(x=1,y=1,z=1)
+    )
+    expect_equal(nrow(v$corrections),1)
+})
+
+
+test_that("correctRounding.editset works with pure categorical",{
+    
+    v <- correctRounding(
+        editset(expression(
+            A %in% c('a','b'),
+            B %in% c('c','d'),
+            if ( A == 'a' ) B == 'b')
+        ),
+        data.frame(
+            A = 'a',
+            B = NA)
+    )
+    expect_equal(nrow(v$corrections),0)
+    
+})
+
+
+test_that("correctRounding.editset works with unconnected numeric/categorical",{
+
+    v <- correctRounding(
+        editset(expression(
+            x + y == z,
+            x >= 0,
+            A %in% c('a','b'),
+            B %in% c('c','d'),
+            if ( A == 'a' ) B == 'b'
+        )),
+        data.frame(
+            x = 1,
+            y = 1,
+            z = 1,
+            A = 'a',
+            B = NA
+        )
+    )
+    expect_equal(nrow(v$corrections),1)
+})
+
+test_that("correctRounding.editset works with connected numeric/categorical",{
+    # with NA (uncheckable)
+    v <- correctRounding(editset(expression(
+            x + y == z,
+            x >= 0,
+            A %in% c('a','b'),
+            B %in% c('c','d'),
+            if ( A == 'a' ) B == 'b',
+            if ( B == 'b' ) x > 0
+        )),
+        data.frame(
+            x = NA,
+            y = 1,
+            z = 1,
+            A = 'a',
+            B = NA
+        )
+    )
+    # without revert
+    v <- correctRounding(editset(expression(
+            x + y == z,
+            x >= 0,
+            y > 0,
+            y < 1,
+            z > 1,
+            z < 3,
+            A %in% c('a','b'),
+            B %in% c('c','d'),
+            if ( A == 'a' ) B == 'b',
+            if ( B == 'b' ) x > 0
+        )),
+        data.frame(
+            x = 0,
+            y = 1,
+            z = 2,
+            A = 'a',
+            B = 'b'
+        )
+    )
+    expect_equal(nrow(v$corrections),1)
+    # with revert
+    v <- correctRounding(
+        editset(expression(
+            x + y == z,
+            x >= 0,
+            y > 0,
+            y < 2,
+            z > 1,
+            z < 3,
+            A %in% c('a','b'),
+            B %in% c('c','d'),
+            if ( A == 'a' ) B == 'b',
+            if ( B == 'b' ) x < 1
+        )), 
+        data.frame(
+            x = 0,
+            y = 1,
+            z = 2,
+            A = 'a',
+            B = 'b'
+        )
+    )
+    expect_equal(nrow(v$corrections),0)
+})
+
+
+
+
 
 
 

@@ -28,6 +28,8 @@ deduImpute <- function(E, dat, adapt=NULL, ...){
 #' pure categorical rules. The results are combined and returned in a \code{deducorrect} object.
 #'
 #' @method deduImpute editset
+#' @rdname deduImpute
+#'
 #' @export
 deduImpute.editset <- function(E, dat, adapt=NULL,...){
     et <- editType(E)
@@ -75,6 +77,8 @@ deduImpute.editset <- function(E, dat, adapt=NULL,...){
     numvar <- as.character(unique(dnum$corrections$variable))
     dat[,numvar] <- dnum$corrected[,numvar]
     
+    # this dirty little trick keeps R CMD CHECK from detecting unassigned variables...
+    old <- variable <- NULL
     corr <- rbind(
         transform(dnum$corrections,
             variable = as.character(variable)

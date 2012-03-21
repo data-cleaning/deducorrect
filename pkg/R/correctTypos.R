@@ -163,7 +163,8 @@ correctTypos.editmatrix <- function( E
         newdeducorrect(
             status = data.frame(status=status),
             corrected = corrected,
-            corrections = cdf
+            corrections = cdf,
+            ...
         )
     )
 }

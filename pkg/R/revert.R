@@ -31,7 +31,8 @@ revert <- function(d, rows){
     newdeducorrect(
         corrected = cord,
         corrections=corr[!irws,,drop=FALSE],
-        status=status
+        status=status,
+        Call = d$call
     )
 }
 
@@ -39,7 +40,7 @@ revert <- function(d, rows){
 
 correctAndRevert <- function(fun, E, dat, ...){
     v1 <- violatedEdits(E, dat)
-    d1 <- fun(E$num, dat, ...)
+    d1 <- fun(E$num, dat, Call=sys.call(-2), ...)
     v2 <- violatedEdits(E, d1$corrected)
     k <- apply(!v1 & v2, 1, any)
     k <- k[!is.na(k)]

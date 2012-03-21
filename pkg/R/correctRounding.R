@@ -194,7 +194,8 @@ correctRounding.editmatrix <- function(E, dat, fixate=NULL, delta=2, K=10, round
       newdeducorrect(
          corrected   = corrected, 
          corrections = as.data.frame(corrections), 
-         status      = data.frame(status=status, attempts=attempts)
+         status      = data.frame(status=status, attempts=attempts),
+         ...
       )
    )
 }

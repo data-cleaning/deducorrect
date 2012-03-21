@@ -199,4 +199,3 @@ test_that("correctRounding.editset works with connected numeric/categorical",{
 
 
 
-

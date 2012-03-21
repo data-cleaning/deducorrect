@@ -264,7 +264,15 @@ correctSigns.editmatrix <- function(
     }
     dat[,vars] <- D
     rownames(corrections) <- NULL
-    return(newdeducorrect(corrected=dat,
-        status=data.frame(status=status,weight=wgt,degeneracy=degeneracy, nflip=nflips, nswap=nswaps),
-        corrections=corrections))
+    return(newdeducorrect(
+        corrected   = dat,
+        status      = data.frame(
+            status  = status,
+            weight  = wgt,
+            degeneracy = degeneracy, 
+            nflip = nflips, 
+            nswap=nswaps),
+            corrections = corrections,
+            ...
+    ))
 }

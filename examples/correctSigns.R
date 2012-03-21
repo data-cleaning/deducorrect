@@ -1,5 +1,4 @@
 
-require(editrules)
 # some data 
 dat <- data.frame(
     x = c( 3,14,15,  1, 17,12.3),
@@ -9,6 +8,7 @@ dat <- data.frame(
 E <- editmatrix(c("z == x-y"))
 
 # All signs may be flipped, no swaps.
+
 correctSigns(E, dat)
 
 # Allow for rounding errors

@@ -36,10 +36,12 @@
 #' @param corrected The corrected data.frame
 #' @param corrections A \code{data.frame} listing old and new values for every row and variable where corrections were applied
 #' @param status A \code{data.frame} with at least one \code{\link{status}} column.
+#' @param Call  Optionally, a \code{call} object.
+#'
 #' @return an S3 object of class \code{deducorrect}
 #' 
 #' @seealso \code{\link{deducorrect-object}}
-newdeducorrect <- function(corrected, corrections, status){ 
+newdeducorrect <- function(corrected, corrections, status, Call=sys.call(-1) ){ 
     if ( missing(corrections) ){
         corrections <- data.frame(
             row=numeric(0),
@@ -53,20 +55,21 @@ newdeducorrect <- function(corrected, corrections, status){
             status = rep(NA,nrow(corrected))
         )
     }
-
-
+    
     corrsummary <- array(0,dim=c(1,ncol(corrected)+1),dimnames=list(NULL,c(colnames(corrected),'sum'))) 
     if (nrow(corrections) > 0){
         corrsummary <- addmargins(table(corrections$variable, useNA="no"))
         rownames(corrections) <- NULL
     }
+
     structure(
         list(
             corrected   = corrected, 
             corrections = corrections, 
             status      = status,
             timestamp   = date(),
-            generatedby = sys.call(-1)[[1]],
+            call        = Call,
+            generatedby = if ( is.list(Call) ) { Call[[1]][[1]] } else { Call[[1]] },
             user        = getUsername()
         ),
         class = c("deducorrect","list"),

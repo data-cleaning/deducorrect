@@ -71,5 +71,24 @@ s$status
 s$corrections
 
 
+E <- editset(expression(
+    x + y == z,
+    x >= 0,
+    A %in% c('a','b'),
+    B %in% c('c','d'),
+    if ( A == 'a' ) B == 'b',
+    if ( B == 'b' ) x > 0
+))
+
+x <- data.frame(
+    x = NA,
+    y = 1,
+    z = 1,
+    A = 'a',
+    B = NA
+)
+# deduImpute will impute x=0 and B='b',which violates the 
+# last edit. Hence, imputation will be reverted.
+deduImpute(E,x) 
 
 

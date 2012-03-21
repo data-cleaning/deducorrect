@@ -20,3 +20,31 @@ dat <- read.csv(txt<-textConnection(
 ))
 close(txt)
 (cor <- correctTypos(E,dat))
+
+
+
+# example with editset
+E <- editset(expression(
+    x + y == z,
+    x >= 0,
+    y > 0,
+    y < 2,
+    z > 1,
+    z < 3,
+    A %in% c('a','b'),
+    B %in% c('c','d'),
+    if ( A == 'a' ) B == 'b',
+    if ( B == 'b' ) x > 3
+))
+
+x <- data.frame(
+    x = 10,
+    y = 1,
+    z = 2,
+    A = 'a',
+    B = 'b'
+)
+
+correctTypos(E,x)
+
+

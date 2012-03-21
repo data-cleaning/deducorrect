@@ -40,4 +40,26 @@ dat <- data.frame(
 # solutions causing new violations of conditional rules are rejected 
 sol <- correctRounding(E,dat)
 
+# An example with editset
+E <- editset(expression(
+    x + y == z,
+    x >= 0,
+    y > 0,
+    y < 2,
+    z > 1,
+    z < 3,
+    A %in% c('a','b'),
+    B %in% c('c','d'),
+    if ( A == 'a' ) B == 'b',
+    if ( B == 'b' ) x < 1
+))
+dat <- data.frame(
+    x = 0,
+    y = 1,
+    z = 2,
+    A = 'a',
+    B = 'b'
+)
+
+correctRounding(E,dat)    
 

@@ -42,7 +42,29 @@ correctSigns(E,dat)
 # demand that solution has y>0, taking acount of roundings in equalities
 correctSigns(E,dat,eps=2)
 
+# example with editset
+E <- editset(expression(
+    x + y == z,
+    x >= 0,
+    y > 0,
+    y < 2,
+    z > 1,
+    z < 3,
+    A %in% c('a','b'),
+    B %in% c('c','d'),
+    if ( A == 'a' ) B == 'b',
+    if ( B == 'b' ) x < 1
+))
 
+x <- data.frame(
+    x = -1,
+    y = 1,
+    z = 2,
+    A = 'a',
+    B = 'b'
+)
+
+correctSigns(E,x)
 
 
 

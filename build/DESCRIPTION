@@ -9,11 +9,11 @@ Author: Mark van der Loo, Edwin de Jonge, and Sander
     Scholtus
 Description: Deductive correction of simple rounding,
     typing and sign errors
-Version: 1.1-4
+Version: 1.2-0
 URL: http://code.google.com/p/deducorrect/
 Date: 2011-02-22
 Depends:
-    editrules (>= 2.2-1)
+    editrules (>= 2.5-0)
 Collate:
     'correctRounding.R'
     'correctSigns.R'

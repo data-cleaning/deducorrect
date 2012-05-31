@@ -42,24 +42,26 @@ deduImpute.editset <- function(E, dat, adapt=NULL,...){
     toImpute <- rowSums(toImpute)    
 
     if ( any(et=='num') && !is.null(Em) ){ 
-        v1 <- violatedEdits(Em,dat)
+        v1 <- violatedEdits(E,dat)
         dnum <- deduImpute.editmatrix(E$num, dat, adapt, ...)
-        v2 <- violatedEdits(Em,dat)
-        rvt <- apply(!v1 & v2,1,any)
-        dnum <- revert(dnum,rows=rvt)
+        v2 <- violatedEdits(E,dat)
+        rvt <- apply((!v1 |is.na(v1)) & (v2|is.na(v2)) ,1,any)
+        rvt <- rvt[!is.na(rvt)]
+        if(any(rvt)) dnum <- revert(dnum,rows=rvt)
     } else if ( any(et=='num') ) {
-        dnum <- deduImpute.editmatrix(E$num,dat,adapt,...)
+        dnum <- deduImpute.editmatrix(E$num, dat, adapt,...)
     } else {
         NUM <- FALSE
     }
 
     icat <- et == 'cat'
     if ( any(icat) && !is.null(Em) ){ 
-        v1 <- violatedEdits(Em, dat)
+        v1 <- violatedEdits(E, dat)
         dcat <- deduImpute(reduce(E[icat,]$mixcat), dat, adapt, ...)
-        v2 <- violatedEdits(Em, dat)
-        rvt <- apply(!v1 & v2, 1, any)
-        dcat <- revert(dcat,rows=rvt)
+        v2 <- violatedEdits(E, dat)
+        rvt <- apply((!v1|is.na(v1)) & (v2|is.na(v2)), 1, any)
+        rvt <- rvt[!is.na(rvt)]
+        if(any(rvt)) dcat <- revert(dcat,rows=rvt)
     } else if ( any(icat) ) {
         dcat <- deduImpute(E$mixcat, dat, adapt, ...)
     } else {
@@ -67,10 +69,12 @@ deduImpute.editset <- function(E, dat, adapt=NULL,...){
     }
         
     if ( !NUM & !CAT) return(newdeducorrect(dat))
+
     
     if ( NUM & !CAT) return(dnum)
 
     if ( !NUM & CAT) return(dcat)
+
 
     catvar <- as.character(unique(dcat$corrections$variable))
     dat[,catvar] <- as.character(dcat$corrected[,catvar])
@@ -126,7 +130,7 @@ deduImpute.editarray <- function(E, dat, adapt=NULL, ...){
         a <- logical(length(vars))
         nCandidates <- rowSums(is.na(dat[,vars,drop=FALSE]))    
     } else {
-        nCandidates <- rowSums(is.na(dat[,vars,drop=FALSE]) | adapt)
+        nCandidates <- rowSums(is.na(dat[,vars,drop=FALSE]) | adapt[,vars,drop=FALSE])
     }
 
     nImp <- numeric(nrow(dat))

@@ -194,11 +194,11 @@ deduImpute.editarray <- function(E, dat, adapt=NULL, ...){
 #' @export 
 deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.eps),...){
 
-
+    # TODO: change adapt-handling
     vars <- getVars(E)
     X <- t(dat[,vars,drop=FALSE])
     a <- logical(length(vars))
-    Xi <- array(0,dim=c(length(vars),ncol(X)))
+    Xi <- array(NA,dim=c(length(vars),ncol(X)))
 
     dna <- is.na(dat)
     if ( is.null(adapt) ){
@@ -225,8 +225,12 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
         }
         Xi[,i] <- x
     }
-
-    ii <- which(is.na(X[vars,]) & !is.na(Xi))
+    if ( is.null(adapt) ){ 
+        A <- FALSE
+    } else {
+        A <- t(adapt)[vars,]
+    }
+    ii <- which( (is.na(X[vars,]) | A) & !is.na(Xi))
 
     corrections <- data.frame(
             row     = (ii-1) %/% nrow(Xi) + 1,   
@@ -240,10 +244,10 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
 
     nImp <- npre - npost
     stat <- status(nrow(dat))
-    stat[npre  == 0 ]            <- 'valid'
-    stat[npost == 0 & npre > 0]  <- 'corrected'
+    stat[npre  == 0 ]               <- 'valid'
+    stat[npost == 0 & npre > 0]     <- 'corrected'
     stat[0 < nImp   & nImp < npre ] <- 'partial'
-    stat[npre==npost & npre > 0] <- 'invalid'
+    stat[npre==npost & npre > 0]    <- 'invalid'
 
 
 

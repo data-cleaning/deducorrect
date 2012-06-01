@@ -1,6 +1,7 @@
 version 1.2
 - deducorrect object gains 'call' attribute.
 - Update vignette describes new 'editset' functionality
+- deduImpute now sets data to NA according to adapt (should be more intuitive)
 - deduImpute accepts 'editset'. Imputations causing new violations are reverted afterwards
 - correctRounding, correctTypos, correctSigns now S3 generic and accept 'editset'. Corrections causing new violations are reverted afterwards.
 - deduImpute now accepts data.frames with more variables than specified in editset (-matrix, -array)

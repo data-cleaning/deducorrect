@@ -2,6 +2,11 @@
 #'
 #' Based on observed values and edit rules, impute as many variables deductively as possible.
 #'
+#' @note 
+#' When \code{adapt} is not \code{NULL}, values in \code{dat} where \code{adapt==TRUE}
+#' are replaced with \code{NA}. The output may therefore contain missings at positions
+#' that were previously filled (with wrong values, according to \code{adapt}).
+#'
 #' @references 
 #' T. De Waal, J. Pannekoek and S. Scholtus (2011) Handbook of statistical data editing 
 #' Chpt 9.2.1 - 9.2.2
@@ -19,6 +24,12 @@
 #' @example ../examples/deduImpute.R
 #' @export
 deduImpute <- function(E, dat, adapt=NULL, ...){
+    if (!is.null(adapt)){
+        stopifnot(
+            dim(adapt) == dim(dat),
+            all(colnames(adapt) %in% names(dat))
+        )
+    }
     UseMethod('deduImpute')
 }
 
@@ -32,13 +43,17 @@ deduImpute <- function(E, dat, adapt=NULL, ...){
 #'
 #' @export
 deduImpute.editset <- function(E, dat, adapt=NULL,...){
+    if (!is.null(adapt)){
+        N <- colnames(adapt)
+        for ( n in N ) dat[adapt[,n],n] <- NA
+        adapt <- NULL
+    }
     et <- editType(E)
     Em <- NULL
     if ( any(et=='mix'))  Em <- E[et=='mix',]
     NUM <- CAT <- TRUE
-
     toImpute <- is.na(dat[getVars(E)])
-    if ( !is.null(adapt) ) toImpute <- toImpute | adapt
+#    if ( !is.null(adapt) ) toImpute <- toImpute | adapt
     toImpute <- rowSums(toImpute)    
 
     if ( any(et=='num') && !is.null(Em) ){ 
@@ -125,20 +140,25 @@ deduImpute.editset <- function(E, dat, adapt=NULL,...){
 #' @export
 deduImpute.editarray <- function(E, dat, adapt=NULL, ...){
    
+    if (!is.null(adapt)){
+        N <- colnames(adapt)
+        for ( n in N ) dat[adapt[,n],n] <- NA
+        adapt <- NULL
+    }
     vars <- getVars(E)
-    if ( is.null(adapt) ){
+#    if ( is.null(adapt) ){
         a <- logical(length(vars))
         nCandidates <- rowSums(is.na(dat[,vars,drop=FALSE]))    
-    } else {
-        nCandidates <- rowSums(is.na(dat[,vars,drop=FALSE]) | adapt[,vars,drop=FALSE])
-    }
+#    } else {
+#        nCandidates <- rowSums(is.na(dat[,vars,drop=FALSE]) | adapt[,vars,drop=FALSE])
+#    }
 
     nImp <- numeric(nrow(dat))
     X <- t(dat[,vars,drop=FALSE])
     imp <- vector(mode='list',length=nrow(dat))
     for ( i in 1:ncol(X) ){
         x <- X[ ,i]
-        if ( !is.null(adapt) ) a <- adapt[i,vars]
+#        if ( !is.null(adapt) ) a <- adapt[i,vars]
         L <- deductiveLevels(E,x,adapt=a, ...)
         X[names(L),i] <- L
         if ( is.null(L) ){
@@ -198,6 +218,11 @@ deduImpute.editarray <- function(E, dat, adapt=NULL, ...){
 #' @export 
 deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.eps),...){
 
+    if (!is.null(adapt)){
+        N <- colnames(adapt)
+        for ( n in N ) dat[adapt[,n],n] <- NA
+        adapt <- NULL
+    }
     # TODO: change adapt-handling
     vars <- getVars(E)
     X <- t(dat[,vars,drop=FALSE])
@@ -205,16 +230,16 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
     Xi <- array(NA,dim=c(length(vars),ncol(X)))
 
     dna <- is.na(dat)
-    if ( is.null(adapt) ){
+#    if ( is.null(adapt) ){
         npre <- rowSums(dna)
-    } else {
-        npre <- rowSums(adapt|dna)
-    }
+#    } else {
+#        npre <- rowSums(adapt|dna)
+#    }
     npost <- numeric(nrow(dat))
     for ( i in 1:ncol(X) ){
         x <- X[vars,i]
         nMiss <- sum(is.na(x)) + 1
-        if ( !is.null(adapt) ) a <- adapt[i,vars]
+#        if ( !is.null(adapt) ) a <- adapt[i,vars]
 
         while( sum(is.na(x)) < nMiss ){
             nMiss <- sum(is.na(x))
@@ -229,12 +254,12 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
         }
         Xi[,i] <- x
     }
-    if ( is.null(adapt) ){ 
-        A <- FALSE
-    } else {
-        A <- t(adapt)[vars,]
-    }
-    ii <- which( (is.na(X[vars,]) | A) & !is.na(Xi))
+#    if ( is.null(adapt) ){ 
+#        A <- FALSE
+#    } else {
+#        A <- t(adapt)[vars,]
+#    }
+    ii <- which( is.na(X[vars,]) & !is.na(Xi))
 
     corrections <- data.frame(
             row     = (ii-1) %/% nrow(Xi) + 1,   
@@ -252,7 +277,6 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
     stat[npost == 0 & npre > 0]     <- 'corrected'
     stat[0 < nImp   & nImp < npre ] <- 'partial'
     stat[npre==npost & npre > 0]    <- 'invalid'
-
 
 
     newdeducorrect(

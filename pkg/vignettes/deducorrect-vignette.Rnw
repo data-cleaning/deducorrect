@@ -1,0 +1,19 @@
+%\VignetteIndexEntry{deducorrect-vignette}
+\documentclass[11pt, fleqn, a4paper]{article}
+
+\title{The deducorrect Vignette\\
+{\small Package version \Sexpr{packageVersion("deducorrect")}}
+}
+\date{\today}
+
+\author{Mark van der Loo and Edwin de Jonge}
+
+\begin{document}
+\maketitle
+At the moment, this is only a stub of a vignette. Please refer to the
+working papers included in the package's {\tt inst/doc} directory for
+theory and examples.
+
+
+\end{document}
+

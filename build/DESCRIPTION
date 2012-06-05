@@ -12,8 +12,7 @@ Description: Deductive correction of simple rounding,
 Version: 1.2-0
 URL: http://code.google.com/p/deducorrect/
 Date: 2011-02-22
-Depends:
-    editrules (>= 2.5-0)
+Depends: editrules (>= 2.5-0)
 Collate:
     'correctRounding.R'
     'correctSigns.R'

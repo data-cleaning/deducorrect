@@ -1,4 +1,6 @@
-version 1.2
+version 1.2-1
+
+version 1.2-0
 - Discussion papers used to be included as vignette. Now only as pdf in inst/doc
 - deducorrect object gains 'call' attribute.
 - deduImpute now sets data to NA according to adapt (should be more intuitive)

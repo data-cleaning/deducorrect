@@ -1,7 +1,6 @@
 version 1.2-1
 - Added 'round' option for deduImpute.editmatrix (defaults to true)
 
-
 version 1.2-0
 - Discussion papers used to be included as vignette. Now only as pdf in inst/doc
 - deducorrect object gains 'call' attribute.

@@ -1,8 +1,7 @@
 Package: deducorrect
 Maintainer: Mark van der Loo <mark.vanderloo@gmail.com>
 License: GPL-3
-Title: Deductive correction of simple rounding, typing and
-    sign errors
+Title: deducorrect: Deductive correction and imputation of restricted data.
 Type: Package
 LazyLoad: yes
 Author: Mark van der Loo, Edwin de Jonge, and Sander

@@ -213,10 +213,11 @@ deduImpute.editarray <- function(E, dat, adapt=NULL, ...){
 #'
 #' @param tol tolerance to use in \code{\link{solSpace}} 
 #'      and in \code{\link{deductiveZeros}} 
+#' @param round should the result be rounded?
 #'
 #' @rdname deduImpute
 #' @export 
-deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.eps),...){
+deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.eps), round=TRUE, ...){
 
     if (!is.null(adapt)){
         N <- colnames(adapt)
@@ -230,22 +231,18 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
     Xi <- array(NA,dim=c(length(vars),ncol(X)))
 
     dna <- is.na(dat)
-#    if ( is.null(adapt) ){
-        npre <- rowSums(dna)
-#    } else {
-#        npre <- rowSums(adapt|dna)
-#    }
+    npre <- rowSums(dna)
     npost <- numeric(nrow(dat))
+
     for ( i in 1:ncol(X) ){
         x <- X[vars,i]
         nMiss <- sum(is.na(x)) + 1
-#        if ( !is.null(adapt) ) a <- adapt[i,vars]
 
         while( sum(is.na(x)) < nMiss ){
             nMiss <- sum(is.na(x))
             I <- deductiveZeros(E,x)
             if ( any(I) ) x[I] <- 0
-            s <- solSpace(E, x, adapt=a, tol=tol, ...)
+            s <- solSpace(E, x, tol=tol, ...)
             if ( !is.null(s) ){
                 u <- rowSums(abs(s$C)) == 0
                 x[rownames(s$x0)[u]] <- s$x0[u]
@@ -254,11 +251,6 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
         }
         Xi[,i] <- x
     }
-#    if ( is.null(adapt) ){ 
-#        A <- FALSE
-#    } else {
-#        A <- t(adapt)[vars,]
-#    }
     ii <- which( is.na(X[vars,]) & !is.na(Xi))
 
     corrections <- data.frame(
@@ -278,7 +270,7 @@ deduImpute.editmatrix <- function(E, dat, adapt=NULL, tol=sqrt(.Machine$double.e
     stat[0 < nImp   & nImp < npre ] <- 'partial'
     stat[npre==npost & npre > 0]    <- 'invalid'
 
-
+    if (round) dat[,vars] <- round(dat[,vars])
     newdeducorrect(
         corrected   = dat,
         corrections = corrections,    

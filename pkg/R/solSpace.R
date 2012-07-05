@@ -84,9 +84,9 @@ solSpace.matrix <- function(
     Amis <- E[,m,drop=FALSE]
     Aobs <- E[,!m,drop=FALSE]
     Ainv <- ginv(Amis, tol)
-    x0  <- Ainv%*%(b-Aobs%*%x[!m])
-    C         <-  Ainv%*%Amis - diag(1,nrow(Ainv))
-    C[abs(C) < sqrt(.Machine$double.eps)] <- 0
+    x0 <- Ainv%*%(b-Aobs%*%x[!m])
+    C <-  Ainv%*%Amis - diag(1,nrow(Ainv))
+    C[abs(C) < tol] <- 0
     if (!is.null(names(x))){
         rownames(x0) <-  names(x)[m]
         dimnames(C) <- list(names(x)[m],names(x)[m])

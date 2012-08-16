@@ -1,10 +1,14 @@
-
+#' Rules for deterministic imputation
+#' @param x Rules, in \code{character} or \code{expression} form.
+#' 
+#' @export
 imputationRules <- function(x, strict=TRUE, ...){
    UseMethod('imputationRules')
 }
 
 
-# TODO: re
+#' @method imputationRules character
+#' @rdname imputationRules
 imputationRules.character <- function(x, strict=TRUE, ...){
    i <- 0
    L <- lapply(x, function(y){
@@ -20,12 +24,24 @@ imputationRules.character <- function(x, strict=TRUE, ...){
    structure(L,class='imputationRules')
 }
 
+
+#' @method imputationRules expression
+#' @rdname imputationRules
 imputationRules.expression <- function(x,strict=TRUE, ...){
-   if (strict) checkRules(L)
+   if (strict){ 
+      I <- checkRules(x)
+      if (!all(I)){
+         m1 <- "The following rules contain forbidden symbols or functions:"
+         m2 <- sprintf("\n[%d] %s",which(!I),sapply(L[!I], as.character) )
+         stop(sprintf("%s%s",m1,m2))
+      }
+   }
    structure(x,class='imputationRules')
 }
 
-
+#' @method imputationRules print
+#' @export
+#' @rdname imputationRules
 print.imputationRules <- function(x,...){
    cat("Object of class 'imputationRules'")
    v <- sapply(x,as.character)
@@ -43,12 +59,30 @@ ALLOWEDSYMBOLS <- c(
    'ifelse',
    'if',
    'else',
+   '==','<','<=','=','>=','>', '%in%',
    '||', '|', '&&', '&', 
-   '(',
+   '(','{','<-','=',
    '+', '-', '*', '^', '/', '%%', '%/%'
 )
 
-checkRules <- function(...) TRUE
+checkSymbols <- function(x, b=TRUE, ...){
+   if (is.expression(x)){ 
+      x <- x[[1]]
+   }
+
+   if (length(x) == 1 ) return(TRUE)
+   if (  is.symbol(x[[1]]) && 
+         !(as.character(x[[1]]) %in% ALLOWEDSYMBOLS) ){
+            return(FALSE)
+   }
+   for ( i in 1:length(x) ){b <- b & checkSymbols(x[[i]],b)}
+   return(b)
+}
+
+checkRules <- function(x,...){
+   sapply(x,checkSymbols)
+}
+
 
 getvrs <- function(x, L=character(0), ...){
    if ( is.expression(x) ){
@@ -66,15 +100,30 @@ getvrs <- function(x, L=character(0), ...){
    unique(L)
 }
 
-
+#'
+#' @method getVars imputationRules
+#' @rdname imputationRules
+#' @param E object of class \code{\link{imputationRules}}
 getVars.imputationRules <- function(E, ...){
-   unique(sapply(E,getvrs))
+   unique(do.call(c,sapply(E,getvrs)))
 }
 
 
 
+#' Deterministic imputation
+#'
+#' @param rules object of class \code{\link{imputationRules}} 
+#' @param dat \code{data.frame}
+#' @param strict If \code{TRUE}, an error is produced when the imputation rules use variables other than in the \code{data.frame}.
+imputeWithRules <- function(rules, dat, strict=TRUE){
+   if (strict){
+      vars <- getVars(rules)
+      I <- vars %in% names(dat)
+      if (!all(I)) stop(
+         sprintf("Variables '%s' in imputation rules do not occur in data",paste(vars[!I],sep=", "))
+      )
+   }
 
-imputeWithRules <- function(rules, dat){
    out <- dat
    m <- nrow(dat)
    n <- length(rules)

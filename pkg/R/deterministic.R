@@ -1,15 +1,31 @@
+
+
+.onLoad <- function(libname,pkgname){
+   options(allowedSymbols = c(
+      'ifelse',
+      'if', 'else', 'is.na','is.finite',
+      '==','<','<=','=','>=','>','!', '%in%',
+      '||', '|', '&&', '&', 
+      '(','{','<-','=',
+      '+', '-', '*', '^', '/', '%%', '%/%'
+      )
+   )
+}
+
 #' Rules for deterministic imputation
 #' @param x Rules, in \code{character} or \code{expression} form.
-#' 
+#' @param strict If \code{TRUE} an error is thrown if any forbidden symbol is used (see details).
+#' @param allowed A \code{character} vector of allowed symbols
 #' @export
-imputationRules <- function(x, strict=TRUE, ...){
+#' @seealso \code{\link{imputeWithRules}}
+imputationRules <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'), ...){
    UseMethod('imputationRules')
 }
 
 
 #' @method imputationRules character
 #' @rdname imputationRules
-imputationRules.character <- function(x, strict=TRUE, ...){
+imputationRules.character <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'), ...){
    i <- 0
    L <- lapply(x, function(y){
       i <<- i+1
@@ -20,20 +36,25 @@ imputationRules.character <- function(x, strict=TRUE, ...){
             })
    }
    )
-   if (strict) checkRules(L)
+   if (strict){ 
+      M <- checkRules(L,allowed=allowed)
+      if ( any(M$error) ){ 
+         printErrors(x,M)
+         stop('Forbidden symbols found')
+      }
+   }
    structure(L,class='imputationRules')
 }
 
 
 #' @method imputationRules expression
 #' @rdname imputationRules
-imputationRules.expression <- function(x,strict=TRUE, ...){
+imputationRules.expression <- function(x,strict=TRUE, allowed=getOption(allowedSymbols), ...){
    if (strict){ 
-      I <- checkRules(x)
-      if (!all(I)){
-         m1 <- "The following rules contain forbidden symbols or functions:"
-         m2 <- sprintf("\n[%d] %s",which(!I),sapply(L[!I], as.character) )
-         stop(sprintf("%s%s",m1,m2))
+      M <- checkRules(L,allowed=allowed)
+      if ( any(M$error) ){ 
+         printErrors(x,M)
+         stop("Forbidden symbols found in imputation rules")
       }
    }
    structure(x,class='imputationRules')
@@ -50,39 +71,71 @@ print.imputationRules <- function(x,...){
    cat(sprintf("\n## %2d-------\n%s",1:length(v),v),'\n')
 }
 
-
 isconditional <- function(r){
    r[[1]][[3]][[1]] == "ifelse" || r[[1]][[1]] == 'if'
 }
 
-ALLOWEDSYMBOLS <- c(
-   'ifelse',
-   'if',
-   'else',
-   '==','<','<=','=','>=','>', '%in%',
-   '||', '|', '&&', '&', 
-   '(','{','<-','=',
-   '+', '-', '*', '^', '/', '%%', '%/%'
-)
-
-checkSymbols <- function(x, b=TRUE, ...){
+##-------------------------------------------------------------------------
+# check if expression contains forbidden symbols (boolean)
+checkSymbols <- function(x, b=TRUE, allowed=getOption('allowedSymbols'), ...){
    if (is.expression(x)){ 
       x <- x[[1]]
    }
 
    if (length(x) == 1 ) return(TRUE)
    if (  is.symbol(x[[1]]) && 
-         !(as.character(x[[1]]) %in% ALLOWEDSYMBOLS) ){
+         !(as.character(x[[1]]) %in% allowed) ){
             return(FALSE)
    }
    for ( i in 1:length(x) ){b <- b & checkSymbols(x[[i]],b)}
-   return(b)
+   b
 }
 
-checkRules <- function(x,...){
-   sapply(x,checkSymbols)
+##-------------------------------------------------------------------------
+# extract forbidden symbols from an expression
+extractSymbols <- function(x, allowed, L=character(0), ...){
+   if ( is.expression(x)){
+      x <- x[[1]]
+   }
+   if ( length(x) == 1 ) return(NULL)
+   if ( is.symbol(x[[1]]) && 
+      !( as.character(x[[1]]) %in% allowed ) ){
+      return(as.character(x[[1]]))
+   }
+   for ( i in 1:length(x) )  L <- c(L, extractSymbols(x[[i]], allowed, L))
+   L
 }
 
+checkRules <- function(x, allowed, ...){
+   M <- lapply(x,extractSymbols, allowed=allowed,...)
+   list(error = sapply(M,function(m) length(m) == 0), symbols=M)
+}
+
+
+##-------------------------------------------------------------------------
+# print rules and their errors. 
+# x : list of rules, M result of checkRules
+printErrors <- function(x, M){
+   ix <- which(!M$error)
+   v <- sapply(x[ix], function(r){
+            r <- gsub("^","  ",as.character(r))
+            gsub("\n","\n  ",r)
+         })
+   S <- lapply(M$symbols[ix], paste, collapse=", ")
+   cat('\nForbidden symbols found in imputation rules:')
+   cat(sprintf('\n## ERR %2d ------\nForbidden symbols: %s\n%s',ix,S,v),'\n')
+}
+
+
+
+
+#' Extract variables
+#' @method getVars imputationRules
+#' @rdname imputationRules
+#' @param E object of class \code{\link{imputationRules}}
+getVars.imputationRules <- function(E, ...){
+   unique(do.call(c,sapply(E,getvrs)))
+}
 
 getvrs <- function(x, L=character(0), ...){
    if ( is.expression(x) ){
@@ -100,14 +153,6 @@ getvrs <- function(x, L=character(0), ...){
    unique(L)
 }
 
-#'
-#' @method getVars imputationRules
-#' @rdname imputationRules
-#' @param E object of class \code{\link{imputationRules}}
-getVars.imputationRules <- function(E, ...){
-   unique(do.call(c,sapply(E,getvrs)))
-}
-
 
 
 #' Deterministic imputation
@@ -115,6 +160,7 @@ getVars.imputationRules <- function(E, ...){
 #' @param rules object of class \code{\link{imputationRules}} 
 #' @param dat \code{data.frame}
 #' @param strict If \code{TRUE}, an error is produced when the imputation rules use variables other than in the \code{data.frame}.
+#' @export
 imputeWithRules <- function(rules, dat, strict=TRUE){
    if (strict){
       vars <- getVars(rules)

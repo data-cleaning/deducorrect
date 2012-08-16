@@ -10,7 +10,7 @@ u <- imputationRules(c(
    , "if (m>0) print('fiets')"
 ))
 
-
+e
 
 d <- data.frame(
    x = 1:5,
@@ -40,8 +40,14 @@ f <- function(m,...){
 }
 
 
-
+i<-which(!checkRules(u))
 source("../pkg/R/deterministic.R")
 checkSymbols(expression(mean(x)))
+extractSymbols(expression(mean(x)),S=ALLOWEDSYMBOLS)
+
+extractSymbols(u[[4]],S=ALLOWEDSYMBOLS)
+printErrors(u,4,symb=ALLOWEDSYMBOLS)
+
+
 
 

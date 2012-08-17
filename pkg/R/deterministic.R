@@ -197,17 +197,14 @@ getVars.correctionRules <- function(E, ...){
 
 getvrs <- function(x, L=character(0), ...){
    if ( is.expression(x) ){
-      L <- getvrs(x[[1]],L)
+      x <- x[[1]]
    }  
    if ( length(x) == 1){
-      if ( is.symbol(x) ){ 
-         return(c(L,as.character(x)))
-      } else {
-         return(L)
-      } 
+      if ( is.symbol(x) ) return(as.character(x))
+      return(NULL)
    }
 
-   for ( i in 2:length(x) ) L <- getvrs(x[[i]],L)
+   for ( i in 2:length(x) ) L <- c(L, getvrs(x[[i]],L))
    unique(L)
 }
 

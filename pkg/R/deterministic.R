@@ -13,15 +13,45 @@
    )
 }
 
+.onUnload <- function(libpath){
+   options(allowedSymbols=NULL)
+}
+
+
 ##-------------------------------------------------------------------------
 # define imputation rules.
 
 
 
 #' Rules for deterministic imputation
-#' @param x Rules, in \code{character} or \code{expression} form. 
+#'
+#' @section Details:
+#' Data editing processes are rarely completely governed by in-record consistency rules.
+#' Many \emph{ad-hoc} rules are commonly used to impute empty or erroneous values. 
+#' Such rules are often applied manually or hidden in source code. This
+#' function, together with \code{\link{imputeWithRules}} allows for easy definition and execution 
+#' of simle deterministic replacement rules.
+#'
+#' These functions are ment to support very simple rules, such as \emph{if variable x is missing, then
+#' set it to zero}. Such actions usually basically model-free imputations stemming from subject-matter knowledge.
+#' Given the nature of such rules, the type of rules are by default limited to R-statements containing
+#' conditionals (\code{if}-\code{else}), arithmetic and logical operators, and brackets and assignment operators.
+#' see \code{getOption('allowedSymbols')} for a complete list.
+#'
+#' If you cannot execute your 'simple' imputation with just these functions, we strongly recommend to 
+#' write a separate imputation routine. However, it's a free world, so you may alter the list of allowed symbols
+#' as you wish. 
+#' 
+#' @section Note:
+#' \code{getVars} is overloaded from the \code{editrules} package.
+#'
+#' @param x \code{character} or \code{expression} vector. 
 #' @param strict If \code{TRUE} an error is thrown if any forbidden symbol is used (see details).
 #' @param allowed A \code{character} vector of allowed symbols
+#' @param ... Currently unused.
+#' @return \code{imputationRules} returns an object of class \code{imputationRules}
+#' 
+#'
 #' @export
 #' @seealso \code{\link{imputeWithRules}}
 imputationRules <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'), ...){
@@ -30,8 +60,9 @@ imputationRules <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'),
 
 
 #' @method imputationRules character
-#' @param file If \code{file=TRUE}, \code{x} is treated as a filename.
+#' @param file If \code{file=TRUE}, \code{x} is treated as a filename from which the rules are read.
 #' @rdname imputationRules
+#' @export
 imputationRules.character <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'), file=TRUE, ...){
    if ( file ){ 
       x <- parse(file=x)
@@ -60,7 +91,9 @@ imputationRules.character <- function(x, strict=TRUE, allowed=getOption('allowed
 
 #' @method imputationRules expression
 #' @rdname imputationRules
+#' @export
 imputationRules.expression <- function(x,strict=TRUE, allowed=getOption('allowedSymbols'), ...){
+
    if (strict){ 
       M <- checkRules(x,allowed=allowed)
       if ( any(M$error) ){ 
@@ -83,7 +116,7 @@ print.imputationRules <- function(x,...){
 }
 
 #' @method as.character imputationRules
-#' @param oneliner coerce to oneliner
+#' @param oneliner Coerce to oneliner
 #' @export
 #' @rdname imputationRules
 as.character.imputationRules <- function(x, oneliner=FALSE,...){
@@ -96,9 +129,6 @@ as.character.imputationRules <- function(x, oneliner=FALSE,...){
    v
 }
 
-isconditional <- function(r){
-   r[[1]][[3]][[1]] == "ifelse" || r[[1]][[1]] == 'if'
-}
 
 ##-------------------------------------------------------------------------
 # check if expression contains forbidden symbols (boolean)
@@ -133,7 +163,7 @@ extractSymbols <- function(x, allowed, L=character(0), ...){
 
 checkRules <- function(x, allowed, ...){
    M <- lapply(x,extractSymbols, allowed=allowed,...)
-   list(error = sapply(M,function(m) length(m) == 0), symbols=M)
+   list(error = sapply(M,function(m) length(m) > 0), symbols=M)
 }
 
 
@@ -142,10 +172,9 @@ checkRules <- function(x, allowed, ...){
 # x : list of rules, M result of checkRules
 printErrors <- function(x, M){
    ix <- which(!M$error)
-   v <- sapply(x[ix], function(r){
-            r <- gsub("^","  ",as.character(r))
-            gsub("\n","\n  ",r)
-         })
+   v <- as.character(x[ix])
+   v <- gsub("^","  ",v)
+   v <- gsub("\n","\n  ",v)
    S <- lapply(M$symbols[ix], paste, collapse=", ")
    cat('\nForbidden symbols found in imputation rules:')
    cat(sprintf('\n## ERR %2d ------\nForbidden symbols: %s\n%s',ix,S,v),'\n')
@@ -158,6 +187,9 @@ printErrors <- function(x, M){
 #' @method getVars imputationRules
 #' @rdname imputationRules
 #' @param E object of class \code{\link{imputationRules}}
+#'
+#' @return \code{getVars} returns a character vector of variable names.
+#' @export
 getVars.imputationRules <- function(E, ...){
    unique(do.call(c,lapply(E,getvrs)))
 }
@@ -182,9 +214,24 @@ getvrs <- function(x, L=character(0), ...){
 
 #' Deterministic imputation
 #'
+#' Apply simple replacement rules to a \code{data.frame}.
+#'
+#' @section Details:
+#' This function applies the the \code{rules} one by one to \code{dat} and logs
+#' their actions. Rules are excuted in order of occurrence in the \code{\link{imputationRules}}
+#' so order may matter for the final result. Rules are applied to one record at the time, so 
+#' the use of statistical funtions such as \code{mean} is useless, and forbidden by default.
+#' See \code{\link{imputationRules}} for details on the type of rules that are possible.
+#'
 #' @param rules object of class \code{\link{imputationRules}} 
 #' @param dat \code{data.frame}
 #' @param strict If \code{TRUE}, an error is produced when the imputation rules use variables other than in the \code{data.frame}.
+#' @seealso \code{\link{imputationRules}}
+#'
+#' @return list with altered data (\code{$corrected}) and a list of alterations (\code{$corrections}).
+#'
+#' @example ../examples/imputeWithRules.R
+#'
 #' @export
 imputeWithRules <- function(rules, dat, strict=TRUE){
    if (strict){
@@ -210,12 +257,12 @@ imputeWithRules <- function(rules, dat, strict=TRUE){
       for ( j in 1:n ){
          d <- out[i,,drop=FALSE]
          d <- within(d,eval(rules[[j]]))
-         if ( !all(d==out[i,]) ){
+         if ( !all(equal(d,out[i,])) ){
             out[i,] <- d
             rule <- tr[j]
-            w <- which(d != dat[i,])
+            w <- which(!equal(d,dat[i,]))
             row <- c(row, rep(i,length(w)))
-            variable <- c(old,vars[w])
+            variable <- c(variable,vars[w])
             old <- c(old,do.call(c,as.list(dat[i,w])))
             new <- c(new,do.call(c,as.list(out[i,w])))
             how <- c(how,rep(rule,length(w)))
@@ -233,6 +280,14 @@ imputeWithRules <- function(rules, dat, strict=TRUE){
             stringsAsFactors=FALSE
          )
    )
+}
+
+##-------------------------------------------------------------------------'
+# NA-robust pairwise comparison of data.frames
+equal <- function(d,e){
+   dNA <- is.na(d)
+   eNA <- is.na(e)
+   d == e & !(dNA != eNA) | (dNA & eNA) 
 }
 
 

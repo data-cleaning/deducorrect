@@ -1,3 +1,6 @@
+version 1.3-0
+- Added deterministic imputation (correction) feature, see ?imputationRules
+
 version 1.2-1
 - Added 'round' option for deduImpute.editmatrix (defaults to true)
 

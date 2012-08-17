@@ -1,26 +1,15 @@
+## Some example data
+dat <- data.frame(
+   x = c(NA, 2, 0,-10),
+   y = c(1, NA,NA, 6)
+)
 
-# some faulty data
+## a few rules
+u <- imputationRules(expression(
+   if ( is.na(x) ) x <- 0,
+   if ( x == 0 && is.na(y) ) y <- 0,
+   if ( is.na(y) ) y <- 1,
+   if ( x < 0 ) y <- 0
+))
 
-
-source('../pkg/R/deterministic.R')
-
-v <- substitute({ 
-   a + b = c
-   if ( is.na(x) ) x <- 0 
-})
-
-
-w <- substitute("if ( is.na(x) ) y=0")
-
-u <- imputationRules({
-   if ( is.na(x) ) y <- 3
-   if ( is.na(y) ){ 
-      y <- 0
-   } else {
-      y <- 10
-   }
-})
-
-dat <- data.frame(x=c(NA,1),y=c(NA,NA))
 imputeWithRules(u,dat)
-

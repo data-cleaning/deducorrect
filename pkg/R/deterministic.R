@@ -29,7 +29,7 @@
 #' Data editing processes are rarely completely governed by in-record consistency rules.
 #' Many \emph{ad-hoc} rules are commonly used to impute empty or erroneous values. 
 #' Such rules are often applied manually or hidden in source code. This
-#' function, together with \code{\link{imputeWithRules}} allows for easy definition and execution 
+#' function, together with \code{\link{correctWithRules}} allows for easy definition and execution 
 #' of simle deterministic replacement rules.
 #'
 #' These functions are ment to support very simple rules, such as \emph{if variable x is missing, then
@@ -49,24 +49,24 @@
 #' @param strict If \code{TRUE} an error is thrown if any forbidden symbol is used (see details).
 #' @param allowed A \code{character} vector of allowed symbols
 #' @param ... Currently unused.
-#' @return \code{imputationRules} returns an object of class \code{imputationRules}
+#' @return \code{correctionRules} returns an object of class \code{correctionRules}
 #' 
 #'
 #' @export
-#' @seealso \code{\link{imputeWithRules}}
-imputationRules <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'), ...){
-   UseMethod('imputationRules')
+#' @seealso \code{\link{correctWithRules}}
+correctionRules <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'), ...){
+   UseMethod('correctionRules')
 }
 
 
-#' @method imputationRules character
+#' @method correctionRules character
 #' @param file If \code{file=TRUE}, \code{x} is treated as a filename from which the rules are read.
-#' @rdname imputationRules
+#' @rdname correctionRules
 #' @export
-imputationRules.character <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'), file=TRUE, ...){
+correctionRules.character <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'), file=TRUE, ...){
    if ( file ){ 
       x <- parse(file=x)
-      return(imputationRules.expression(x,strict,allowed))
+      return(correctionRules.expression(x,strict,allowed))
    }
    i <- 0
    L <- lapply(x, function(y){
@@ -85,14 +85,14 @@ imputationRules.character <- function(x, strict=TRUE, allowed=getOption('allowed
          stop('Forbidden symbols found')
       }
    }
-   structure(L,class='imputationRules')
+   structure(L,class='correctionRules')
 }
 
 
-#' @method imputationRules expression
-#' @rdname imputationRules
+#' @method correctionRules expression
+#' @rdname correctionRules
 #' @export
-imputationRules.expression <- function(x,strict=TRUE, allowed=getOption('allowedSymbols'), ...){
+correctionRules.expression <- function(x,strict=TRUE, allowed=getOption('allowedSymbols'), ...){
 
    if (strict){ 
       M <- checkRules(x,allowed=allowed)
@@ -101,25 +101,25 @@ imputationRules.expression <- function(x,strict=TRUE, allowed=getOption('allowed
          stop("Forbidden symbols found in imputation rules")
       }
    }
-   structure(x,class='imputationRules')
+   structure(x,class='correctionRules')
 }
 
-#' @method print imputationRules 
+#' @method print correctionRules 
 #' @export
-#' @rdname imputationRules
-print.imputationRules <- function(x,...){
-   cat("Object of class 'imputationRules'")
+#' @rdname correctionRules
+print.correctionRules <- function(x,...){
+   cat("Object of class 'correctionRules'")
    v <- as.character(x)
    v <- gsub("^","  ",v)
    v <- gsub("\n","\n  ",v)
    cat(sprintf("\n## %2d-------\n%s",1:length(v),v),'\n')
 }
 
-#' @method as.character imputationRules
+#' @method as.character correctionRules
 #' @param oneliner Coerce to oneliner
 #' @export
-#' @rdname imputationRules
-as.character.imputationRules <- function(x, oneliner=FALSE,...){
+#' @rdname correctionRules
+as.character.correctionRules <- function(x, oneliner=FALSE,...){
    # this seems to be the easiest way to retain formatting information (mvdl)
    v <- sapply(x,function(r) as.character(noquote(list(r))))
    if ( oneliner ){
@@ -184,13 +184,13 @@ printErrors <- function(x, M){
 
 
 
-#' @method getVars imputationRules
-#' @rdname imputationRules
-#' @param E object of class \code{\link{imputationRules}}
+#' @method getVars correctionRules
+#' @rdname correctionRules
+#' @param E object of class \code{\link{correctionRules}}
 #'
 #' @return \code{getVars} returns a character vector of variable names.
 #' @export
-getVars.imputationRules <- function(E, ...){
+getVars.correctionRules <- function(E, ...){
    unique(do.call(c,lapply(E,getvrs)))
 }
 
@@ -218,22 +218,22 @@ getvrs <- function(x, L=character(0), ...){
 #'
 #' @section Details:
 #' This function applies the the \code{rules} one by one to \code{dat} and logs
-#' their actions. Rules are excuted in order of occurrence in the \code{\link{imputationRules}}
+#' their actions. Rules are excuted in order of occurrence in the \code{\link{correctionRules}}
 #' so order may matter for the final result. Rules are applied to one record at the time, so 
 #' the use of statistical funtions such as \code{mean} is useless, and forbidden by default.
-#' See \code{\link{imputationRules}} for details on the type of rules that are possible.
+#' See \code{\link{correctionRules}} for details on the type of rules that are possible.
 #'
-#' @param rules object of class \code{\link{imputationRules}} 
+#' @param rules object of class \code{\link{correctionRules}} 
 #' @param dat \code{data.frame}
 #' @param strict If \code{TRUE}, an error is produced when the imputation rules use variables other than in the \code{data.frame}.
-#' @seealso \code{\link{imputationRules}}
+#' @seealso \code{\link{correctionRules}}
 #'
 #' @return list with altered data (\code{$corrected}) and a list of alterations (\code{$corrections}).
 #'
-#' @example ../examples/imputeWithRules.R
+#' @example ../examples/correctWithRules.R
 #'
 #' @export
-imputeWithRules <- function(rules, dat, strict=TRUE){
+correctWithRules <- function(rules, dat, strict=TRUE){
    if (strict){
       vars <- getVars(rules)
       I <- vars %in% names(dat)

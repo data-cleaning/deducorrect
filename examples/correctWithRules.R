@@ -5,11 +5,11 @@ dat <- data.frame(
 )
 
 ## a few rules
-u <- imputationRules(expression(
+u <- correctionRules(expression(
    if ( is.na(x) ) x <- 0,
    if ( x == 0 && is.na(y) ) y <- 0,
    if ( is.na(y) ) y <- 1,
    if ( x < 0 ) y <- 0
 ))
 
-imputeWithRules(u,dat)
+correctWithRules(u,dat)

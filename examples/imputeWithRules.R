@@ -1,53 +1,26 @@
 
+# some faulty data
 
 
-source("../pkg/R/deterministic.R")
+source('../pkg/R/deterministic.R')
 
-u <- imputationRules(c(
-     "y <- ifelse( x > 3 || x < 1 , 5, y)"
-   , "y <- ifelse( x < 3 , 0, y)"
-   , "if ( 0 < 1){ x<-1} else {'aap'}"
-   , "if (m>0) print('fiets')"
-))
-
-e
-
-d <- data.frame(
-   x = 1:5,
-   y = 5:1
-)
-
-imputeWithRules(u,d)
+v <- substitute({ 
+   a + b = c
+   if ( is.na(x) ) x <- 0 
+})
 
 
-source("../pkg/R/deterministic.R")
-e <- expression(
-   if ( x == 3 ) y <- mean(x)
-)
+w <- substitute("if ( is.na(x) ) y=0")
 
-v <- getvrs(e,L=character(0))
-
-
-f <- function(m,...){
-   if (!m){
-      x <- 1:3
+u <- imputationRules({
+   if ( is.na(x) ) y <- 3
+   if ( is.na(y) ){ 
+      y <- 0
+   } else {
+      y <- 10
    }
-   if (length(x)>0){
-      print(x)
-      f(TRUE,x[-1])
-   }
+})
 
-}
-
-
-i<-which(!checkRules(u))
-source("../pkg/R/deterministic.R")
-checkSymbols(expression(mean(x)))
-extractSymbols(expression(mean(x)),S=ALLOWEDSYMBOLS)
-
-extractSymbols(u[[4]],S=ALLOWEDSYMBOLS)
-printErrors(u,4,symb=ALLOWEDSYMBOLS)
-
-
-
+dat <- data.frame(x=c(NA,1),y=c(NA,NA))
+imputeWithRules(u,dat)
 

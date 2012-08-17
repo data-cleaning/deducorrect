@@ -1,5 +1,6 @@
 
-
+##-------------------------------------------------------------------------
+# default symbols allowed to define imputation rules.
 .onLoad <- function(libname,pkgname){
    options(allowedSymbols = c(
       'ifelse',
@@ -12,8 +13,13 @@
    )
 }
 
+##-------------------------------------------------------------------------
+# define imputation rules.
+
+
+
 #' Rules for deterministic imputation
-#' @param x Rules, in \code{character} or \code{expression} form.
+#' @param x Rules, in \code{character} or \code{expression} form. 
 #' @param strict If \code{TRUE} an error is thrown if any forbidden symbol is used (see details).
 #' @param allowed A \code{character} vector of allowed symbols
 #' @export
@@ -24,8 +30,13 @@ imputationRules <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'),
 
 
 #' @method imputationRules character
+#' @param file If \code{file=TRUE}, \code{x} is treated as a filename.
 #' @rdname imputationRules
-imputationRules.character <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'), ...){
+imputationRules.character <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'), file=TRUE, ...){
+   if ( file ){ 
+      x <- parse(file=x)
+      return(imputationRules.expression(x,strict,allowed))
+   }
    i <- 0
    L <- lapply(x, function(y){
       i <<- i+1
@@ -49,9 +60,9 @@ imputationRules.character <- function(x, strict=TRUE, allowed=getOption('allowed
 
 #' @method imputationRules expression
 #' @rdname imputationRules
-imputationRules.expression <- function(x,strict=TRUE, allowed=getOption(allowedSymbols), ...){
+imputationRules.expression <- function(x,strict=TRUE, allowed=getOption('allowedSymbols'), ...){
    if (strict){ 
-      M <- checkRules(L,allowed=allowed)
+      M <- checkRules(x,allowed=allowed)
       if ( any(M$error) ){ 
          printErrors(x,M)
          stop("Forbidden symbols found in imputation rules")
@@ -60,15 +71,29 @@ imputationRules.expression <- function(x,strict=TRUE, allowed=getOption(allowedS
    structure(x,class='imputationRules')
 }
 
-#' @method imputationRules print
+#' @method print imputationRules 
 #' @export
 #' @rdname imputationRules
 print.imputationRules <- function(x,...){
    cat("Object of class 'imputationRules'")
-   v <- sapply(x,as.character)
+   v <- as.character(x)
    v <- gsub("^","  ",v)
    v <- gsub("\n","\n  ",v)
    cat(sprintf("\n## %2d-------\n%s",1:length(v),v),'\n')
+}
+
+#' @method as.character imputationRules
+#' @param oneliner coerce to oneliner
+#' @export
+#' @rdname imputationRules
+as.character.imputationRules <- function(x, oneliner=FALSE,...){
+   # this seems to be the easiest way to retain formatting information (mvdl)
+   v <- sapply(x,function(r) as.character(noquote(list(r))))
+   if ( oneliner ){
+      v <- gsub("\n"," ",v)      # remove line end
+      v <- gsub("[ ]+"," ",v)    # collapse multiple spaces to one
+   }   
+   v
 }
 
 isconditional <- function(r){
@@ -129,12 +154,12 @@ printErrors <- function(x, M){
 
 
 
-#' Extract variables
+
 #' @method getVars imputationRules
 #' @rdname imputationRules
 #' @param E object of class \code{\link{imputationRules}}
 getVars.imputationRules <- function(E, ...){
-   unique(do.call(c,sapply(E,getvrs)))
+   unique(do.call(c,lapply(E,getvrs)))
 }
 
 getvrs <- function(x, L=character(0), ...){
@@ -179,8 +204,8 @@ imputeWithRules <- function(rules, dat, strict=TRUE){
    new <- numeric(0)
    how <- character(0)
    vars <- colnames(dat)
-   tr <- sapply(rules, function(r) gsub("\n","",as.character(r)))
-   tr <- sapply(tr, function(r) gsub("[ ]+"," ",r))
+   tr <- as.character(rules,oneliner=TRUE)
+   
    for ( i in 1:m ){
       for ( j in 1:n ){
          d <- out[i,,drop=FALSE]

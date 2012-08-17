@@ -6,6 +6,7 @@
       'ifelse',
       'if', 'else', 'is.na','is.finite',
       '==','<','<=','=','>=','>','!', '%in%',
+      'identical','sign',
       '||', '|', '&&', '&', 
       '(','{','<-','=',
       '+', '-', '*', '^', '/', '%%', '%/%'
@@ -171,7 +172,7 @@ checkRules <- function(x, allowed, ...){
 # print rules and their errors. 
 # x : list of rules, M result of checkRules
 printErrors <- function(x, M){
-   ix <- which(!M$error)
+   ix <- which(M$error)
    v <- as.character(x[ix])
    v <- gsub("^","  ",v)
    v <- gsub("\n","\n  ",v)

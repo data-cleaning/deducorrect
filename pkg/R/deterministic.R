@@ -68,9 +68,11 @@ correctionRules.character <- function(x, strict=TRUE, allowed=getOption('allowed
    if ( file ){ 
       x <- parse(file=x)
       return(correctionRules.expression(x,strict,allowed))
-   }
+   } 
+    
+   
    i <- 0
-   L <- lapply(x, function(y){
+   L <- sapply(x, function(y){
       i <<- i+1
       tryCatch(parse(text=y), 
             error = function(e){
@@ -126,7 +128,8 @@ as.character.correctionRules <- function(x, oneliner=FALSE,...){
    if ( oneliner ){
       v <- gsub("\n"," ",v)      # remove line end
       v <- gsub("[ ]+"," ",v)    # collapse multiple spaces to one
-   }   
+   }
+   names(v) <- NULL
    v
 }
 

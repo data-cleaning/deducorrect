@@ -1,9 +1,8 @@
 
 ##-------------------------------------------------------------------------
-# default symbols allowed to define imputation rules.
+# default symbols allowed to define correction rules.
 .onLoad <- function(libname,pkgname){
    options(allowedSymbols = c(
-      'ifelse',
       'if', 'else', 'is.na','is.finite',
       '==','<','<=','=','>=','>','!', '%in%',
       'identical','sign',
@@ -20,11 +19,11 @@
 
 
 ##-------------------------------------------------------------------------
-# define imputation rules.
+# define correction rules.
 
 
 
-#' Rules for deterministic imputation
+#' Rules for deterministic correction
 #'
 #' @section Details:
 #' Data editing processes are rarely completely governed by in-record consistency rules.
@@ -34,13 +33,13 @@
 #' of simle deterministic replacement rules.
 #'
 #' These functions are ment to support very simple rules, such as \emph{if variable x is missing, then
-#' set it to zero}. Such actions usually basically model-free imputations stemming from subject-matter knowledge.
+#' set it to zero}. Such actions usually basically model-free corrections stemming from subject-matter knowledge.
 #' Given the nature of such rules, the type of rules are by default limited to R-statements containing
 #' conditionals (\code{if}-\code{else}), arithmetic and logical operators, and brackets and assignment operators.
 #' see \code{getOption('allowedSymbols')} for a complete list.
 #'
-#' If you cannot execute your 'simple' imputation with just these functions, we strongly recommend to 
-#' write a separate imputation routine. However, it's a free world, so you may alter the list of allowed symbols
+#' If you cannot execute your 'simple' corrections with just these functions, we strongly recommend to 
+#' write a separate imputation or correction routine. However, it's a free world, so you may alter the list of allowed symbols
 #' as you wish. 
 #' 
 #' @section Note:
@@ -101,7 +100,7 @@ correctionRules.expression <- function(x,strict=TRUE, allowed=getOption('allowed
       M <- checkRules(x,allowed=allowed)
       if ( any(M$error) ){ 
          printErrors(x,M)
-         stop("Forbidden symbols found in imputation rules")
+         stop("Forbidden symbols found")
       }
    }
    structure(x,class='correctionRules')
@@ -180,7 +179,7 @@ printErrors <- function(x, M){
    v <- gsub("^","  ",v)
    v <- gsub("\n","\n  ",v)
    S <- lapply(M$symbols[ix], paste, collapse=", ")
-   cat('\nForbidden symbols found in imputation rules:')
+   cat('\nForbidden symbols found:')
    cat(sprintf('\n## ERR %2d ------\nForbidden symbols: %s\n%s',ix,S,v),'\n')
 }
 
@@ -213,7 +212,7 @@ getvrs <- function(x, L=character(0), ...){
 
 
 
-#' Deterministic imputation
+#' Deterministic correction
 #'
 #' Apply simple replacement rules to a \code{data.frame}.
 #'
@@ -226,7 +225,7 @@ getvrs <- function(x, L=character(0), ...){
 #'
 #' @param rules object of class \code{\link{correctionRules}} 
 #' @param dat \code{data.frame}
-#' @param strict If \code{TRUE}, an error is produced when the imputation rules use variables other than in the \code{data.frame}.
+#' @param strict If \code{TRUE}, an error is produced when the rules use variables other than in the \code{data.frame}.
 #' @seealso \code{\link{correctionRules}}
 #'
 #' @return list with altered data (\code{$corrected}) and a list of alterations (\code{$corrections}).
@@ -239,7 +238,7 @@ correctWithRules <- function(rules, dat, strict=TRUE){
       vars <- getVars(rules)
       I <- vars %in% names(dat)
       if (!all(I)) stop(
-         sprintf("Variables '%s' in imputation rules do not occur in data",paste(vars[!I],sep=", "))
+         sprintf("Variables '%s' in rules do not occur in data",paste(vars[!I],sep=", "))
       )
    }
 

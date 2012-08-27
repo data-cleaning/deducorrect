@@ -3,6 +3,7 @@ version 1.3-0
 
 version 1.2-1
 - Added 'round' option for deduImpute.editmatrix (defaults to true)
+- bugfix in correctSigns: some correction opportunities were missed because of ignored constant vector in constraints.
 
 version 1.2-0
 - Discussion papers used to be included as vignette. Now only as pdf in inst/doc

@@ -40,7 +40,7 @@ test_that("correctSigns",{
 }) 
 
 
-test_that("correctRounding.editset works with pure numerical",{
+test_that("correctSigns.editset works with pure numerical",{
     
     v <- correctSigns(
         editset(expression(
@@ -66,7 +66,7 @@ test_that("correctRounding.editset works with pure numerical",{
 
 })
 
-test_that("correctRounding.editset works with pure numerical",{
+test_that("correctSigns.editset works with pure numerical",{
 
     v <- correctTypos(editset(expression(
         A %in% c('a','b'),
@@ -82,7 +82,7 @@ test_that("correctRounding.editset works with pure numerical",{
 })
 
 
-test_that("correctRounding.editset works with unconnected numerical/categorical",{
+test_that("correctSigns.editset works with unconnected numerical/categorical",{
 
     v <- correctSigns(
         editset(expression(
@@ -122,7 +122,7 @@ test_that("correctRounding.editset works with unconnected numerical/categorical"
 
 
 
-test_that("correctRounding.editset works with connected numerical/categorical",{
+test_that("correctSings.editset works with connected numerical/categorical",{
 
 
 ## without revert
@@ -176,3 +176,13 @@ test_that("correctRounding.editset works with connected numerical/categorical",{
     expect_equal(nrow(v$corrections),0)
 
 })
+
+# fixes issue nr XXXX
+test_that("constant vector is accounted for",{
+   expect_equal(correctSigns(editmatrix("x + y == 2"), data.frame(x=-1,y=1))$corrected$x[1],1)
+})
+
+
+
+
+

@@ -219,7 +219,7 @@ correctSigns.editmatrix <- function(
     
     for ( i in which(complete.cases(D)) ){
         r <- D[i, ]
-        iViolated <- abs(A1 %*% r) > eps
+        iViolated <- abs(A1 %*% r - C1)  > eps
         if ( !any(iViolated) ){
             status[i] <- "valid"
             next

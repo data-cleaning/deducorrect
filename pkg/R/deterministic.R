@@ -4,7 +4,7 @@
 .onLoad <- function(libname,pkgname){
    options(allowedSymbols = c(
       'if', 'else', 'is.na','is.finite',
-      '==','<','<=','=','>=','>','!', '%in%',
+      '==','<','<=','=','>=','>','!=','!', '%in%',
       'identical','sign',
       '||', '|', '&&', '&', 
       '(','{','<-','=',

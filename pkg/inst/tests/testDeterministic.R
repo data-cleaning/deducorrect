@@ -61,5 +61,22 @@ test_that("logging for changing a variable twice",{
    expect_equal(x$corrections[2,'new'],1)
 })
 
+test_that("changing multiple variables in a record with different rules",{
 
+   df <- data.frame(
+    x = 1,
+   y = NA,
+   z = 2)
+
+
+   w <- correctionRules(expression(
+      if ( x == 1 ) x <- NA,
+      if ( is.na(y) ) y <- 1
+   ))
+   x <- correctWithRules(w,df)
+   expect_equal(nrow(x$corrections),2)
+   expect_equal(x$corrections$old,c(1,NA))
+   expect_equal(x$corrections$new,c(NA,1))
+
+})
 

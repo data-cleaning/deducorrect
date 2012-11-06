@@ -259,7 +259,7 @@ correctWithRules <- function(rules, dat, strict=TRUE){
          d <- within(out[i,,drop=FALSE],eval(rules[[j]]))
          if ( !all(equal(d,out[i,])) ){
             rule <- tr[j]
-            w <- which(!equal(d,dat[i,]))
+            w <- which(!equal(d,out[i,]))
             row <- c(row, rep(i,length(w)))
             variable <- c(variable,vars[w])
             old <- c(old,do.call(c,as.list(out[i,w])))

@@ -255,17 +255,17 @@ correctWithRules <- function(rules, dat, strict=TRUE){
    
    for ( i in 1:m ){
       for ( j in 1:n ){
-         d <- out[i,,drop=FALSE]
-         d <- within(d,eval(rules[[j]]))
+         #d <- out[i,,drop=FALSE]
+         d <- within(out[i,,drop=FALSE],eval(rules[[j]]))
          if ( !all(equal(d,out[i,])) ){
-            out[i,] <- d
             rule <- tr[j]
             w <- which(!equal(d,dat[i,]))
             row <- c(row, rep(i,length(w)))
             variable <- c(variable,vars[w])
-            old <- c(old,do.call(c,as.list(dat[i,w])))
-            new <- c(new,do.call(c,as.list(out[i,w])))
+            old <- c(old,do.call(c,as.list(out[i,w])))
+            new <- c(new,do.call(c,as.list(d[i,w])))
             how <- c(how,rep(rule,length(w)))
+            out[i,] <- d
          }
       }
    }

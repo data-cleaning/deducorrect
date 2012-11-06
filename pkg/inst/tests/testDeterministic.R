@@ -45,3 +45,21 @@ test_that("logging",{
 })
 
 
+test_that("logging for changing a variable twice",{
+   df <- data.frame(
+      x = 1,
+      y = NA,
+      z = 2)
+
+   u <- correctionRules(expression(
+      if ( x == 1 ) z <- NA,
+      if ( is.na(z) ) z <- 1
+   ))
+   x <- correctWithRules(u,df)
+
+   expect_true(is.na(x$corrections[2,'old']))
+   expect_equal(x$corrections[2,'new'],1)
+})
+
+
+

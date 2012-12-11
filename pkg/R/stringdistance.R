@@ -18,9 +18,10 @@
 #' @param sb character vector of equal \code{length(sa)}
 #' @param w integer vector for cost of deletion, insertion, substitution 
 #' and transposition.
-#'
-#' @return integer vector with all edit distances
+#' @export
+#' @return integer vector with pairwise edit distances
 damerauLevenshteinDistance <- function(sa,sb, w=c(1,1,1,1)){
+   if (length(sa) != length(sb)) stop('sa and sb must be of equal length')
    mapply(function(a,b){      
       a <- c("",a)
       b <- c("",b)

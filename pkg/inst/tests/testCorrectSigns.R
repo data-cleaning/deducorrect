@@ -22,6 +22,19 @@ test_that("correctSigns",{
             swap=list("z","y"))$corrected,
        data.frame(x=1,y=1,z=2)
     )
+   expect_identical(
+      correctSigns(    
+         editmatrix(expression(
+            y >= 0,
+            z >= 0,
+            x + y == z
+         )),
+         data.frame(x=1,y=1,z=0),
+         swap=list(c('z','y')),
+         flip=c()
+      )$corrected,
+      data.frame(x=1,y=0,z=1)
+   )
     expect_identical( # flip has variable not in E
         correctSigns(
             editmatrix(c("y>0","z>0","x+y==z")),

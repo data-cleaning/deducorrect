@@ -206,7 +206,7 @@ correctSigns.editmatrix <- function(
     C1 <- getb(E)[eq]
     A2 <- getA(E)[!eq, ,drop=FALSE]
     C2 <- getb(E)[!eq]
-    epsvec <- ifelse(ops[!eq]=="<", -.Machine$double.eps, 0)
+    epsvec <- ifelse(ops[!eq]=="<=", 100*.Machine$double.eps, 0)
     
     D <- as.matrix(dat[, getVars(E)])
     # from flip and swap names to indices

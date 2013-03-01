@@ -61,6 +61,7 @@ test_that("logging for changing a variable twice",{
    expect_equal(x$corrections[2,'new'],1)
 })
 
+
 test_that("changing multiple variables in a record with different rules",{
 
    df <- data.frame(

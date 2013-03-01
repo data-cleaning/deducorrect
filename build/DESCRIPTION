@@ -6,7 +6,7 @@ Type: Package
 LazyLoad: yes
 Author: Mark van der Loo, Edwin de Jonge, and Sander
     Scholtus
-Description: A collection of methods for automated data cleaning.
+Description: A collection of methods for automated data cleaning where all actions are logged.
 Version: 1.3-1
 URL: http://code.google.com/p/deducorrect/
 Date: 2011-02-22

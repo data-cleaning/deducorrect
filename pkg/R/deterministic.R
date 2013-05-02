@@ -5,7 +5,7 @@
    options(allowedSymbols = c(
       'if', 'else', 'is.na','is.finite',
       '==','<','<=','=','>=','>','!=','!', '%in%',
-      'identical','sign',
+      'identical','sign','abs',
       '||', '|', '&&', '&', 
       '(','{','<-','=',
       '+', '-', '*', '^', '/', '%%', '%/%'

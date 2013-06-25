@@ -247,8 +247,8 @@ correctWithRules <- function(rules, dat, strict=TRUE){
    n <- length(rules)
    row <- numeric(0)
    variable <- character(0)
-   old <- numeric(0)
-   new <- numeric(0)
+   old <- character(0)
+   new <- character(0)
    how <- character(0)
    vars <- colnames(dat)
    tr <- as.character(rules,oneliner=TRUE)
@@ -257,13 +257,14 @@ correctWithRules <- function(rules, dat, strict=TRUE){
       for ( j in 1:n ){
          #d <- out[i,,drop=FALSE]
          d <- within(out[i,,drop=FALSE],eval(rules[[j]]))
+
          if ( !all(equal(d,out[i,])) ){
             rule <- tr[j]
             w <- which(!equal(d,out[i,]))
             row <- c(row, rep(i,length(w)))
             variable <- c(variable,vars[w])
-            old <- c(old,do.call(c,as.list(out[i,w])))
-            new <- c(new,do.call(c,as.list(d[i,w])))
+            old <- c(old, format(unlist(out[i,w])) )
+            new <- c(new, format(unlist(d[1,w])) )
             how <- c(how,rep(rule,length(w)))
             out[i,] <- d
          }

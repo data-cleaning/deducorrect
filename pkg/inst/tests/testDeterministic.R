@@ -40,7 +40,7 @@ test_that("logging",{
          b,
          data.frame(x=-1,0,1)
       )$corrections
-    , data.frame(row=1,variable='x',old=-1,new=0,how=as.character(b),stringsAsFactors=FALSE)
+    , data.frame(row=1,variable='x',old=format(-1),new=format(0),how=as.character(b),stringsAsFactors=FALSE)
    )
 })
 
@@ -57,8 +57,8 @@ test_that("logging for changing a variable twice",{
    ))
    x <- correctWithRules(u,df)
 
-   expect_true(is.na(x$corrections[2,'old']))
-   expect_equal(x$corrections[2,'new'],1)
+   expect_equal(x$corrections[2,'old'],format(NA))
+   expect_equal(x$corrections[2,'new'],format(1))
 })
 
 
@@ -76,8 +76,8 @@ test_that("changing multiple variables in a record with different rules",{
    ))
    x <- correctWithRules(w,df)
    expect_equal(nrow(x$corrections),2)
-   expect_equal(x$corrections$old,c(1,NA))
-   expect_equal(x$corrections$new,c(NA,1))
+   expect_equal(x$corrections$old,sapply(c(1,NA),format))
+   expect_equal(x$corrections$new,sapply(c(NA,1),format))
 
 })
 

@@ -22,7 +22,18 @@ E <- editmatrix(c(
     "x7 >= 0"
 ))
 
-x <- c(x1 = 145, x2 = NA, x3 = 155, x4 = NA, x5 = 86, x6 = NA, x7 = NA, x8 = 86, x9 = NA, x10 = 217, x11 = NA)
+x <- c(
+  x1 = 145, 
+  x2 = NA, 
+  x3 = 155, 
+  x4 = NA, 
+  x5 = 86, 
+  x6 = NA, 
+  x7 = NA, 
+  x8 = 86, 
+  x9 = NA, 
+  x10 = 217, 
+  x11 = NA)
 
 # determine zeros:
 I <- deductiveZeros(E,x)

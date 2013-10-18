@@ -1,10 +1,11 @@
 #' Deductive correction methods for sign, rounding and typing errors
 #' 
+#; @section Description: 
 #' Deductive correction methods for sign, rounding and typing errors
 #' It also contains functionality to check if a matrix of linear restrictions is
 #' totally unimodular. See also
-#'
 #' \itemize{
+#' \item{\code{\link{ruleset}}}
 #' \item{\code{\link{correctRounding}}}
 #' \item{\code{\link{correctTypos}}}
 #' \item{\code{\link{deducorrect-object}} and \code{\link{status}} for output specification}

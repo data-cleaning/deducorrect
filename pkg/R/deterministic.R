@@ -86,7 +86,7 @@ correctionRules <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'),
 #' @param ... Currently unused.
 #' @return \code{ruleset} returns an object of class \code{ruleset}
 #' 
-#'
+#' @example ../examples/ruleset.R
 #' @export
 #' @seealso \code{\link{applyRules}}
 ruleset <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'), ...){
@@ -470,7 +470,7 @@ replace_shortcircuit <- function(x){
 #' @seealso \code{\link{ruleset}}
 #'
 #' @return list with altered data (\code{$dat}) and a list of modifications (\code{$log}).
-#'
+#' @example ../examples/ruleset.R
 #' @export
 applyRules <- function(rules, dat, strict=TRUE, vectorize=TRUE, ...){
   

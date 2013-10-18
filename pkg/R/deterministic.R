@@ -253,9 +253,10 @@ correctWithRules <- function(rules, dat, strict=TRUE){
    vars <- colnames(dat)
    tr <- as.character(rules,oneliner=TRUE)
    
+
+
    for ( i in 1:m ){
       for ( j in 1:n ){
-         #d <- out[i,,drop=FALSE]
          d <- within(out[i,,drop=FALSE],eval(rules[[j]]))
 
          if ( !all(equal(d,out[i,])) ){
@@ -290,6 +291,134 @@ equal <- function(d,e){
    eNA <- is.na(e)
    d == e & !(dNA != eNA) | (dNA & eNA) 
 }
+
+##-------------------------------------------------------------------------'
+# helper function for vectorize 
+set_guards <- function(x){
+  e <- x[[1]]
+  if ( class(e) == "{" ){
+    v <- lapply(e[min(2,length(e)):length(e)], function(ex){
+      ex <- as.expression(ex)
+      attr(ex,'guard') <- guard(x)
+      ex
+    })
+    return(lapply(v,set_guards))
+  }
+  
+  if(class(e) == 'if'){
+    v <- as.expression(e[[3]]) # expression
+    attr(v,'guard') <- guard(x) %&% condition(e)
+    v <- list(v)
+    if (length(e)==4){ # there is an 'else'
+      w <- as.expression(e[[4]])
+      attr(w,'guard') <- guard(x) %&% not(condition(e))
+      v <- list(v[[1]],w)
+    }
+    return(lapply(v,set_guards))
+  }
+  return(x) 
+}
+
+##-------------------------------------------------------------------------'
+# vectorize an expression.
+vectorize <- function(x){
+  L <- lapply(x,function(e) set_guards(as.expression(e)))  
+  expr <- unlist(L)
+  guard <- rapply(L, function(e) if (is.null(attr(e,'guard'))) expression(TRUE) else attr(e,'guard') )
+  list(rule=as.expression(expr), guard=as.expression(guard))
+}
+
+##-------------------------------------------------------------------------'
+# apply a single vectorized rule to a dataset
+apply_rule <- function(rule, dat, subset=expression(TRUE)){
+  I <- eval(subset,dat)
+  dat[I, ] <- within(dat[I,],eval(rule))
+  dat
+}  
+
+##-------------------------------------------------------------------------'
+# replace shortcircuited operators by vectorized ones
+replace_shortcircuit <- function(x){
+  y <- as.character(x)
+  if ( any(grepl('&&|\\|\\|',y)) ){
+    warning("Short-circuited operators '&&' and/or '||' replaced by vectorized operators '&' and/or '|'")
+    y <- gsub('&&','&',y,fixed=TRUE)
+    y <- gsub('||','|',y,fixed=TRUE)
+    x <- parse(text=y)
+  } 
+  x
+}
+
+##-------------------------------------------------------------------------'
+# apply rules and log
+applyRules <- function(rules, dat, strict=TRUE, vectorize=TRUE, ...){
+  rules <- replace_shortcircuit(rules)
+  R <- vectorize(rules)
+  
+  # init log
+  log <- logframe(dat,dat,'')
+
+  # apply rules
+  for ( i in 1:length(R[[1]]) ){
+    dat1 <- apply_rule(rule=R$rule[i], dat=dat, subset=R$guard[i])
+    if ( TRUE ){
+      log <- rbind(log,logframe(
+        dat
+        , dat1
+        , paste(R$rule[i],'because',R$guard[i])
+        , as.character(R$rule[i])
+      ))
+    }
+    dat <- dat1
+  }
+  list(dat=dat,log=log)
+}
+
+
+
+##-------------------------------------------------------------------------'
+# Get guarding expression
+guard <- function(x) attr(x,'guard')
+
+
+##-------------------------------------------------------------------------'
+# Conjugate two expressions
+`%&%` <- function(e,f){
+  if ( is.null(e) ) return(f)
+  if ( is.null(f) ) return(e)
+  parse(text=paste('(',e,') & (',f,')'))
+}
+
+##-------------------------------------------------------------------------'
+# Negate an expression
+not <- function(e){
+  parse(text=paste0('!(',e,')'))
+}
+
+##-------------------------------------------------------------------------'
+# return the conditional expression from an 'if' object
+condition <- function(e){
+  stopifnot(class(e)=='if')
+  as.expression(e[[2]])
+}
+
+##-------------------------------------------------------------------------'
+# row-variable-old-new-remark log
+logframe <- function(dat1, dat2, remark,...){
+  time <- format(Sys.time(),format="%Y-%m-%d %H:%M:%S")
+  A <- !equal(dat1,dat2)
+  rc <- which(A,arr.ind=TRUE)
+  data.frame(
+      row = rc[,'row']
+    , variable = names(dat1)[rc[,'col']]
+    , old = as.character(dat1[A])
+    , new = as.character(dat2[A])
+    , time=rep(time,nrow(rc))
+    , remark=rep(remark,nrow(rc))
+    , stringsAsFactors=FALSE
+  )
+}
+
 
 
 

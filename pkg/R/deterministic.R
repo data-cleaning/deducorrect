@@ -24,27 +24,7 @@
 
 #' Rules for deterministic correction
 #' 
-#' This functions are deprecated and will be defunct as of 01.01.2015. Please see \code{\link{ruleset}} instead.
-#' 
-#' @section Details:
-#' Data editing processes are rarely completely governed by in-record consistency rules.
-#' Many \emph{ad-hoc} rules are commonly used to impute empty or erroneous values. 
-#' Such rules are often applied manually or hidden in source code. This
-#' function, together with \code{\link{correctWithRules}} allows for easy definition and execution 
-#' of simle deterministic replacement rules.
-#'
-#' These functions are ment to support very simple rules, such as \emph{if variable x is missing, then
-#' set it to zero}. Such actions usually basically model-free corrections stemming from subject-matter knowledge.
-#' Given the nature of such rules, the type of rules are by default limited to R-statements containing
-#' conditionals (\code{if}-\code{else}), arithmetic and logical operators, and brackets and assignment operators.
-#' see \code{getOption('allowedSymbols')} for a complete list.
-#'
-#' If you cannot execute your 'simple' corrections with just these functions, we strongly recommend to 
-#' write a separate imputation or correction routine. However, it's a free world, so you may alter the list of allowed symbols
-#' as you wish. 
-#' 
-#' @section Note:
-#' \code{getVars} is overloaded from the \code{editrules} package.
+#' These functions are deprecated and will be defunct as of 01.01.2015. Please see \code{\link{ruleset}} instead.
 #'
 #' @param x \code{character} or \code{expression} vector. 
 #' @param strict If \code{TRUE} an error is thrown if any forbidden symbol is used (see details).
@@ -308,12 +288,6 @@ getvrs <- function(x, L=character(0), ...){
 #' 
 #' These functions are deprecated and will be defunct as of 01.01.2015. Please see \code{\link{applyRules}} instead.
 #'
-#' @section Details:
-#' This function applies the the \code{rules} one by one to \code{dat} and logs
-#' their actions. Rules are excuted in order of occurrence in the \code{\link{correctionRules}}
-#' so order may matter for the final result. Rules are applied to one record at the time, so 
-#' the use of statistical funtions such as \code{mean} is useless, and forbidden by default.
-#' See \code{\link{correctionRules}} for details on the type of rules that are possible.
 #'
 #' @param rules object of class \code{\link{correctionRules}} 
 #' @param dat \code{data.frame}

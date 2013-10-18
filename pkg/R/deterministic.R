@@ -432,7 +432,7 @@ vectorize <- function(x){
 # apply a single vectorized rule to a dataset
 apply_rule <- function(rule, dat, subset=expression(TRUE)){
   I <- eval(subset,dat)
-  dat[I, ] <- within(dat[I,],eval(rule))
+  dat[I, ] <- within(dat[I,,drop=FALSE],eval(rule))
   dat
 }  
 
@@ -539,8 +539,8 @@ logframe <- function(dat1, dat2, remark,...){
   data.frame(
       row = rc[,'row']
     , variable = names(dat1)[rc[,'col']]
-    , old = as.character(dat1[A])
-    , new = as.character(dat2[A])
+    , old = format(as.character(dat1[A]))
+    , new = format(as.character(dat2[A]))
     , how=rep(remark,nrow(rc))
     , stringsAsFactors=FALSE
   )

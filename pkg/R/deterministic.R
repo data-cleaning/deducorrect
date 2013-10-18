@@ -22,9 +22,10 @@
 # define correction rules.
 
 
-
 #' Rules for deterministic correction
-#'
+#' 
+#' This functions are deprecated and will be defunct as of 01.01.2015. Please see \code{\link{ruleset}} instead.
+#' 
 #' @section Details:
 #' Data editing processes are rarely completely governed by in-record consistency rules.
 #' Many \emph{ad-hoc} rules are commonly used to impute empty or erroneous values. 
@@ -55,7 +56,41 @@
 #' @export
 #' @seealso \code{\link{correctWithRules}}
 correctionRules <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'), ...){
+   .Deprecated(new='ruleset')
    UseMethod('correctionRules')
+}
+
+#' Rules for deterministic correction or deriving new variables
+#'
+#' @section Details:
+#' This function, together with \code{\link{applyRules}} allows for easy definition and execution 
+#' of simle deterministic replacement rules and variable derivation rules where all actions are
+#' logged on the variable level.
+#'
+#' These functions are ment to support very simple rules, such as \emph{if variable x is missing, then
+#' set it to zero}. Such actions usually basically model-free corrections stemming from subject-matter knowledge.
+#' Given the nature of such rules, the type of rules are by default limited to R-statements containing
+#' conditionals (\code{if}-\code{else}), arithmetic and logical operators, and brackets and assignment operators.
+#' see \code{getOption('allowedSymbols')} for a complete list.
+#'
+#' If you cannot execute your 'simple' corrections with just these functions, we strongly recommend to 
+#' write a separate imputation or correction routine. However, it's a free world, so you may alter the list of allowed symbols
+#' as you wish. 
+#' 
+#' @section Note:
+#' \code{getVars} is overloaded from the \code{editrules} package.
+#'
+#' @param x \code{character} or \code{expression} vector. 
+#' @param strict If \code{TRUE} an error is thrown if any forbidden symbol is used (see details).
+#' @param allowed A \code{character} vector of allowed symbols
+#' @param ... Currently unused.
+#' @return \code{ruleset} returns an object of class \code{ruleset}
+#' 
+#'
+#' @export
+#' @seealso \code{\link{applyRules}}
+ruleset <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'), ...){
+  UseMethod('ruleset')
 }
 
 
@@ -64,47 +99,64 @@ correctionRules <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'),
 #' @rdname correctionRules
 #' @export
 correctionRules.character <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'), file=TRUE, ...){
-   if ( file ){ 
-      x <- parse(file=x)
-      return(correctionRules.expression(x,strict,allowed))
-   } 
-    
-   
-   i <- 0
-   L <- sapply(x, function(y){
-      i <<- i+1
-      tryCatch(parse(text=y), 
-            error = function(e){
+  ruleset.character(x,strict,allowed,file,...)
+}
+
+#' @method ruleset character
+#' @param file If \code{file=TRUE}, \code{x} is treated as a filename from which the rules are read.
+#' @rdname ruleset
+#' @export
+ruleset.character <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'), file=TRUE, ...){
+  if ( file ){ 
+    x <- parse(file=x)
+    return(correctionRules.expression(x,strict,allowed))
+  } 
+  
+  i <- 0
+  L <- sapply(x, function(y){
+    i <<- i+1
+    tryCatch(parse(text=y), 
+             error = function(e){
                msg <- sprintf("\nCould not process rule [%d]:\n '%s'\nparser returned:\n%s\n",i,y,e$message)
                stop(msg)
-            })
-   }
-   )
-   if (strict){ 
-      M <- checkRules(L,allowed=allowed)
-      if ( any(M$error) ){ 
-         printErrors(x,M)
-         stop('Forbidden symbols found')
-      }
-   }
-   structure(L,class='correctionRules')
+             })
+  }
+  )
+  if (strict){ 
+    M <- checkRules(L,allowed=allowed)
+    if ( any(M$error) ){ 
+      printErrors(x,M)
+      stop('Forbidden symbols found')
+    }
+  }
+  structure(L,class='ruleset')
 }
+
 
 
 #' @method correctionRules expression
 #' @rdname correctionRules
 #' @export
 correctionRules.expression <- function(x,strict=TRUE, allowed=getOption('allowedSymbols'), ...){
-
-   if (strict){ 
-      M <- checkRules(x,allowed=allowed)
-      if ( any(M$error) ){ 
-         printErrors(x,M)
-         stop("Forbidden symbols found")
-      }
-   }
-   structure(x,class='correctionRules')
+  ruleset.expression(x,strict,allowed,...)
 }
+
+#' @method ruleset expression
+#' @rdname ruleset
+#' @export
+ruleset.expression <- function(x,strict=TRUE, allowed=getOption('allowedSymbols'), ...){
+  
+  if (strict){ 
+    M <- checkRules(x,allowed=allowed)
+    if ( any(M$error) ){ 
+      printErrors(x,M)
+      stop("Forbidden symbols found")
+    }
+  }
+  structure(x,class='ruleset')
+}
+
+
 
 #' @method print correctionRules 
 #' @export
@@ -116,6 +168,19 @@ print.correctionRules <- function(x,...){
    v <- gsub("\n","\n  ",v)
    cat(sprintf("\n## %2d-------\n%s",1:length(v),v),'\n')
 }
+
+#' @method print ruleset 
+#' @export
+#' @rdname ruleset
+print.ruleset <- function(x,...){
+  cat("Object of class 'ruleset'")
+  v <- as.character(x)
+  v <- gsub("^","  ",v)
+  v <- gsub("\n","\n  ",v)
+  cat(sprintf("\n## %2d-------\n%s",1:length(v),v),'\n')
+}
+
+
 
 #' @method as.character correctionRules
 #' @param oneliner Coerce to oneliner
@@ -130,6 +195,21 @@ as.character.correctionRules <- function(x, oneliner=FALSE,...){
    }
    names(v) <- NULL
    v
+}
+
+#' @method as.character ruleset
+#' @param oneliner Coerce to oneliner
+#' @export
+#' @rdname ruleset
+as.character.correctionRules <- function(x, oneliner=FALSE,...){
+  # this seems to be the easiest way to retain formatting information (mvdl)
+  v <- sapply(x,function(r) as.character(noquote(list(r))))
+  if ( oneliner ){
+    v <- gsub("\n"," ",v)      # remove line end
+    v <- gsub("[ ]+"," ",v)    # collapse multiple spaces to one
+  }
+  names(v) <- NULL
+  v
 }
 
 
@@ -197,6 +277,18 @@ getVars.correctionRules <- function(E, ...){
    unique(do.call(c,lapply(E,getvrs)))
 }
 
+#' @method getVars ruleset
+#' @rdname ruleset
+#' @param E object of class \code{\link{ruleset}}
+#'
+#' @return \code{getVars} returns a character vector of variable names.
+#' @export
+getVars.ruleset <- function(E, ...){
+  unique(do.call(c,lapply(E,getvrs)))
+}
+
+
+
 getvrs <- function(x, L=character(0), ...){
    if ( is.expression(x) ){
       x <- x[[1]]
@@ -213,8 +305,8 @@ getvrs <- function(x, L=character(0), ...){
 
 
 #' Deterministic correction
-#'
-#' Apply simple replacement rules to a \code{data.frame}.
+#' 
+#' These functions are deprecated and will be defunct as of 01.01.2015. Please see \code{\link{applyRules}} instead.
 #'
 #' @section Details:
 #' This function applies the the \code{rules} one by one to \code{dat} and logs
@@ -230,59 +322,67 @@ getvrs <- function(x, L=character(0), ...){
 #'
 #' @return list with altered data (\code{$corrected}) and a list of alterations (\code{$corrections}).
 #'
-#' @example ../examples/correctWithRules.R
-#'
 #' @export
 correctWithRules <- function(rules, dat, strict=TRUE){
-   if (strict){
-      vars <- getVars(rules)
-      I <- vars %in% names(dat)
-      if (!all(I)) stop(
-         sprintf("Variables '%s' in rules do not occur in data",paste(vars[!I],sep=", "))
-      )
-   }
-
-   out <- dat
-   m <- nrow(dat)
-   n <- length(rules)
-   row <- numeric(0)
-   variable <- character(0)
-   old <- character(0)
-   new <- character(0)
-   how <- character(0)
-   vars <- colnames(dat)
-   tr <- as.character(rules,oneliner=TRUE)
-   
-
-
-   for ( i in 1:m ){
-      for ( j in 1:n ){
-         d <- within(out[i,,drop=FALSE],eval(rules[[j]]))
-
-         if ( !all(equal(d,out[i,])) ){
-            rule <- tr[j]
-            w <- which(!equal(d,out[i,]))
-            row <- c(row, rep(i,length(w)))
-            variable <- c(variable,vars[w])
-            old <- c(old, format(unlist(out[i,w])) )
-            new <- c(new, format(unlist(d[1,w])) )
-            how <- c(how,rep(rule,length(w)))
-            out[i,] <- d
-         }
-      }
-   }
-   list(
-      corrected=out, 
-      corrections=data.frame(
-            row=row,
-            variable=variable,
-            old=old,
-            new=new,
-            how=how,
-            stringsAsFactors=FALSE
-         )
-   )
+  .Deprecated(new='applyRules')
+  rowbyrow(rules,dat,strict)
 }
+
+##-------------------------------------------------------------------------'
+# Code of the old 'correctWithRules function'
+rowbyrow <- function(rules, dat, strict=TRUE){
+  if (strict){
+    vars <- getVars(rules)
+    I <- vars %in% names(dat)
+    if (!all(I)) stop(
+      sprintf("Variables '%s' in rules do not occur in data",paste(vars[!I],sep=", "))
+    )
+  }
+  
+  out <- dat
+  m <- nrow(dat)
+  n <- length(rules)
+  row <- numeric(0)
+  variable <- character(0)
+  old <- character(0)
+  new <- character(0)
+  how <- character(0)
+  vars <- colnames(dat)
+  tr <- as.character(rules,oneliner=TRUE)
+  
+  
+  
+  for ( i in 1:m ){
+    for ( j in 1:n ){
+      d <- within(out[i,,drop=FALSE],eval(rules[[j]]))
+      
+      if ( !all(equal(d,out[i,])) ){
+        rule <- tr[j]
+        w <- which(!equal(d,out[i,]))
+        row <- c(row, rep(i,length(w)))
+        variable <- c(variable,vars[w])
+        old <- c(old, format(unlist(out[i,w])) )
+        new <- c(new, format(unlist(d[1,w])) )
+        how <- c(how,rep(rule,length(w)))
+        out[i,] <- d
+      }
+    }
+  }
+  list(
+    corrected=out, 
+    corrections=data.frame(
+      row=row,
+      variable=variable,
+      old=old,
+      new=new,
+      how=how,
+      stringsAsFactors=FALSE
+    )
+  )
+}
+
+
+
 
 ##-------------------------------------------------------------------------'
 # NA-robust pairwise comparison of data.frames
@@ -351,7 +451,39 @@ replace_shortcircuit <- function(x){
 
 ##-------------------------------------------------------------------------'
 # apply rules and log
+
+#' Execute a ruleset in data environment
+#'
+#' Apply simple replacement and derivation rules to a \code{data.frame}.
+#'
+#' @section Details:
+#' This function applies the the \code{rules} one by one to \code{dat} and logs
+#' their actions. Rules are excuted in order of occurrence in the \code{\link{ruleset}}
+#' so order may matter for the final result. Rules are vectorized by default for speedy execution.
+#' Deriving new variables is only possible in vectorized mode.
+#' See \code{\link{ruleset}} for details on the type of rules that are allowed.
+#'
+#' @param rules object of class \code{\link{ruleset}} 
+#' @param dat \code{data.frame}
+#' @param strict If \code{TRUE}, an error is produced when the rules involve variables other than in the \code{data.frame}.
+#' @param vectorize Vectorize rules before applying them? If \code{FALSE}, the rules are applied row-by-row, which can be significantly slower.
+#' @seealso \code{\link{ruleset}}
+#'
+#' @return list with altered data (\code{$dat}) and a list of modifications (\code{$log}).
+#'
+#' @export
 applyRules <- function(rules, dat, strict=TRUE, vectorize=TRUE, ...){
+  
+  if (!vectorize) return(rowbyrow(rules,dat,strict))
+
+  if (strict){
+    vars <- getVars(rules)
+    I <- vars %in% names(dat)
+    if (!all(I)) stop(
+      sprintf("Variables '%s' in rules do not occur in data",paste(vars[!I],sep=", "))
+    )
+  }
+  
   rules <- replace_shortcircuit(rules)
   R <- vectorize(rules)
   
@@ -374,12 +506,9 @@ applyRules <- function(rules, dat, strict=TRUE, vectorize=TRUE, ...){
   list(dat=dat,log=log)
 }
 
-
-
 ##-------------------------------------------------------------------------'
 # Get guarding expression
 guard <- function(x) attr(x,'guard')
-
 
 ##-------------------------------------------------------------------------'
 # Conjugate two expressions
@@ -405,7 +534,6 @@ condition <- function(e){
 ##-------------------------------------------------------------------------'
 # row-variable-old-new-remark log
 logframe <- function(dat1, dat2, remark,...){
-  time <- format(Sys.time(),format="%Y-%m-%d %H:%M:%S")
   A <- !equal(dat1,dat2)
   rc <- which(A,arr.ind=TRUE)
   data.frame(
@@ -413,8 +541,7 @@ logframe <- function(dat1, dat2, remark,...){
     , variable = names(dat1)[rc[,'col']]
     , old = as.character(dat1[A])
     , new = as.character(dat2[A])
-    , time=rep(time,nrow(rc))
-    , remark=rep(remark,nrow(rc))
+    , how=rep(remark,nrow(rc))
     , stringsAsFactors=FALSE
   )
 }

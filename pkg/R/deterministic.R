@@ -51,7 +51,7 @@ correctionRules <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'),
 #' set it to zero}. Such actions usually basically model-free corrections stemming from subject-matter knowledge.
 #' Given the nature of such rules, the type of rules are by default limited to R-statements containing
 #' conditionals (\code{if}-\code{else}), arithmetic and logical operators, and brackets and assignment operators.
-#' see \code{getOption('allowedSymbols')} for a complete list.
+#' see \code{getOption('allowedSymbols')} for a complete list. 
 #'
 #' If you cannot execute your 'simple' corrections with just these functions, we strongly recommend to 
 #' write a separate imputation or correction routine. However, it's a free world, so you may alter the list of allowed symbols
@@ -59,6 +59,13 @@ correctionRules <- function(x, strict=TRUE, allowed=getOption('allowedSymbols'),
 #' 
 #' @section Note:
 #' \code{getVars} is overloaded from the \code{editrules} package.
+#'
+#' @section Assignment operators:
+#' The specified rules may contain operators \code{<-} as wel as \code{=}. Note however, that when the rules are specified
+#' as an expression, as in \code{ruleset(expression(...))}, there is a corner case when a constant is assigned. 
+#' That is, \code{\link{applyRules}} will give an error on \code{ruleset(expression(x = 1))} but not on 
+#' \code{ruleset(expression(x <- 1))} or \code{ruleset(expression{x = 1})}. See also the help on \code{\link[base]{assignOps}}.
+#'
 #'
 #' @param x \code{character} or \code{expression} vector. 
 #' @param strict If \code{TRUE} an error is thrown if any forbidden symbol is used (see details).
@@ -293,7 +300,7 @@ getvrs <- function(x, L=character(0), ...){
 assignee <- function(e){
   f <- function(e,L=list()){
     x <- if (is.expression(e)) e[[1]] else e
-    if ( as.character(x)[1] == '<-' ) return(c(L,as.character(x[2])))
+    if ( as.character(x)[1] %in% c('<-','=') ) return(c(L,as.character(x[2])))
     if (length(x) > 1) return(sapply(x[-1],f,L))
   }
   unique(rapply(f(e),function(x) x))
@@ -421,9 +428,10 @@ vectorize <- function(x){
 
 ##-------------------------------------------------------------------------'
 # apply a single vectorized rule to a dataset
-apply_rule <- function(rule, dat, subset=expression(TRUE)){
+apply_rule <- function(rule, dat, subset=expression(TRUE),na.condition=FALSE){
   I <- eval(subset,dat)
-  dat[I, ] <- within(dat[I,,drop=FALSE],eval(rule))
+  I[is.na(I)] <- na.condition
+  if ( any (I) ) dat[I, ] <- within(dat[I,,drop=FALSE],eval(rule))
   dat
 }  
 
@@ -457,13 +465,14 @@ replace_shortcircuit <- function(x){
 #' @param rules object of class \code{\link{ruleset}} 
 #' @param dat \code{data.frame}
 #' @param addnew If \code{TRUE}, newly assigned variables are added to the data, only when \code{vectorized=TRUE}.
+#' @param na.condition If a conditional expression evaluates to \code{NA}, replace it with \code{TRUE} or \code{FALSE}? Only when \code{vectorized=TRUE}.
 #' @param vectorize Vectorize rules before applying them? If \code{FALSE}, the rules are applied row-by-row, which can be significantly slower.
 #' @seealso \code{\link{ruleset}}
 #'
 #' @return list with altered data (\code{$dat}) and a list of modifications (\code{$log}). 
 #' @example ../examples/ruleset.R
 #' @export
-applyRules <- function(rules, dat, addnew=FALSE, vectorize=TRUE){
+applyRules <- function(rules, dat, addnew=FALSE, vectorize=TRUE, na.condition=FALSE){
   stopifnot(class(rules)=='ruleset')
   if (addnew && !vectorize) stop("New variables can only be added in vectorized mode")
   
@@ -475,9 +484,9 @@ applyRules <- function(rules, dat, addnew=FALSE, vectorize=TRUE){
   if (addnew) vars <- vars[!vars %in% asgn]
   
   if (any( I <- !vars %in% names(dat))){
-    stop("Variables"
+    stop("Variables "
          , paste(vars[I],collapse=',')
-         , 'used in rules but not present in data'
+         , ' used in rules but not present in data'
          )
   }  
   # add empty columns
@@ -491,7 +500,7 @@ applyRules <- function(rules, dat, addnew=FALSE, vectorize=TRUE){
 
   # apply rules
   for ( i in 1:length(R[[1]]) ){
-    dat1 <- apply_rule(rule=R$rule[i], dat=dat, subset=R$guard[i])
+    dat1 <- apply_rule(rule=R$rule[i], dat=dat, subset=R$guard[i],na.condition=na.condition)
     if ( TRUE ){ # TODO: make logging optional/customizable
       g <- ifelse(as.character(R$guard[i])=="TRUE","",paste(' @',R$guard[i])) 
       log <- rbind(log,logframe(

@@ -181,7 +181,7 @@ as.character.correctionRules <- function(x, oneliner=FALSE,...){
 #' @param oneliner Coerce to oneliner
 #' @export
 #' @rdname ruleset
-as.character.correctionRules <- function(x, oneliner=FALSE,...){
+as.character.ruleset <- function(x, oneliner=FALSE,...){
   # this seems to be the easiest way to retain formatting information (mvdl)
   v <- sapply(x,function(r) as.character(noquote(list(r))))
   if ( oneliner ){
@@ -260,15 +260,21 @@ getVars.correctionRules <- function(E, ...){
 #' @method getVars ruleset
 #' @rdname ruleset
 #' @param E object of class \code{\link{ruleset}}
-#'
+#' @param type Select which variables to return 
+#' 
 #' @return \code{getVars} returns a character vector of variable names.
 #' @export
-getVars.ruleset <- function(E, ...){
-  unique(do.call(c,lapply(E,getvrs)))
+getVars.ruleset <- function(E, type=c('all','assigned'),...){
+  type <- match.arg(type)
+  switch(type
+    , 'all'       = unique(do.call(c,lapply(E,getvrs)))
+    , 'assigned'  = unique(do.call(c,lapply(E,assignee)))
+  )
 }
 
 
-
+##-------------------------------------------------------------------------'
+# get variables from expression (helper function, returnes list)
 getvrs <- function(x, L=character(0), ...){
    if ( is.expression(x) ){
       x <- x[[1]]
@@ -280,6 +286,17 @@ getvrs <- function(x, L=character(0), ...){
 
    for ( i in 2:length(x) ) L <- c(L, getvrs(x[[i]],L))
    unique(L)
+}
+
+##-------------------------------------------------------------------------'
+# get assigned variables from expression (helper function, returns list)
+assignee <- function(e){
+  f <- function(e,L=list()){
+    x <- if (is.expression(e)) e[[1]] else e
+    if ( as.character(x)[1] == '<-' ) return(c(L,as.character(x[2])))
+    if (length(x) > 1) return(sapply(x[-1],f,L))
+  }
+  unique(rapply(f(e),function(x) x))
 }
 
 
@@ -439,24 +456,32 @@ replace_shortcircuit <- function(x){
 #'
 #' @param rules object of class \code{\link{ruleset}} 
 #' @param dat \code{data.frame}
-#' @param strict If \code{TRUE}, an error is produced when the rules involve variables other than in the \code{data.frame}.
+#' @param addnew If \code{TRUE}, newly assigned variables are added to the data, only when \code{vectorized=TRUE}.
 #' @param vectorize Vectorize rules before applying them? If \code{FALSE}, the rules are applied row-by-row, which can be significantly slower.
 #' @seealso \code{\link{ruleset}}
 #'
-#' @return list with altered data (\code{$dat}) and a list of modifications (\code{$log}).
+#' @return list with altered data (\code{$dat}) and a list of modifications (\code{$log}). 
 #' @example ../examples/ruleset.R
 #' @export
-applyRules <- function(rules, dat, strict=TRUE, vectorize=TRUE, ...){
+applyRules <- function(rules, dat, addnew=FALSE, vectorize=TRUE){
+  stopifnot(class(rules)=='ruleset')
+  if (addnew && !vectorize) stop("New variables can only be added in vectorized mode")
   
-  if (!vectorize) return(rowbyrow(rules,dat,strict))
+  if (!vectorize) return(rowbyrow(rules,dat,strict=TRUE))
+  
+  vars <- getVars(rules)
+  asgn <- getVars(rules,type='assigned')
 
-  if (strict){
-    vars <- getVars(rules)
-    I <- vars %in% names(dat)
-    if (!all(I)) stop(
-      sprintf("Variables '%s' in rules do not occur in data",paste(vars[!I],sep=", "))
-    )
-  }
+  if (addnew) vars <- vars[!vars %in% asgn]
+  
+  if (any( I <- !vars %in% names(dat))){
+    stop("Variables"
+         , paste(vars[I],collapse=',')
+         , 'used in rules but not present in data'
+         )
+  }  
+  # add empty columns
+  if (addnew) dat[asgn] <- NA
   
   rules <- replace_shortcircuit(rules)
   R <- vectorize(rules)
@@ -467,11 +492,12 @@ applyRules <- function(rules, dat, strict=TRUE, vectorize=TRUE, ...){
   # apply rules
   for ( i in 1:length(R[[1]]) ){
     dat1 <- apply_rule(rule=R$rule[i], dat=dat, subset=R$guard[i])
-    if ( TRUE ){
+    if ( TRUE ){ # TODO: make logging optional/customizable
+      g <- ifelse(as.character(R$guard[i])=="TRUE","",paste(' @',R$guard[i])) 
       log <- rbind(log,logframe(
         dat
         , dat1
-        , paste(R$rule[i],'because',R$guard[i])
+        , paste0(R$rule[i],g)
         , as.character(R$rule[i])
       ))
     }

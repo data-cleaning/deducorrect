@@ -466,13 +466,15 @@ replace_shortcircuit <- function(x){
 #' @param dat \code{data.frame}
 #' @param addnew If \code{TRUE}, newly assigned variables are added to the data, only when \code{vectorized=TRUE}.
 #' @param na.condition If a conditional expression evaluates to \code{NA}, replace it with \code{TRUE} or \code{FALSE}? Only when \code{vectorized=TRUE}.
-#' @param vectorize Vectorize rules before applying them? If \code{FALSE}, the rules are applied row-by-row, which can be significantly slower.
+#' @param vectorize Vectorize rules before applying them? If \code{FALSE}, the rules are applied row-by-row, 
+#'    which can be significantly slower.
+#' @param create_log Create log? if not, the log will be \code{NULL}.
 #' @seealso \code{\link{ruleset}}
 #'
 #' @return list with altered data (\code{$dat}) and a list of modifications (\code{$log}). 
 #' @example ../examples/ruleset.R
 #' @export
-applyRules <- function(rules, dat, addnew=FALSE, vectorize=TRUE, na.condition=FALSE){
+applyRules <- function(rules, dat, addnew=FALSE, vectorize=TRUE, na.condition=FALSE, create_log=TRUE){
   stopifnot(class(rules)=='ruleset')
   if (addnew && !vectorize) stop("New variables can only be added in vectorized mode")
   
@@ -495,13 +497,13 @@ applyRules <- function(rules, dat, addnew=FALSE, vectorize=TRUE, na.condition=FA
   rules <- replace_shortcircuit(rules)
   R <- vectorize(rules)
   
-  # init log
-  log <- logframe(dat,dat,'')
+  # init log -- switched off for now
+  log <- if(create_log) logframe(dat,dat,'') else NULL
 
   # apply rules
   for ( i in 1:length(R[[1]]) ){
     dat1 <- apply_rule(rule=R$rule[i], dat=dat, subset=R$guard[i],na.condition=na.condition)
-    if ( TRUE ){ # TODO: make logging optional/customizable
+    if ( create_log ){ 
       g <- ifelse(as.character(R$guard[i])=="TRUE","",paste(' @',R$guard[i])) 
       log <- rbind(log,logframe(
         dat

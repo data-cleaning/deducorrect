@@ -1,7 +1,10 @@
+version 1.4.1
+- logging is now optional in correctionRules
+
 version 1.4.0
-- correctionRules is now deprecated, will be removed 01.01.2015
+- correctionRules is now deprecated
 - new function 'ruleset' replaces correctionRules
-- correctWithRules is now deprecated, will be removed 01.01.2015
+- correctWithRules is now deprecated 
 - new function 'applyRules', replaces correctionRules. Vectorizes ruleset prior to application yielding significant speed gain.
 
 version 1.3-5

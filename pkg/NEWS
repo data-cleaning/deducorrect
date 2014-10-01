@@ -4,6 +4,9 @@ version 1.4.0
 - correctWithRules is now deprecated, will be removed 01.01.2015
 - new function 'applyRules', replaces correctionRules. Vectorizes ruleset prior to application yielding significant speed gain.
 
+version 1.3-5
+- Small updates to conform to CRAN policies.
+
 version 1.3-4
 - bugfix in logging of correctWithRules (factors were incorrectly logged).
 

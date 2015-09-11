@@ -1,22 +1,14 @@
 Package: deducorrect
 Maintainer: Mark van der Loo <mark.vanderloo@gmail.com>
 License: GPL-3
-Title: deducorrect: Deductive correction, deductive imputation, and deterministic correction.
+Title: Deductive Correction, Deductive Imputation, and Deterministic Correction
 Type: Package
 LazyLoad: yes
 Author: Mark van der Loo, Edwin de Jonge, and Sander
     Scholtus
 Description: A collection of methods for automated data cleaning where all actions are logged.
 Version: 1.4.0
-URL: https://github.com/markvanderloo/deducorrect
-Date: 2011-02-22
-Depends: editrules (>= 2.5-0)
-Collate:
-    'correctRounding.R'
-    'correctSigns.R'
-    'correctTypos.R'
-    'pkg.R'
-    'S3deducorrect.R'
-    'stringdistance.R'
-    'unimodularity.R'
-    'util.R'
+URL: https://github.com/data-cleaning/deducorrect
+Date: 2015-07-15
+Depends: editrules (>= 2.9.0)
+Imports: stats, utils, methods

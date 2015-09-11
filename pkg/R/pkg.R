@@ -19,6 +19,10 @@
 #'
 #'
 #' @import editrules
+#' @importFrom stats complete.cases
+#' @importFrom stats addmargins
+#' @importFrom methods new
+#' @importFrom utils combn
 #' @example ../examples/pkg.R
 #' @name deducorrect-package 
 #' @docType package 

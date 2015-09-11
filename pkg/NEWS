@@ -1,15 +1,10 @@
-version 1.4.1
-- logging is now optional in correctionRules
-
 version 1.4.0
-- correctionRules is now deprecated
 - new function 'ruleset' replaces correctionRules
-- correctWithRules is now deprecated 
 - new function 'applyRules', replaces correctionRules. Vectorizes ruleset prior to application yielding significant speed gain.
+- DEPRECATED: correctionRules, correctWithRules. Will be available for some time to allow smooth transition.
 
 version 1.3.7
 - Small updates to conform to CRAN policies.
-
 
 version 1.3-5
 - Small updates to conform to CRAN policies.

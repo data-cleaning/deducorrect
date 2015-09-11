@@ -4,7 +4,6 @@
 [![Downloads](http://cranlogs.r-pkg.org/badges/deducorrect)](http://www.r-pkg.org/pkg/deducorrect) 
 
 
-
 deducorrect
 ===========
 

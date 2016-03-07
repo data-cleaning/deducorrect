@@ -1,3 +1,7 @@
+version 1.4.1
+- Moving active development to the packages 'deductive' for deductive correction methods
+  and to 'dcmodify' for rule-based deterministic correction.
+
 version 1.4.0
 - new function 'ruleset' replaces correctionRules
 - new function 'applyRules', replaces correctionRules. Vectorizes ruleset prior to application yielding significant speed gain.

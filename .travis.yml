@@ -11,6 +11,7 @@ before_install:
   - cd ./pkg
 
 r_packages:
+  - testthat
   - covr
   - rmarkdown
 

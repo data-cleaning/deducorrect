@@ -6,9 +6,16 @@ Type: Package
 LazyLoad: yes
 Author: Mark van der Loo, Edwin de Jonge, and Sander
     Scholtus
-Description: A collection of methods for automated data cleaning where all actions are logged.
-Version: 1.4.0
+Description: A collection of methods for automated data cleaning
+    where all actions are logged. NOTE: active development has moved to
+    the 'deductive' package.
+Version: 1.4.1
 URL: https://github.com/data-cleaning/deducorrect
-Date: 2015-07-15
-Depends: editrules (>= 2.9.0)
-Imports: stats, utils, methods
+Date: 2016-03-07
+Depends:
+    editrules (>= 2.9.0)
+Imports:
+    stats,
+    utils,
+    methods
+RoxygenNote: 5.0.1

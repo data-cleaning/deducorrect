@@ -1,11 +1,13 @@
-#' Apply flips and swaps to a record. 
-#'
-#' @param flips Index vector in r. r will be sign-flipped at flips
-#' @param swaps nx2 matrix denoting value swaps in r.
-#' @param r numerical record.
-#' @return r, with flips and swaps applied
-#'
-#' @keywords internal
+# Apply flips and swaps to a record. 
+#
+# Internal function
+#
+# @param flips Index vector in r. r will be sign-flipped at flips
+# @param swaps nx2 matrix denoting value swaps in r.
+# @param r numerical record.
+# @return r, with flips and swaps applied
+#
+# @keywords internal
 applyFix <- function(flips, swaps, r){
     if ( length(flips) > 0 )
         r[flips] <- -r[flips]
@@ -14,36 +16,35 @@ applyFix <- function(flips, swaps, r){
     return(r)
 }
 
-#' Workhorse for correctSigns
-#'
-#' 
-#' @title workhorse for correctSigns
-#'
-#' @param r The numerical record to correct
-#' @param A1 Equality matrix
-#' @param C1 Constant vector for equalities
-#' @param eps Tolerance for equality-checking
-#' @param A2 Inequality matrix
-#' @param C2 Constant vector for inequalities
-#' @param epsvec Vector to check against. (\code{.Machine.double.eps} for \code{>} inequalities, otherwise 0.)
-#' @param flip indices in \code{r}, where r may be sign-flipped
-#' @param swap \eqn{n\times2} matrix with indices in \code{r}, each row indicating a possible value swap.
-#' @param w weight vector of \code{length(flips)+nrow(swaps)} if \code{swapIsOneFlip==TRUE}, otherwise of \code{length(r)}
-#' @param swapIsOneFlip logical. If \code{TRUE}, weights are assigned to each flip or swap action. If \code{FALSE} weights are assigned to every changed variable. 
-#' @param maxActions Maximum number of \code{flips+swaps} to try.
-#' @param maxCombinations the maximum number of flip/swap combinations to try. See the description in \code{\link{correctSigns}}
-#'
-#' @return a list containing
-#'  \tabular{ll}{
-#'      \code{S} \tab \code{n x length(r)} array with corrected versions of \code{r} \cr
-#'      \code{weight} \tab vector of length \code{n} with total weight for each solution \cr
-#'      \code{nFlip} \tab number of sign flips for every solution \cr
-#'      \code{nSwap} \tab number of value swaps for every solution\cr
-#' }
-#'
-#' @seealso \code{\link{correctSigns}}
-#'
-#'
+# Workhorse for correctSigns
+#
+# Internal function 
+#
+# @param r The numerical record to correct
+# @param A1 Equality matrix
+# @param C1 Constant vector for equalities
+# @param eps Tolerance for equality-checking
+# @param A2 Inequality matrix
+# @param C2 Constant vector for inequalities
+# @param epsvec Vector to check against. (\code{.Machine.double.eps} for \code{>} inequalities, otherwise 0.)
+# @param flip indices in \code{r}, where r may be sign-flipped
+# @param swap \eqn{n\times2} matrix with indices in \code{r}, each row indicating a possible value swap.
+# @param w weight vector of \code{length(flips)+nrow(swaps)} if \code{swapIsOneFlip==TRUE}, otherwise of \code{length(r)}
+# @param swapIsOneFlip logical. If \code{TRUE}, weights are assigned to each flip or swap action. If \code{FALSE} weights are assigned to every changed variable. 
+# @param maxActions Maximum number of \code{flips+swaps} to try.
+# @param maxCombinations the maximum number of flip/swap combinations to try. See the description in \code{\link{correctSigns}}
+#
+# @return a list containing
+#  \tabular{ll}{
+#      \code{S} \tab \code{n x length(r)} array with corrected versions of \code{r} \cr
+#      \code{weight} \tab vector of length \code{n} with total weight for each solution \cr
+#      \code{nFlip} \tab number of sign flips for every solution \cr
+#      \code{nSwap} \tab number of value swaps for every solution\cr
+# }
+#
+# @seealso \code{\link{correctSigns}}
+#
+# @keywords internal
 getSignCorrection <- function( r, A1, C1, eps, A2, C2, epsvec, flip, swap, w, 
     swapIsOneFlip, maxActions, maxCombinations ){
     nflip <- length(flip)
@@ -80,10 +81,11 @@ getSignCorrection <- function( r, A1, C1, eps, A2, C2, epsvec, flip, swap, w,
 
 #' Correct sign errors and value interchanges in data records. 
 #'
-#' This algorithm tries to correct records violating linear equalities by sign flipping and/or value interchanges.
-#' Linear inequalities are taken into account when judging possible solutions. If one or more inequality restriction
-#' is violated, the solution is rejected. It is important to note that the \code{\link{status}} of a record has
-#' the following meaning:
+#' This algorithm tries to correct records violating linear equalities by sign
+#' flipping and/or value interchanges. Linear inequalities are taken into
+#' account when judging possible solutions. If one or more inequality
+#' restriction is violated, the solution is rejected. It is important to note
+#' that the \code{\link{status}} of a record has the following meaning:
 #' 
 #' \tabular{ll}{
 #' \code{valid} \tab The record obeys all equality constraints on entry. No error correction is performed. \cr
@@ -94,13 +96,16 @@ getSignCorrection <- function( r, A1, C1, eps, A2, C2, epsvec, flip, swap, w,
 #' \code{NA} \tab record could not be checked. It contained missings.
 #' }
 #'
-#' The algorithm applies all combinations of (user-allowed) flip- and swap combinations to find a solution, and minimizes 
-#' the number of actions (flips+swaps) that have to be taken to correct a record. When multiple solutions are found, the
-#' solution of minimal weight is chosen. The user may provide a weight vector with weights for every flip and every swap,
-#' or a named weight vector with a weight for every variable. If the weights do not single out a solution, the first one
-#' found is chosen.
+#' The algorithm applies all combinations of (user-allowed) flip- and swap
+#' combinations to find a solution, and minimizes the number of actions
+#' (flips+swaps) that have to be taken to correct a record. When multiple
+#' solutions are found, the solution of minimal weight is chosen. The user may
+#' provide a weight vector with weights for every flip and every swap, or a
+#' named weight vector with a weight for every variable. If the weights do not
+#' single out a solution, the first one found is chosen.
 #'
-#' If arguments \code{flip} or \code{swap} contain a variable not in \code{E}, these variables will be ignored by the algorithm.
+#' If arguments \code{flip} or \code{swap} contain a variable not in \code{E},
+#' these variables will be ignored by the algorithm.
 #'
 #'
 #'
@@ -116,10 +121,14 @@ getSignCorrection <- function( r, A1, C1, eps, A2, C2, epsvec, flip, swap, w,
 #'      the number of \code{flips+swaps}, and \code{k} the number of actions taken in that step. If \code{choose(n,k)} exceeds \code{maxCombinations},
 #'      the algorithm returns a record uncorrected.
 #' @param eps Tolerance to check equalities against. Use this to account for sign errors masked by rounding errors.
-#' @param weight weight vector. Weights can be assigned either to actions (flips and swap) or to variables.
-#'      If \code{length(weight)==length(flip)+length(swap)}, weights are assiged to actions, if \code{length(weight)==ncol(E)}, weights
-#'      are assigned to variables. In the first case, the first \code{length{flip}} weights correspond to flips, the rest to swaps. 
-#'      A warning is issued in the second case when the weight vector is not named. See the examples for more details.
+#' @param weight weight vector. Weights can be assigned either to actions (flips
+#'   and swap) or to variables. If
+#'   \code{length(weight)==length(flip)+length(swap)}, weights are assiged to
+#'   actions, if \code{length(weight)==ncol(E)}, weights are assigned to
+#'   variables. In the first case, the first \code{length{flip}} weights
+#'   correspond to flips, the rest to swaps. A warning is issued in the second
+#'   case when the weight vector is not named. See the examples for more
+#'   details.
 #' @param fixate a \code{character} vector with names of variables whos values may not be changed
 #' @return a \code{\link{deducorrect-object}}. The \code{status} slot has the following columns for every records in \code{dat}.
 #'
@@ -141,7 +150,7 @@ correctSigns <- function(E,dat, ...){
     UseMethod("correctSigns")
 }
 
-#'
+
 #' @method correctSigns editset
 #' @rdname correctSigns
 #' @export

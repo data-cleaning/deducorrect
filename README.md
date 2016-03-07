@@ -9,6 +9,11 @@ deducorrect
 
 An R package for rule-based record correction and imputation
 
+h4. NOTE
+
+Active development has moved to the [deductive](https://github.com/data-cleaning/deductive) package.
+
+
 This repo used to be hosted at code.google.com but moved to
 github in May 2013.
 

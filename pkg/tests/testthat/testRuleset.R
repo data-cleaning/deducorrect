@@ -35,7 +35,7 @@ test_that("correction",{
 
 test_that("logging",{
    b <- ruleset("if ( x < 0 ) x <- 0", file=FALSE)
-   how <- "x <- 0 because x < 0"
+   how <- "x <- 0 @ x < 0"
    expect_equivalent(
       applyRules(
          b,
